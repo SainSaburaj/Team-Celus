@@ -3,7 +3,6 @@
  * @NScriptType Suitelet
  */
 
-
 /************************************************************************************************ 
  *  
  * JJIT-8710 : DEV | Frontend Development - Project Creation Page
@@ -23,14 +22,15 @@
 *************************************************************************************************/ 
 
 
-define(['N/file', 'N/log', 'N/search', 'N/ui/serverWidget'],
+define(['N/file', 'N/log', 'N/search', 'N/ui/serverWidget', 'N/record'],
     /**
  * @param{file} file
  * @param{log} log
  * @param{search} search
  * @param{serverWidget} serverWidget
+ * @param{record} record
  */
-    (file, log, search, serverWidget) => {
+    (file, log, search, serverWidget, record) => {
         /**
          * Defines the Suitelet script trigger point.
          * @param {Object} scriptContext
@@ -39,29 +39,58 @@ define(['N/file', 'N/log', 'N/search', 'N/ui/serverWidget'],
          * @since 2015.2
          */
         const onRequest = (scriptContext) => {
-            if (scriptContext.request.method === 'GET') {
-                let html = file.load({
-                    id: './projectCreateForm.html'
-                }).getContents();
+            try {
+                if (scriptContext.request.method === 'GET') {
+                    let html = file.load({
+                        id: './projectCreateForm.html'
+                    }).getContents();
 
-                const employees = getEmployees();
-                const statuses = getStatusValues();
-                const priorities = getPriorityValues();
-                const issues = getIssueValues();
-                const customers = getAllCustomers();
+                    const employees = getEmployees();
+                    const statuses = getStatusValues();
+                    const priorities = getPriorityValues();
+                    const issues = getIssueValues();
+                    const customers = getAllCustomers();
 
-                html = html
-                    .replace('%%EMPLOYEES%%', JSON.stringify(employees))
-                    .replace('%%STATUSES%%', JSON.stringify(statuses))
-                    .replace('%%PRIORITIES%%', JSON.stringify(priorities))
-                    .replace('%%ISSUES%%', JSON.stringify(issues))
-                    .replace('%%CUSTOMERS%%', JSON.stringify(customers));
+                    html = html
+                        .replace('%%EMPLOYEES%%', JSON.stringify(employees))
+                        .replace('%%STATUSES%%', JSON.stringify(statuses))
+                        .replace('%%PRIORITIES%%', JSON.stringify(priorities))
+                        .replace('%%ISSUES%%', JSON.stringify(issues))
+                        .replace('%%CUSTOMERS%%', JSON.stringify(customers));
 
-                scriptContext.response.write(html);
-                return;
+                    scriptContext.response.write(html);
+                    return;
+                }
+
+                if (scriptContext.request.method === 'POST') {
+                    let data = JSON.parse(scriptContext.request.body);
+                    const job = createJobRecord(data);
+
+                    try {
+                        const jobId = job.save();
+                        scriptContext.response.write(JSON.stringify({
+                            success: true,
+                            message: "Project (Job) Created Successfully!",
+                            jobId: jobId
+                        }));
+                    }
+                    catch (e) {
+                        log.error('Error Creating Job', e);
+                        scriptContext.response.write(JSON.stringify({
+                            success: false,
+                            message: "Error Creating Job.",
+                            error: e.message
+                        }));
+                    }
+                };
             }
-            if (scriptContext.request.method === 'POST') {
-                
+            catch (error) {
+                log.error('Error in onRequest', error);
+                scriptContext.response.write(JSON.stringify({
+                    success: false,
+                    message: "An error occurred.",
+                    error: error.message
+                }));
             }
         }
 
@@ -210,6 +239,91 @@ define(['N/file', 'N/log', 'N/search', 'N/ui/serverWidget'],
                 return true;
             });
             return customers;
+        }
+
+        /**
+         * Format a date object into YYYY/MM/DD format.
+         *
+         * @function formatDate
+         * @param {Date} dateObj - The date object to be formatted
+         * @returns {string} The formatted date string
+         */
+        function formatDate(dateObj) {
+            const month = dateObj.getMonth() + 1; // Month is 0-indexed
+            const day = dateObj.getDate();
+            const year = dateObj.getFullYear();
+            return `${year}/${month}/${day}`;
+        }
+
+        /**
+         * Create a new Job record with provided data.
+         *
+         * @function createJobRecord
+         * @param {Object} data - Data for creating the Job record
+         * @returns {Record} The created Job record
+         */
+        function createJobRecord(data) {
+            const job = record.create({
+                type: record.Type.JOB,
+                isDynamic: false
+            });
+
+            const startDate = new Date(data.startDate);
+            const endDate = new Date(data.endDate);
+
+            const formattedStartDate = formatDate(startDate);
+            const formattedEndDate = formatDate(endDate);
+
+            job.setValue({
+                fieldId: 'companyname',
+                value: data.projectName
+            });
+            job.setValue({
+                fieldId: 'parent',
+                value: data.customer
+            });
+            job.setValue({
+                fieldId: 'custentity_jj_jira_start_date',
+                value: new Date(formattedStartDate)
+            });
+            job.setValue({
+                fieldId: 'custentity_jj_jira_due_date',
+                value: new Date(formattedEndDate)
+            });
+            job.setValue({
+                fieldId: 'custentity_jj_jira_status',
+                value: data.status || 1
+            });
+            job.setValue({
+                fieldId: 'custentity_jj_jira_issue_type',
+                value: data.issue
+            });
+            job.setValue({
+                fieldId: 'custentity_jj_jira_epic_assignee',
+                value: data.assignee
+            });
+            job.setValue({
+                fieldId: 'custentity_jj_jira_epic_reporter',
+                value: data.reporter
+            });
+            job.setValue({
+                fieldId: 'custentity_jj_jira_priority',
+                value: data.priority
+            });
+            job.setValue({
+                fieldId: 'custentity_jj_jira_task_description',
+                value: data.description
+            });
+            job.setValue({
+                fieldId: 'subsidiary',
+                value: 1
+            });
+            job.setValue({
+                fieldId: 'projectexpensetype',
+                value: 1
+            });
+
+            return job;
         }
 
         return {onRequest}
