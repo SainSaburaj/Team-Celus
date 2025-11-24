@@ -45,13 +45,15 @@ define(['N/file', 'N/log', 'N/search', 'N/ui/serverWidget'],
                 }).getContents();
 
                 const employees = getEmployees();
-                const statuses = getStatusListValues();
-                const issues = getIssueListValues();
+                const statuses = getStatusValues();
+                const priorities = getPriorityValues();
+                const issues = getIssueValues();
                 const customers = getAllCustomers();
 
                 html = html
                     .replace('%%EMPLOYEES%%', JSON.stringify(employees))
                     .replace('%%STATUSES%%', JSON.stringify(statuses))
+                    .replace('%%PRIORITIES%%', JSON.stringify(priorities))
                     .replace('%%ISSUES%%', JSON.stringify(issues))
                     .replace('%%CUSTOMERS%%', JSON.stringify(customers));
 
@@ -63,6 +65,12 @@ define(['N/file', 'N/log', 'N/search', 'N/ui/serverWidget'],
             }
         }
 
+        /**
+         * Fetch all active employees.
+         *
+         * @function getEmployees
+         * @returns {Array<Object>} Array of employee objects: [{id, name}]
+         */
         function getEmployees() {
             let list = [];
 
@@ -80,44 +88,87 @@ define(['N/file', 'N/log', 'N/search', 'N/ui/serverWidget'],
             return list;
         }
 
-        function getStatusListValues() {
+        /**
+         * Fetch all status values from custom status record.
+         *
+         * @function getStatusValues
+         * @returns {Array<Object>} Array of status values: [{id, name}]
+         */
+        function getStatusValues() {
             let values = [];
 
             let results = search.create({
-                type: 'customlist_jj_jira_status',
+                type: 'customrecord_jj_jira_status_record',
                 filters: [['isinactive', 'is', 'F']],
-                columns: ['internalid', 'name']
+                columns: ['internalid', 'custrecord_jj_status_name']
             }).run();
 
             results.each(res => {
                 values.push({
                     id: res.getValue('internalid'),
-                    name: res.getValue('name')
+                    name: res.getValue('custrecord_jj_status_name')
                 });
                 return true;
             });
             return values;
         }
         
-        function getIssueListValues() {
+        /**
+         * Fetch all priority values from custom priority record.
+         *
+         * @function getPriorityValues
+         * @returns {Array<Object>} Array of priority values: [{id, name}]
+         */
+        function getPriorityValues() {
             let values = [];
 
             let results = search.create({
-                type: 'customlist_jj_jira_issue_type',
+                type: 'customrecord_jj_jira_priority_record',
                 filters: [['isinactive', 'is', 'F']],
-                columns: ['internalid', 'name']
+                columns: ['internalid', 'custrecord_jj_priority_name']
             }).run();
 
             results.each(res => {
                 values.push({
                     id: res.getValue('internalid'),
-                    name: res.getValue('name')
+                    name: res.getValue('custrecord_jj_priority_name')
+                });
+                return true;
+            });
+            return values;
+        }
+        
+         /**
+         * Fetch all issue type values from custom issue type record.
+         *
+         * @function getIssueValues
+         * @returns {Array<Object>} Array of issue type values: [{id, name}]
+         */
+        function getIssueValues() {
+            let values = [];
+
+            let results = search.create({
+                type: 'customrecord_jj_jira_issue_type_record',
+                filters: [['isinactive', 'is', 'F']],
+                columns: ['internalid', 'custrecord_jj_issue_type_name']
+            }).run();
+
+            results.each(res => {
+                values.push({
+                    id: res.getValue('internalid'),
+                    name: res.getValue('custrecord_jj_issue_type_name')
                 });
                 return true;
             });
             return values;
         }
 
+        /**
+         * Fetch all customers having project names (custentity_jj_jira_project_name).
+         *
+         * @function getAllCustomers
+         * @returns {Array<Object>} Array of customers: [{id, name}]
+         */
         function getAllCustomers() {
             const customers = [];
             const searchObj = search.create({

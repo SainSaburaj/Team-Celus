@@ -13,6 +13,7 @@
     <script>
         const EMPLOYEES = JSON.parse('%%EMPLOYEES%%');
         const STATUSES = JSON.parse('%%STATUSES%%');
+        const PRIORITIES = JSON.parse('%%PRIORITIES%%');
         const ISSUES = JSON.parse('%%ISSUES%%');
         const CUSTOMERS = JSON.parse('%%CUSTOMERS%%');
     </script>
@@ -48,108 +49,137 @@
             </div>
 
             <div class="flex-auto px-6 lg:px-12 py-10">
-                <form id="projectForm" class="space-y-8">
-                    <h6 class="text-gray-600 text-lg font-semibold uppercase tracking-wider border-b pb-2 -mb-4">
-                        📂 Project Information
-                    </h6>
+                <form id="projectForm" class="space-y-10">
 
-                    <div class="flex flex-wrap -mx-4">
-                        <div class="w-full lg:w-1/2 px-4 mt-6">
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">Project Name</label>
-                            <input id="projectName" type="text" required placeholder="Enter project name" class="border border-gray-300 px-4 py-3 bg-white rounded-lg text-sm shadow-sm outline-none w-full transition"/>
+                    <section class="rounded-xl">
+                        <h6 class="bg-gray-300 rounded-tr-xl rounded-tl-xl text-gray-700 text-lg font-semibold uppercase tracking-wider border-b p-3">⚙️ Project Information</h6>
+                        <div class="flex flex-wrap bg-gradient-to-b from-gray-200 to-transparent border border-gray-300 shadow-md rounded-bl-xl rounded-br-xl pb-8">
+
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Project Name</label>
+                                <div class="relative">
+                                    <input id="projectName" type="text" required placeholder="Enter project name" class="border border-gray-300 px-4 py-3 bg-white rounded-lg text-sm shadow-sm outline-none w-full transition"/>
+                                </div>
+                            </div>
+
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Client</label>
+                                <input type="hidden" id="customerId">
+                                <div class="customer-dropdown relative border border-gray-300 bg-white rounded-lg text-sm shadow-sm w-full">
+                                    <input type="text" id="customerSearchInput" class="rounded-lg w-full p-3 outline-none" placeholder="Select Client">
+                                    <button type="button" onclick="document.getElementById('customerSearchInput').value=''" class="absolute right-3 top-3 text-gray-400 hover:text-red-500 text-xs">CLEAR</button>
+                                    <div class="customer-dropdown-panel absolute left-0 w-full bg-white border border-gray-300 rounded-lg shadow-lg hidden z-50 mt-1">
+                                        <ul id="customerList" class="max-h-80 overflow-y-auto"></ul>
+                                        <div id="customerNoResults" class="hidden text-center text-gray-900 py-3">No results found</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="w-full mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Project Description</label>
+                                <div class="relative">
+                                    <textarea id="description" placeholder="Describe your project..."
+                                    class="border border-gray-300 px-4 py-3 bg-white rounded-lg text-sm shadow-sm outline-none w-full transition" rows="4"></textarea>
+                                    <button type="button" onclick="document.getElementById('description').value=''"
+                                    class="absolute right-3 top-3 text-gray-400 hover:text-red-500 text-xs">CLEAR</button>
+                                </div>
+                            </div>
                         </div>
+                    </section>
 
-                        <div class="w-full lg:w-1/2 px-4 mt-6">
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">Client</label>
-                            <input type="hidden" id="customerId">
+                    <section class="rounded-xl">
+                        <h6 class="bg-gray-300 rounded-tr-xl rounded-tl-xl text-gray-700 text-lg font-semibold uppercase tracking-wider border-b p-3">⏳ Timeline</h6>
+                        <div class="flex flex-wrap bg-gradient-to-b from-gray-200 to-transparent border border-gray-300 shadow-md rounded-bl-xl rounded-br-xl pb-8">
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Start Date</label>
+                                <input id="startDate" type="date" class="border border-gray-300 px-4 py-3 bg-white rounded-lg text-sm shadow-sm outline-none w-full transition"/>
+                            </div>
 
-                            <div class="customer-dropdown relative border border-gray-300 bg-white rounded-lg text-sm shadow-sm w-full">
-                                <input type="text" id="customerSearchInput"class="rounded-lg w-full p-3 outline-none"placeholder="Select Client">
-                                <div class="customer-dropdown-panel absolute left-0 w-full bg-white border border-gray-300 rounded-lg shadow-lg hidden z-50 mt-1">
-                                    <ul id="customerList" class="max-h-80 overflow-y-auto"></ul>
-                                    <div id="customerNoResults" class="hidden text-center text-gray-900 py-3">
-                                        No results found
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Due Date</label>
+                                <input id="endDate" type="date" class="border border-gray-300 px-4 py-3 bg-white rounded-lg text-sm shadow-sm outline-none w-full transition" placeholder="MM/DD/YYYY" />
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="rounded-xl">
+                        <h6 class="bg-gray-300 rounded-tr-xl rounded-tl-xl text-gray-700 text-lg font-semibold uppercase tracking-wider border-b p-3">⚙️ Project Settings</h6>
+                        <div class="flex flex-wrap bg-gradient-to-b from-gray-200 to-transparent border border-gray-300 shadow-md rounded-bl-xl rounded-br-xl pb-8">
+                            <div class="w-full lg:w-1/3 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Project Status</label>
+                                <select id="status" class="border border-gray-300 px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full">
+                                    <option value="" selected hidden>Loading...</option>
+                                </select>
+                            </div>
+                            <div class="w-full lg:w-1/3 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Project Priority</label>
+                                <select id="priority" class="border border-gray-300 px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full">
+                                    <option value="" selected hidden>Loading...</option>
+                                </select>
+                            </div>
+                            <div class="w-full lg:w-1/3 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Issue Type</label>
+                                <select id="issue" class="border border-gray-300 px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full">
+                                    <option value="" selected hidden>Loading...</option>
+                                </select>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <section class="rounded-xl">
+                        <h6 class="bg-gray-300 rounded-tr-xl rounded-tl-xl text-gray-700 text-lg font-semibold uppercase tracking-wider border-b p-3">👥 Team & Assignment</h6>
+                        <div class="flex flex-wrap bg-gradient-to-b from-gray-200 to-transparent border border-gray-300 shadow-md rounded-bl-xl rounded-br-xl pb-8">
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Reporter</label>
+                                <input type="hidden" id="reporterId">
+
+                                <div class="reporter-dropdown relative border border-gray-300 bg-white rounded-lg text-sm shadow-sm w-full">
+                                    <input type="text" id="reporterSearchInput" class="rounded-lg w-full p-3 outline-none" placeholder="Select Reporter">
+                                    <button type="button" onclick="document.getElementById('reporterSearchInput').value=''" class="absolute right-3 top-3 text-gray-400 hover:text-red-500 text-xs">CLEAR</button>
+                                    <div class="reporter-dropdown-panel absolute bottom-full left-0 w-full bg-white border border-gray-300 rounded-lg shadow-lg hidden z-50 mb-1">
+                                        <ul id="reporterList" class="max-h-80 overflow-y-auto">
+                                        </ul>
+                                        <div id="reporterNoResults" class="hidden text-center text-gray-900 py-3">No results found</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Assignee</label>
+                                <input type="hidden" id="assigneeId">
+
+                                <div class="assignee-dropdown relative border border-gray-300 bg-white rounded-lg text-sm shadow-sm w-full">
+                                    <input type="text" id="assigneeSearchInput" class="rounded-lg w-full p-3 outline-none" placeholder="Select Assignee">
+                                    <button type="button" onclick="document.getElementById('assigneeSearchInput').value=''" class="absolute right-3 top-3 text-gray-400 hover:text-red-500 text-xs">CLEAR</button>
+                                    <div class="assignee-dropdown-panel absolute bottom-full left-0 w-full bg-white border border-gray-300 rounded-lg shadow-lg hidden z-50 mb-1">
+                                        <ul id="assigneeList" class="assignee-options max-h-80 overflow-y-auto">
+                                        </ul>
+                                        <div id="noResults" class="hidden text-center text-gray-900 py-3">No results found</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                    </section>
 
-                        <div class="w-full px-4 mt-6">
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">Project Description</label>
-                            <textarea id="description" placeholder="Describe your project..." class="border border-gray-300 px-4 py-3 bg-white rounded-lg text-sm shadow-sm outline-none w-full transition" rows="4"></textarea>
-                        </div>
-
-                        <div class="w-full lg:w-1/2 px-4 mt-6">
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">Start Date</label>
-                            <input id="startDate" type="date" class="border border-gray-300 px-4 py-3 bg-white rounded-lg text-sm shadow-sm outline-none w-full transition"/>
-                        </div>
-
-                        <div class="w-full lg:w-1/2 px-4 mt-6">
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">Due Date</label>
-                            <input id="endDate" type="date" class="border border-gray-300 px-4 py-3 bg-white rounded-lg text-sm shadow-sm outline-none w-full transition" placeholder="MM/DD/YYYY" />
-                        </div>
-
-                        <script>
-                            (function(){
-                                const d = new Date();
-                                const yyyy = d.getFullYear();
-                                const mm = String(d.getMonth()+1).padStart(2,'0');
-                                const dd = String(d.getDate()).padStart(2,'0');
-                                const today = `${yyyy}-${mm}-${dd}`;
-                                const el = document.getElementById('startDate');
-                                if (el) el.value = today;
-                            })();
-                        </script>
-
-                        <div class="w-full lg:w-1/2 px-4 mt-6">
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">Project Status</label>
-                            <select id="status" class="border border-gray-300 px-4 py-3 bg-white rounded-lg text-sm shadow-sm outline-none w-full transition">
-                                <option value="" selected hidden>Loading...</option>
-                            </select>
-                        </div>
-
-                        <div class="w-full lg:w-1/2 px-4 mt-6">
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">Issue Type</label>
-                            <select id="issue" class="border border-gray-300 px-4 py-3 bg-white rounded-lg text-sm shadow-sm outline-none w-full transition">
-                                <option value="" selected hidden>Loading...</option>
-                            </select>
-                        </div>
-
-                        <div class="w-full lg:w-1/2 px-4 mt-6">
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">Reporter</label>
-                            <input type="hidden" id="reporterId">
-
-                            <div class="reporter-dropdown relative border border-gray-300 bg-white rounded-lg text-sm shadow-sm w-full">
-                                <input type="text" id="reporterSearchInput" class="rounded-lg w-full p-3 outline-none" placeholder="Select Reporter">
-                                <div class="reporter-dropdown-panel absolute bottom-full left-0 w-full bg-white border border-gray-300 rounded-lg shadow-lg hidden z-50 mb-1">
-                                    <ul id="reporterList" class="max-h-80 overflow-y-auto">
-                                    </ul>
-                                    <div id="reporterNoResults" class="hidden text-center text-gray-900 py-3">No results found</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="w-full lg:w-1/2 px-4 mt-6">
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">Assignee</label>
-                            <input type="hidden" id="assigneeId">
-
-                            <div class="assignee-dropdown relative border border-gray-300 bg-white rounded-lg text-sm shadow-sm w-full">
-                                <input type="text" id="assigneeSearchInput" class="rounded-lg w-full p-3 outline-none" placeholder="Select Assignee">
-                                <div class="assignee-dropdown-panel absolute bottom-full left-0 w-full bg-white border border-gray-300 rounded-lg shadow-lg hidden z-50 mb-1">
-                                    <ul id="assigneeList" class="assignee-options max-h-80 overflow-y-auto">
-                                    </ul>
-                                    <div id="noResults" class="hidden text-center text-gray-900 py-3">No results found</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="w-full px-4 mt-8">
-                            <button id="submitBtn" type="submit"
-                                class="w-full bg-gradient-to-r from-gray-700 via-gray-500 to-gray-700 text-white font-bold uppercase text-sm px-6 py-3 rounded-lg hover:scale-103 hover:shadow-lg transform transition">
-                                🚀 Create Epic
-                            </button>
-                        </div>
+                    <script>
+                        (function(){
+                            const d = new Date();
+                            const yyyy = d.getFullYear();
+                            const mm = String(d.getMonth()+1).padStart(2,'0');
+                            const dd = String(d.getDate()).padStart(2,'0');
+                            const today = `${yyyy}-${mm}-${dd}`;
+                            const el = document.getElementById('startDate');
+                            if (el) el.value = today;
+                        })();
+                    </script>
+                    
+                    <div class="w-full px-4 mt-8">
+                        <button id="submitBtn" type="submit"
+                            class="w-full bg-gradient-to-r from-gray-700 via-gray-500 to-gray-700 text-white font-bold uppercase text-sm px-6 py-3 rounded-lg hover:scale-103 hover:shadow-lg transform transition">
+                            🚀 Create Epic
+                        </button>
                     </div>
+
                 </form>
             </div>
         </div>
@@ -193,12 +223,44 @@
             data.forEach(item => {
                 const value = item?.id ?? item?.value ?? item;
                 const label = item?.name ?? item?.label ?? item;
-                el.innerHTML += `<option value="${value}">${label}</option>`;
+                el.innerHTML += `<option value="${value}" class="hover:bg-gray-400 hover:text-black">${label}</option>`;
             });
         };
 
         populate("status", STATUSES);
+        populate("priority", PRIORITIES);
         populate("issue", ISSUES);
+
+        (function setDefaultIssueToEpic(){
+            const issueEl = document.getElementById('issue');
+            if (!issueEl) return;
+
+            const desired = 'Epic';
+            const match = Array.from(issueEl.options).find(o => {
+                const text = (o.textContent || o.innerText || '').trim();
+                return o.value === desired || text.toLowerCase() === desired.toLowerCase();
+            });
+
+            if (match) {
+                issueEl.value = match.value;
+            }
+        })();
+        
+        (function setDefaultIssueToToDo(){
+            const statusEl = document.getElementById('status');
+            if (!statusEl) return;
+
+            const desired = 'To Do';
+            const match = Array.from(statusEl.options).find(o => {
+                const text = (o.textContent || o.innerText || '').trim();
+                return o.value === desired || text.toLowerCase() === desired.toLowerCase();
+            });
+
+            if (match) {
+                statusEl.value = match.value;
+            }
+        })();
+
         populate("reporter", EMPLOYEES);
         populate("customer", CUSTOMERS);
 
@@ -220,7 +282,7 @@
                 const li = document.createElement("li");
                 li.textContent = employee.name ?? employee.label ?? String(employee);
                 li.dataset.id = employee.id ?? employee.value ?? employee;
-                li.classList.add("cursor-pointer", "px-4", "py-2", "hover:bg-gray-200");
+                li.classList.add("cursor-pointer", "px-4", "py-2", "hover:bg-gradient-to-b", "from-gray-100", "to-gray-200");
                 assigneeUL.appendChild(li);
             });
         };
@@ -237,6 +299,7 @@
                 startDate: document.getElementById('startDate').value,
                 endDate: document.getElementById('endDate').value,
                 status: document.getElementById('status').value,
+                priority: document.getElementById('priority').value,
                 issue: document.getElementById('issue').value,
                 reporter: document.getElementById('reporter').value,
                 assignee: document.getElementById('assigneeId').value
@@ -321,7 +384,7 @@
                 li.textContent = emp.name ?? emp.label ?? String(emp);
                 li.dataset.id = emp.id ?? emp.value ?? emp;
 
-                li.classList.add("cursor-pointer", "px-4", "py-2", "hover:bg-gray-200");
+                li.classList.add("cursor-pointer", "px-4", "py-2", "hover:bg-gradient-to-b", "from-gray-100", "to-gray-200");
                 reporterList.appendChild(li);
             });
         };
@@ -377,7 +440,7 @@
                 li.textContent = customer.name ?? customer.label ?? String(customer);
                 li.dataset.id = customer.id ?? customer.value ?? customer;
 
-                li.classList.add("cursor-pointer", "px-4", "py-2", "hover:bg-gray-200");
+                li.classList.add("cursor-pointer", "px-4", "py-2", "hover:bg-gradient-to-b", "from-gray-100", "to-gray-200");
                 customerList.appendChild(li);
             });
         };
