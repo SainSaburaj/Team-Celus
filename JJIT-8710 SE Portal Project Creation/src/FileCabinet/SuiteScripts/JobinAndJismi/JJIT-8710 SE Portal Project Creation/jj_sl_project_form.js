@@ -101,20 +101,26 @@ define(['N/file', 'N/log', 'N/search', 'N/ui/serverWidget', 'N/record'],
          * @returns {Array<Object>} Array of employee objects: [{id, name}]
          */
         function getEmployees() {
-            let list = [];
+            try {
+                let list = [];
 
-            search.create({
-                type: "employee",
-                filters: [['isinactive', 'is', 'F']],
-                columns: ['internalid', 'firstname', 'lastname']
-            }).run().each(res => {
-                list.push({
-                    id: res.getValue('internalid'),
-                    name: res.getValue('firstname') + " " + res.getValue('lastname')
+                search.create({
+                    type: "employee",
+                    filters: [['isinactive', 'is', 'F']],
+                    columns: ['internalid', 'firstname', 'lastname']
+                }).run().each(res => {
+                    list.push({
+                        id: res.getValue('internalid'),
+                        name: res.getValue('firstname') + " " + res.getValue('lastname')
+                    });
+                    return true;
                 });
-                return true;
-            });
-            return list;
+                return list;
+            } 
+            catch (e) {
+                log.error('Error in getEmployees', e);
+                return [];
+            }
         }
 
         /**
@@ -124,22 +130,28 @@ define(['N/file', 'N/log', 'N/search', 'N/ui/serverWidget', 'N/record'],
          * @returns {Array<Object>} Array of status values: [{id, name}]
          */
         function getStatusValues() {
-            let values = [];
+            try {
+                let values = [];
 
-            let results = search.create({
-                type: 'customrecord_jj_jira_status_record',
-                filters: [['isinactive', 'is', 'F']],
-                columns: ['internalid', 'custrecord_jj_status_name']
-            }).run();
+                let results = search.create({
+                    type: 'customrecord_jj_jira_status_record',
+                    filters: [['isinactive', 'is', 'F']],
+                    columns: ['internalid', 'custrecord_jj_status_name']
+                }).run();
 
-            results.each(res => {
-                values.push({
-                    id: res.getValue('internalid'),
-                    name: res.getValue('custrecord_jj_status_name')
+                results.each(res => {
+                    values.push({
+                        id: res.getValue('internalid'),
+                        name: res.getValue('custrecord_jj_status_name')
+                    });
+                    return true;
                 });
-                return true;
-            });
-            return values;
+                return values;
+            } 
+            catch (e) {
+                log.error('Error in getStatusValues', e);
+                return [];
+            }
         }
         
         /**
@@ -149,22 +161,28 @@ define(['N/file', 'N/log', 'N/search', 'N/ui/serverWidget', 'N/record'],
          * @returns {Array<Object>} Array of priority values: [{id, name}]
          */
         function getPriorityValues() {
-            let values = [];
+            try {
+                let values = [];
 
-            let results = search.create({
-                type: 'customrecord_jj_jira_priority_record',
-                filters: [['isinactive', 'is', 'F']],
-                columns: ['internalid', 'custrecord_jj_priority_name']
-            }).run();
+                let results = search.create({
+                    type: 'customrecord_jj_jira_priority_record',
+                    filters: [['isinactive', 'is', 'F']],
+                    columns: ['internalid', 'custrecord_jj_priority_name']
+                }).run();
 
-            results.each(res => {
-                values.push({
-                    id: res.getValue('internalid'),
-                    name: res.getValue('custrecord_jj_priority_name')
+                results.each(res => {
+                    values.push({
+                        id: res.getValue('internalid'),
+                        name: res.getValue('custrecord_jj_priority_name')
+                    });
+                    return true;
                 });
-                return true;
-            });
-            return values;
+                return values;
+            } 
+            catch (e) {
+                log.error('Error in getPriorityValues', e);
+                return [];
+            }
         }
         
          /**
@@ -174,22 +192,28 @@ define(['N/file', 'N/log', 'N/search', 'N/ui/serverWidget', 'N/record'],
          * @returns {Array<Object>} Array of issue type values: [{id, name}]
          */
         function getIssueValues() {
-            let values = [];
+            try {
+                let values = [];
 
-            let results = search.create({
-                type: 'customrecord_jj_jira_issue_type_record',
-                filters: [['isinactive', 'is', 'F']],
-                columns: ['internalid', 'custrecord_jj_issue_type_name']
-            }).run();
+                let results = search.create({
+                    type: 'customrecord_jj_jira_issue_type_record',
+                    filters: [['isinactive', 'is', 'F']],
+                    columns: ['internalid', 'custrecord_jj_issue_type_name']
+                }).run();
 
-            results.each(res => {
-                values.push({
-                    id: res.getValue('internalid'),
-                    name: res.getValue('custrecord_jj_issue_type_name')
+                results.each(res => {
+                    values.push({
+                        id: res.getValue('internalid'),
+                        name: res.getValue('custrecord_jj_issue_type_name')
+                    });
+                    return true;
                 });
-                return true;
-            });
-            return values;
+                return values;
+            } 
+            catch (e) {
+                log.error('Error in getIssueValues', e);
+                return [];
+            }
         }
 
         /**
@@ -199,46 +223,52 @@ define(['N/file', 'N/log', 'N/search', 'N/ui/serverWidget', 'N/record'],
          * @returns {Array<Object>} Array of customers: [{id, name}]
          */
         function getAllCustomers() {
-            const customers = [];
-            const searchObj = search.create({
-                type: search.Type.CUSTOMER,
-                filters: [
-                    ['isinactive', 'is', 'F'],
-                    'AND',
-                    ['custentity_jj_jira_project_name', 'isnotempty', '']
-                ],
-                columns: [
-                    'entityid',
-                    'companyname',
-                    'firstname',
-                    'lastname'
-                ]
-            });
-
-            searchObj.run().each(function (result) {
-                const companyName = result.getValue('companyname');
-                const firstName = result.getValue('firstname');
-                const lastName = result.getValue('lastname');
-
-                let finalName = '';
-                if (companyName && companyName.trim() !== '') {
-                    finalName = companyName;
-                }
-                else if ((firstName && firstName.trim() !== '') || (lastName && lastName.trim() !== '')) {
-                    const fn = firstName ? firstName : '';
-                    const ln = lastName ? lastName : '';
-                    finalName = `${fn} ${ln}`.trim();
-                } 
-                else {
-                    finalName = result.getValue('entityid');
-                }
-                customers.push({
-                    id: result.id,
-                    name: finalName
+            try {
+                const customers = [];
+                const searchObj = search.create({
+                    type: search.Type.CUSTOMER,
+                    filters: [
+                        ['isinactive', 'is', 'F'],
+                        'AND',
+                        ['custentity_jj_jira_project_name', 'isnotempty', '']
+                    ],
+                    columns: [
+                        'entityid',
+                        'companyname',
+                        'firstname',
+                        'lastname'
+                    ]
                 });
-                return true;
-            });
-            return customers;
+
+                searchObj.run().each(function (result) {
+                    const companyName = result.getValue('companyname');
+                    const firstName = result.getValue('firstname');
+                    const lastName = result.getValue('lastname');
+
+                    let finalName = '';
+                    if (companyName && companyName.trim() !== '') {
+                        finalName = companyName;
+                    }
+                    else if ((firstName && firstName.trim() !== '') || (lastName && lastName.trim() !== '')) {
+                        const fn = firstName ? firstName : '';
+                        const ln = lastName ? lastName : '';
+                        finalName = `${fn} ${ln}`.trim();
+                    } 
+                    else {
+                        finalName = result.getValue('entityid');
+                    }
+                    customers.push({
+                        id: result.id,
+                        name: finalName
+                    });
+                    return true;
+                });
+                return customers;
+            } 
+            catch (e) {
+                log.error('Error in getAllCustomers', e);
+                return [];
+            }
         }
 
         /**
@@ -249,10 +279,16 @@ define(['N/file', 'N/log', 'N/search', 'N/ui/serverWidget', 'N/record'],
          * @returns {string} The formatted date string
          */
         function formatDate(dateObj) {
-            const month = dateObj.getMonth() + 1; // Month is 0-indexed
-            const day = dateObj.getDate();
-            const year = dateObj.getFullYear();
-            return `${year}/${month}/${day}`;
+            try {
+                const month = dateObj.getMonth() + 1;
+                const day = dateObj.getDate();
+                const year = dateObj.getFullYear();
+                return `${year}/${month}/${day}`;
+            } 
+            catch (e) {
+                log.error('Error in formatDate', e);
+                return '';
+            }
         }
 
         /**
@@ -263,67 +299,73 @@ define(['N/file', 'N/log', 'N/search', 'N/ui/serverWidget', 'N/record'],
          * @returns {Record} The created Job record
          */
         function createJobRecord(data) {
-            const job = record.create({
-                type: record.Type.JOB,
-                isDynamic: false
-            });
+            try {
+                const job = record.create({
+                    type: record.Type.JOB,
+                    isDynamic: false
+                });
 
-            const startDate = new Date(data.startDate);
-            const endDate = new Date(data.endDate);
+                const startDate = new Date(data.startDate);
+                const endDate = new Date(data.endDate);
 
-            const formattedStartDate = formatDate(startDate);
-            const formattedEndDate = formatDate(endDate);
+                const formattedStartDate = formatDate(startDate);
+                const formattedEndDate = formatDate(endDate);
 
-            job.setValue({
-                fieldId: 'companyname',
-                value: data.projectName
-            });
-            job.setValue({
-                fieldId: 'parent',
-                value: data.customer
-            });
-            job.setValue({
-                fieldId: 'custentity_jj_jira_start_date',
-                value: new Date(formattedStartDate)
-            });
-            job.setValue({
-                fieldId: 'custentity_jj_jira_due_date',
-                value: new Date(formattedEndDate)
-            });
-            job.setValue({
-                fieldId: 'custentity_jj_jira_status',
-                value: data.status || 1
-            });
-            job.setValue({
-                fieldId: 'custentity_jj_jira_issue_type',
-                value: data.issue
-            });
-            job.setValue({
-                fieldId: 'custentity_jj_jira_epic_assignee',
-                value: data.assignee
-            });
-            job.setValue({
-                fieldId: 'custentity_jj_jira_epic_reporter',
-                value: data.reporter
-            });
-            job.setValue({
-                fieldId: 'custentity_jj_jira_priority',
-                value: data.priority
-            });
-            job.setValue({
-                fieldId: 'custentity_jj_jira_task_description',
-                value: data.description
-            });
-            job.setValue({
-                fieldId: 'subsidiary',
-                value: 1
-            });
-            job.setValue({
-                fieldId: 'projectexpensetype',
-                value: 1
-            });
+                job.setValue({
+                    fieldId: 'companyname',
+                    value: data.projectName
+                });
+                job.setValue({
+                    fieldId: 'parent',
+                    value: data.customer
+                });
+                job.setValue({
+                    fieldId: 'custentity_jj_jira_start_date',
+                    value: new Date(formattedStartDate)
+                });
+                job.setValue({
+                    fieldId: 'custentity_jj_jira_due_date',
+                    value: new Date(formattedEndDate)
+                });
+                job.setValue({
+                    fieldId: 'custentity_jj_jira_status',
+                    value: data.status || 1
+                });
+                job.setValue({
+                    fieldId: 'custentity_jj_jira_issue_type',
+                    value: data.issue
+                });
+                job.setValue({
+                    fieldId: 'custentity_jj_jira_epic_assignee',
+                    value: data.assignee
+                });
+                job.setValue({
+                    fieldId: 'custentity_jj_jira_epic_reporter',
+                    value: data.reporter
+                });
+                job.setValue({
+                    fieldId: 'custentity_jj_jira_priority',
+                    value: data.priority
+                });
+                job.setValue({
+                    fieldId: 'custentity_jj_jira_task_description',
+                    value: data.description
+                });
+                job.setValue({
+                    fieldId: 'subsidiary',
+                    value: 1
+                });
+                job.setValue({
+                    fieldId: 'projectexpensetype',
+                    value: 1
+                });
 
-            return job;
+                return job;
+            } 
+            catch (e) {
+                log.error('Error in createJobRecord', e);
+                return null;
+            }
         }
 
         return {onRequest}
