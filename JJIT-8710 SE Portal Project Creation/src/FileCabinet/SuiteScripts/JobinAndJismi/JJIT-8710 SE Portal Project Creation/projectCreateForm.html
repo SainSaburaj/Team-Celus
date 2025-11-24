@@ -67,7 +67,6 @@
                                 <input type="hidden" id="customerId">
                                 <div class="customer-dropdown relative border border-gray-300 bg-white rounded-lg text-sm shadow-sm w-full">
                                     <input type="text" id="customerSearchInput" class="rounded-lg w-full p-3 outline-none" placeholder="Select Client">
-                                    <button type="button" onclick="document.getElementById('customerSearchInput').value=''" class="absolute right-3 top-3 text-gray-400 hover:text-red-500 text-xs">CLEAR</button>
                                     <div class="customer-dropdown-panel absolute left-0 w-full bg-white border border-gray-300 rounded-lg shadow-lg hidden z-50 mt-1">
                                         <ul id="customerList" class="max-h-80 overflow-y-auto"></ul>
                                         <div id="customerNoResults" class="hidden text-center text-gray-900 py-3">No results found</div>
@@ -78,10 +77,7 @@
                             <div class="w-full mt-6 px-6">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Project Description</label>
                                 <div class="relative">
-                                    <textarea id="description" placeholder="Describe your project..."
-                                    class="border border-gray-300 px-4 py-3 bg-white rounded-lg text-sm shadow-sm outline-none w-full transition" rows="4"></textarea>
-                                    <button type="button" onclick="document.getElementById('description').value=''"
-                                    class="absolute right-3 top-3 text-gray-400 hover:text-red-500 text-xs">CLEAR</button>
+                                    <textarea id="description" placeholder="Describe your project..." class="border border-gray-300 px-4 py-3 bg-white rounded-lg text-sm shadow-sm outline-none w-full transition" rows="4"></textarea>
                                 </div>
                             </div>
                         </div>
@@ -135,7 +131,6 @@
 
                                 <div class="reporter-dropdown relative border border-gray-300 bg-white rounded-lg text-sm shadow-sm w-full">
                                     <input type="text" id="reporterSearchInput" class="rounded-lg w-full p-3 outline-none" placeholder="Select Reporter">
-                                    <button type="button" onclick="document.getElementById('reporterSearchInput').value=''" class="absolute right-3 top-3 text-gray-400 hover:text-red-500 text-xs">CLEAR</button>
                                     <div class="reporter-dropdown-panel absolute bottom-full left-0 w-full bg-white border border-gray-300 rounded-lg shadow-lg hidden z-50 mb-1">
                                         <ul id="reporterList" class="max-h-80 overflow-y-auto">
                                         </ul>
@@ -150,7 +145,6 @@
 
                                 <div class="assignee-dropdown relative border border-gray-300 bg-white rounded-lg text-sm shadow-sm w-full">
                                     <input type="text" id="assigneeSearchInput" class="rounded-lg w-full p-3 outline-none" placeholder="Select Assignee">
-                                    <button type="button" onclick="document.getElementById('assigneeSearchInput').value=''" class="absolute right-3 top-3 text-gray-400 hover:text-red-500 text-xs">CLEAR</button>
                                     <div class="assignee-dropdown-panel absolute bottom-full left-0 w-full bg-white border border-gray-300 rounded-lg shadow-lg hidden z-50 mb-1">
                                         <ul id="assigneeList" class="assignee-options max-h-80 overflow-y-auto">
                                         </ul>
@@ -186,33 +180,6 @@
     </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const form = document.querySelector("form");
-            const startDateEl = document.getElementById("startDate");
-            const endDateEl = document.getElementById("endDate");
-
-            function forceMMDDYYYY(inputElement) {
-                if (!inputElement || !inputElement.value) return;
-
-                const digits = inputElement.value.replace(/\D/g, "");
-
-                if (digits.length >= 8) {
-                    const mm = digits.substring(0, 2);
-                    const dd = digits.substring(2, 4);
-                    const yyyy = digits.substring(4, 8);
-
-                    inputElement.value = `${mm}/${dd}/${yyyy}`;
-                }
-            }
-
-            if (!form) return;
-
-            form.addEventListener("submit", function () {
-                forceMMDDYYYY(startDateEl);
-                forceMMDDYYYY(endDateEl);
-            });
-        });
-
         const populate = (id, data) => {
             const el = document.getElementById(id);
             if (!el) return;
@@ -261,9 +228,6 @@
             }
         })();
 
-        populate("reporter", EMPLOYEES);
-        populate("customer", CUSTOMERS);
-
         const populateAssigneeDropdown = (data) => {
             const assigneeUL = document.getElementById('assigneeList');
             const noResultsBox = document.getElementById('noResults');
@@ -294,16 +258,18 @@
 
             const payload = {
                 projectName: document.getElementById('projectName').value,
-                customer: document.getElementById('customer').value,
+                customer: document.getElementById('customerId').value,
                 description: document.getElementById('description').value,
                 startDate: document.getElementById('startDate').value,
                 endDate: document.getElementById('endDate').value,
                 status: document.getElementById('status').value,
                 priority: document.getElementById('priority').value,
                 issue: document.getElementById('issue').value,
-                reporter: document.getElementById('reporter').value,
+                reporter: document.getElementById('reporterId').value,
                 assignee: document.getElementById('assigneeId').value
             };
+
+            console.log(payload);
 
             try {
                 const res = await fetch(window.location.href, {
