@@ -77,7 +77,7 @@ define(['N/file', 'N/log', 'N/search', 'N/ui/serverWidget', 'N/record'],
 
                         scriptContext.response.write(JSON.stringify({
                             success: true,
-                            message: "Project (Job) Created Successfully!",
+                            message: "New Epic Created in Jira! Please navigate to Jira and add the description to the newly created Epic task.",
                             jobId: jobId
                         }));
                     } 
