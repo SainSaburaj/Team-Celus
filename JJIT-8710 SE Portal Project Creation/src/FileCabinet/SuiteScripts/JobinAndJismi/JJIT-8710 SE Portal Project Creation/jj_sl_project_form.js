@@ -113,7 +113,11 @@ define(['N/file', 'N/log', 'N/search', 'N/ui/serverWidget', 'N/record'],
 
                 search.create({
                     type: "employee",
-                    filters: [['isinactive', 'is', 'F']],
+                    filters: [
+                        ['isinactive', 'is', 'F'],
+                        'AND',
+                        ['subsidiary', 'anyof', '1']
+                    ],
                     columns: ['internalid', 'firstname', 'lastname']
                 }).run().each(res => {
                     list.push({
@@ -144,6 +148,8 @@ define(['N/file', 'N/log', 'N/search', 'N/ui/serverWidget', 'N/record'],
                     type: search.Type.CUSTOMER,
                     filters: [
                         ['isinactive', 'is', 'F'],
+                        'AND',
+                        ['subsidiary', 'anyof', '1'],
                         'AND',
                         ['custentity_jj_jira_project_name', 'isnotempty', '']
                     ],
