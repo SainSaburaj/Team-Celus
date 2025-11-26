@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Order History</title>
+
+    <!-- Skeleton CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet" />
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        header {
+            background-color: #fff;
+            padding: 20px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #ddd;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .logo {
+            height: 45px;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 20px;
+            margin: 0;
+            padding: 0;
+        }
+
+        nav ul li a {
+            text-decoration: none;
+            font-weight: 600;
+            color: #444;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+        }
+
+        nav ul li a:hover {
+            background-color: #f0f0f0;
+            color: #000;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+
+        .filters input,
+        .filters select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .filters button {
+            background-color: #0a514a;
+            color: white;
+
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+            cursor: pointer;
+        }
+
+        .filters button:hover {
+            background-color: #1e857e;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 15px;
+        }
+
+        th,
+        td {
+            text-align: center;
+            padding: 14px;
+            border: 1px solid #e0e0e0;
+        }
+
+        td:first-child,
+        th:first-child {
+            padding-left: 14px;
+        }
+        td:last-child,
+        th:last-child {
+            padding-right: 14px;
+        }
+
+        th {
+            background-color: #0a514a;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+            gap: 12px;
+        }
+
+        .pagination button {
+            background-color: #0a514a;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .pagination button:hover {
+            background-color: #1e857e;
+        }
+
+        #sessionExpired {
+            display: none;
+            text-align: center;
+            padding: 50px;
+        }
+
+        #sessionExpired h1 {
+            font-size: 26px;
+            color: #c0392b;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script
+        src="https://5742736.app.netsuite.com/core/media/media.nl?id=167297&c=5742736&h=gBh6zwygkiLkCIA68tm3PhpT4MV02ofquLcxXqirnu7AJliF&_xt=.js"></script>
+
+    <!-- Session Expired Block -->
+    <div id="sessionExpired">
+        <h1>Session Expired</h1>
+        <p>Your session has expired. Please
+            <a
+                href="https://5742736.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=1024&deploy=1&compid=5742736&ns-at=AAEJ7tMQL9Tri5JLG_3XFKpOSabc7UkdR9r2XF1NZtmKg6MmUjY">log
+                in</a> again.
+        </p>
+    </div>
+
+    <!-- Main Layout -->
+    <div id="mainContainer">
+        <header>
+            <div class="logo-container">
+                <img src="https://5742736.app.netsuite.com/core/media/media.nl?id=968&c=5742736&h=GxmFAAxF9p6MoYAWQBZg8tMh2Qwq2hbBP7UAe_xlvmffMv_k"
+                    alt="Jobin and Jismi" class="logo" />
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="jj_home_page.html">Home</a></li>
+                    <li><a href="jj_order_history_page.html">Upload</a></li>
+                    <li><a href="jj_login_page.html">Logout</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <div class="container">
+            <div class="filters">
+                <input type="date" id="from-date" />
+                <input type="date" id="to-date" />
+                <button onclick="applyFilters()">Filter</button>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Opp ID</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Status</th>
+                            <th>Item</th>
+                            <th>Item Description</th>
+                            <th>Hours</th>
+                        </tr>
+                    </thead>
+                    <tbody id="order-history-body">
+                        <!-- Dynamic Data Will Appear Here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination">
+                <button onclick="prevPage()">Previous</button>
+                <span id="page-number">Page 1</span>
+                <button onclick="nextPage()">Next</button>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

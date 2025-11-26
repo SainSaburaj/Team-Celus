@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap" rel="stylesheet" />
+    <title>Create Epic | Jobin & Jismi</title>
+
+    <style>
+        body {
+            font-family: "Exo 2", sans-serif;
+            font-optical-sizing: auto;
+            font-weight: 400;
+            font-style: normal;
+        }
+    </style>
+
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+
+    <div id="accessDenied" class="hidden text-center">
+        <h2 class="text-2xl font-bold text-red-500">Access Denied</h2>
+        <p class="mt-2 text-gray-700">Only Sales team members can create projects.</p>
+    </div>
+
+    <div id="mainForm" class="w-full px-6 mt-10">
+        <div class="relative flex flex-col min-w-0 break-words w-full mb-10 shadow-2xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-xl">
+            
+            <div class="bg-gradient-to-r from-[#91d4a8] via-[#c8d9ce] to-[#91d4a8] px-6 py-6 rounded-t-xl text-white shadow-md">
+                <div class="flex items-center justify-between">
+                    <h6 class="text-lg text-green-900 sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-extrabold tracking-wide leading-tight px-4">Create Epic</h6>
+                    <a href="https://www.jobinandjismi.com" target="_blank" rel="noopener noreferrer">
+                        <img src="https://www.jobinandjismi.com/images/secondary-logo.svg" class="w-32 sm:w-32 md:w-40 lg:w-48 xl:w-56 drop-shadow-lg" alt="Jobin And Jismi Logo"/>
+                    </a>
+                </div>
+            </div>
+
+            <div class="flex-auto px-6 lg:px-12 py-10">
+                <form id="projectForm" class="space-y-10">
+
+                    <section class="rounded-xl">
+                        <h6 class="bg-[#b8dec5] rounded-tr-xl rounded-tl-xl text-gray-700 text-lg font-bold uppercase tracking-wider border-b p-3 px-6">Project Information</h6>
+                        <div class="flex flex-wrap bg-gradient-to-b from-[#eefff4] to-transparent border border-[#b8dec5] shadow-md rounded-bl-xl rounded-br-xl pb-8">
+
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Project *</label>
+                                <input type="hidden" id="customerId">
+                                <div class="customer-dropdown relative border border-[#b8dec5] bg-white rounded-lg text-sm shadow-sm w-full">
+                                    <input type="text" id="customerSearchInput" class="rounded-lg w-full p-3 outline-none" required placeholder="Select Project">
+                                    <div class="customer-dropdown-panel hidden absolute left-0 w-full bg-white border border-[#b8dec5] rounded-lg shadow-lg z-50 mt-1">
+                                        <ul id="customerList" class="max-h-80 overflow-y-auto"></ul>
+                                        <div id="customerNoResults" class="hidden text-center text-gray-900 py-3">No results found</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Epic Name *</label>
+                                <div class="relative">
+                                    <input id="projectName" type="text" required maxlength="83" placeholder="Enter Epic Name" class="border border-[#b8dec5] px-4 py-3 bg-white rounded-lg text-sm shadow-sm outline-none w-full transition"/>
+                                </div>
+                            </div>
+
+                            <div class="w-full mt-8 px-6">
+                               <hr class="border-t-2 border-gray-200">
+                            </div>
+
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Start Date *</label>
+                                <input id="startDate" type="date" required class="border border-gray-300 px-4 py-3 bg-white rounded-lg text-sm shadow-sm outline-none w-full transition"/>
+                            </div>
+
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Due Date *</label>
+                                <input id="endDate" type="date" required class="border border-gray-300 px-4 py-3 bg-white rounded-lg text-sm shadow-sm outline-none w-full transition" placeholder="MM/DD/YYYY" />
+                            </div>
+
+                            <div class="w-full mt-8 px-6">
+                               <hr class="border-t-2 border-gray-200">
+                            </div>
+
+                            <div class="w-full lg:w-1/3 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Project Status *</label>
+                                <select id="status" required class="border border-gray-300 px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full">
+                                    <option value="" selected hidden>Loading...</option>
+                                </select>
+                            </div>
+                            <div class="w-full lg:w-1/3 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Project Priority *</label>
+                                <select id="priority" required class="border border-gray-300 px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full">
+                                    <option value="" selected hidden>Loading...</option>
+                                </select>
+                            </div>
+                            <div class="w-full lg:w-1/3 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Issue Type *</label>
+                                <select id="issue" required class="border border-gray-300 px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full">
+                                    <option value="" selected hidden>Loading...</option>
+                                </select>
+                            </div>
+
+                            <div class="w-full mt-8 px-6">
+                                <hr class="border-t-2 border-gray-200">
+                            </div>
+
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Reporter *</label>
+                                <input type="hidden" id="reporterId">
+                                <div class="reporter-dropdown relative border border-gray-300 bg-white rounded-lg text-sm shadow-sm w-full">
+                                    <input type="text" id="reporterSearchInput" class="rounded-lg w-full p-3 outline-none" required placeholder="Select Reporter">
+                                    <div class="reporter-dropdown-panel hidden absolute bottom-full left-0 w-full bg-white border border-gray-300 rounded-lg shadow-lg z-50 mb-1">
+                                        <ul id="reporterList" class="max-h-80 overflow-y-auto"></ul>
+                                        <div id="reporterNoResults" class="hidden text-center text-gray-900 py-3">No results found</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Assignee *</label>
+                                <input type="hidden" id="assigneeId">
+                                <div class="assignee-dropdown relative border border-gray-300 bg-white rounded-lg text-sm shadow-sm w-full">
+                                    <input type="text" id="assigneeSearchInput" class="rounded-lg w-full p-3 outline-none" required placeholder="Select Assignee">
+                                    <div class="assignee-dropdown-panel hidden absolute bottom-full left-0 w-full bg-white border border-gray-300 rounded-lg shadow-lg z-50 mb-1">
+                                        <ul id="assigneeList" class="max-h-80 overflow-y-auto"></ul>
+                                        <div id="assigneeNoResults" class="hidden text-center text-gray-900 py-3">No results found</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="w-full px-4 mt-8">
+                                <button id="submitBtn" type="submit" class="w-full bg-gradient-to-r from-green-900 via-green-800 to-green-900 text-white font-bold uppercase text-sm px-6 py-3 rounded-lg hover:scale-103 hover:shadow-lg transform transition">
+                                    Create Epic
+                                </button>
+                            </div>
+
+                        </div>
+                    </section>
+
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById("projectForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            console.log("Form submitted → sending POST request...");
+
+            const payload = {
+                action: "createEpic",
+                projectName: document.getElementById("projectName").value,
+                customerId: document.getElementById("customerId").value,
+                reporterId: document.getElementById("reporterId").value,
+                assigneeId: document.getElementById("assigneeId").value,
+                priority: document.getElementById("priority").value,
+                status: document.getElementById("status").value,
+                issue: document.getElementById("issue").value,
+                startDate: document.getElementById("startDate").value,
+                endDate: document.getElementById("endDate").value
+            };
+
+            console.log("Payload:", payload);
+
+            fetch(BASE_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.text()) // <-- use text() first
+            .then(text => {
+                let data;
+                try {
+                    data = JSON.parse(text); // try parsing JSON
+                } catch (err) {
+                    console.error("Error parsing response:", err, text);
+                    alert("Unexpected response from server. Check console.");
+                    return;
+                }
+
+                console.log("POST Response:", data);
+
+                if (data.success) {
+                    alert(data.message || "Epic created successfully!");
+                } 
+                else {
+                    alert(data.message || "Error creating Epic!");
+                }
+            })
+            .catch(err => {
+                console.error("POST error:", err);
+                alert("Unexpected error occurred. Check console.");
+            });
+        });
+
+
+        (function(){
+            const d = new Date();
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth()+1).padStart(2,'0');
+            const dd = String(d.getDate()).padStart(2,'0');
+            const today = `${yyyy}-${mm}-${dd}`;
+            const el = document.getElementById('startDate');
+            if (el) el.value = today;
+        })();
+
+        const BASE_URL = "https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=94&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQrDlwptKYI10xcZm8TvwdXzDsdGxEhcV6yzzd44YhFUA";
+
+        function getDropdownData() {
+            fetch(`${BASE_URL}&action=getDropdownData`)
+                .then((response) => response.json())
+                .then((data) => {
+                    populateDropdown("status", data.statuses);
+                    populateDropdown("priority", data.priorities);
+                    populateDropdown("issue", data.issues);
+
+                    populateCustomerDropdown(data.customers);
+                    populateReporterDropdown(data.employees);
+                    populateAssigneeDropdown(data.employees);
+                })
+                .catch((err) => console.error("Error fetching dropdown data:", err));
+        }
+
+        function populateDropdown(id, data) {
+            const el = document.getElementById(id);
+            if (!el) return;
+
+            el.innerHTML = `<option value="" hidden>Select Setting</option>`;
+
+            if (!Array.isArray(data) || data.length === 0) {
+                el.innerHTML += `<option disabled>No options available</option>`;
+                return;
+            }
+
+            data.forEach((item) => {
+                const value = item.id ?? item.value ?? item;
+                const label = item.name ?? item.label ?? item;
+
+                el.innerHTML += `<option value="${value}">${label}</option>`;
+            });
+
+            
+            if (id === "status") {
+                const todo = data.find(i => i.name?.toLowerCase() === "to do" || i.name?.toLowerCase() === "todo");
+                if (todo) el.value = todo.id;
+            }
+            
+            if (id === "priority") {
+                const medium = data.find(i => i.name?.toLowerCase() === "Medium" || i.name?.toLowerCase() === "medium");
+                if (medium) el.value = medium.id;
+            }
+
+            if (id === "issue") {
+                const epic = data.find(i => i.name?.toLowerCase() === "epic");
+                if (epic) {
+                    el.value = epic.id;
+                    el.disabled = true; // disable dropdown
+                }
+            }
+        }
+
+        let CUSTOMERS = [];
+        let EMPLOYEES = [];
+
+        function populateCustomerDropdown(data) {
+            const source = Array.isArray(data) ? data : [];
+
+            const panel = document.querySelector(".customer-dropdown-panel");
+            const list = document.getElementById("customerList");
+            const noResults = document.getElementById("customerNoResults");
+            const input = document.getElementById("customerSearchInput");
+
+            if (data === CUSTOMERS || CUSTOMERS.length === 0) {
+                CUSTOMERS = source;
+            }
+
+            list.innerHTML = "";
+            noResults.classList.add("hidden");
+
+            if (source.length === 0) {
+                noResults.classList.remove("hidden");
+                if (document.activeElement === input) panel.classList.remove("hidden");
+                return;
+            }
+
+            source.forEach((emp) => {
+                const li = document.createElement("li");
+                li.textContent = emp.name;
+                li.dataset.id = emp.id;
+                li.className =
+                    "cursor-pointer px-4 py-2 hover:bg-gradient-to-b from-[#ebfff3] to-[#c6ecd4]";
+                list.appendChild(li);
+            });
+
+            if (document.activeElement === input) {
+                panel.classList.remove("hidden");
+            }
+        }
+
+        document.getElementById("customerSearchInput").addEventListener("keyup", function () {
+            const search = this.value.trim().toUpperCase();
+
+            const filtered = CUSTOMERS.filter((c) =>
+                c.name.toUpperCase().includes(search)
+            );
+
+            populateCustomerDropdown(filtered);
+        });
+
+        document.getElementById("customerList").addEventListener("click", function (e) {
+            const li = e.target.closest("li");
+            if (!li) return;
+
+            document.getElementById("customerSearchInput").value = li.textContent;
+            document.getElementById("customerId").value = li.dataset.id;
+
+            document.querySelector(".customer-dropdown-panel").classList.add("hidden");
+        });
+
+        document.getElementById("customerSearchInput").addEventListener("focus", () => {
+            populateCustomerDropdown(CUSTOMERS);
+            document.querySelector(".customer-dropdown-panel").classList.remove("hidden");
+        });
+
+        document.addEventListener("click", (e) => {
+            const input = document.getElementById("customerSearchInput");
+            const panel = document.querySelector(".customer-dropdown-panel");
+
+            if (!input.contains(e.target) && !panel.contains(e.target)) {
+                panel.classList.add("hidden");
+            }
+        });
+
+        function populateReporterDropdown(data) {
+            const source = Array.isArray(data) ? data : []; 
+
+            const panel = document.querySelector(".reporter-dropdown-panel");
+            const list = document.getElementById("reporterList");
+            const noResults = document.getElementById("reporterNoResults");
+            const input = document.getElementById("reporterSearchInput");
+
+            if (data === EMPLOYEES || EMPLOYEES.length === 0) {
+                EMPLOYEES = source;
+            }
+
+            list.innerHTML = "";
+            noResults.classList.add("hidden");
+
+            if (source.length === 0) {
+                noResults.classList.remove("hidden");
+                if (document.activeElement === input) panel.classList.remove("hidden");
+                return;
+            }
+
+            source.forEach((emp) => {
+                const li = document.createElement("li");
+                li.textContent = emp.name;
+                li.dataset.id = emp.id;
+                li.className =
+                    "cursor-pointer px-4 py-2 hover:bg-gradient-to-b from-[#ebfff3] to-[#c6ecd4]";
+                list.appendChild(li);
+            });
+
+            if (document.activeElement === input) {
+                panel.classList.remove("hidden");
+            }
+        }
+
+        document.getElementById("reporterSearchInput").addEventListener("keyup", function () {
+            const search = this.value.trim().toUpperCase();
+            const filtered = EMPLOYEES.filter((e) =>
+                e.name.toUpperCase().includes(search)
+            );
+            populateReporterDropdown(filtered);
+        });
+
+        document.getElementById("reporterList").addEventListener("click", function (e) {
+            const li = e.target.closest("li");
+            if (!li) return;
+
+            document.getElementById("reporterSearchInput").value = li.textContent;
+            document.getElementById("reporterId").value = li.dataset.id;
+
+            document.querySelector(".reporter-dropdown-panel").classList.add("hidden");
+        });
+
+        document.getElementById("reporterSearchInput").addEventListener("focus", () => {
+            populateReporterDropdown(EMPLOYEES);
+            document.querySelector(".reporter-dropdown-panel").classList.remove("hidden");
+        });
+
+        document.addEventListener("click", (e) => {
+            const input = document.getElementById("reporterSearchInput");
+            const panel = document.querySelector(".reporter-dropdown-panel");
+
+            if (!input.contains(e.target) && !panel.contains(e.target)) {
+                panel.classList.add("hidden");
+            }
+        });
+
+        function populateAssigneeDropdown(data) {
+            const source = Array.isArray(data) ? data : []; 
+
+            const panel = document.querySelector(".assignee-dropdown-panel");
+            const list = document.getElementById("assigneeList");
+            const noResults = document.getElementById("assigneeNoResults");
+            const input = document.getElementById("assigneeSearchInput");
+
+            if (data === EMPLOYEES || EMPLOYEES.length === 0) {
+                EMPLOYEES = source;
+            }
+
+            list.innerHTML = "";
+            noResults.classList.add("hidden");
+
+            if (source.length === 0) {
+                noResults.classList.remove("hidden");
+                if (document.activeElement === input) panel.classList.remove("hidden");
+                return;
+            }
+
+            source.forEach((emp) => {
+                const li = document.createElement("li");
+                li.textContent = emp.name;
+                li.dataset.id = emp.id;
+                li.className =
+                    "cursor-pointer px-4 py-2 hover:bg-gradient-to-b from-[#ebfff3] to-[#c6ecd4]";
+                list.appendChild(li);
+            });
+
+            if (document.activeElement === input) {
+                panel.classList.remove("hidden");
+            }
+        }
+
+        document.getElementById("assigneeSearchInput").addEventListener("keyup", function () {
+            const search = this.value.trim().toUpperCase();
+            const filtered = EMPLOYEES.filter((e) =>
+                e.name.toUpperCase().includes(search)
+            );
+            populateAssigneeDropdown(filtered);
+        });
+
+        document.getElementById("assigneeList").addEventListener("click", function (e) {
+            const li = e.target.closest("li");
+            if (!li) return;
+
+            document.getElementById("assigneeSearchInput").value = li.textContent;
+            document.getElementById("assigneeId").value = li.dataset.id;
+
+            document.querySelector(".assignee-dropdown-panel").classList.add("hidden");
+        });
+
+        document.getElementById("assigneeSearchInput").addEventListener("focus", () => {
+            populateAssigneeDropdown(EMPLOYEES);
+            document.querySelector(".assignee-dropdown-panel").classList.remove("hidden");
+        });
+
+        document.addEventListener("click", (e) => {
+            const input = document.getElementById("assigneeSearchInput");
+            const panel = document.querySelector(".assignee-dropdown-panel");
+
+            if (!input.contains(e.target) && !panel.contains(e.target)) {
+                panel.classList.add("hidden");
+            }
+        });
+
+        getDropdownData();
+
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,785 @@
+/**
+ * @NApiVersion 2.1
+ */
+/**************************************************************************************************************************************
+* 
+* 
+* Custom page designing for implementation of Project Costing tool in NetSuite
+*
+* ************************************************************************************************************************************
+* Author : Jobin and Jismi IT Services
+*
+* Date Created : 21-February-2024
+*
+* Description : This script is to design custom page designing for implementation of Project Costing tool
+* REVISION HISTORY
+* Version 1.0.0 : 21-February-2024 : Created the initial build by JJ0149
+**************************************************************************************************************************************/
+define(['N/search', 'N/query'],
+    /**
+ * @param{search} search
+ */
+    (search, query) => {
+        function replaceSpecialCharacters(str) {
+            try {
+                return str.replace(/[><\-&\[\]\(\)]/g, ' ');
+            } catch (error) {
+                log.error("Error in replaceSpecialCharacters", error);
+                return str;
+            }
+
+        }
+        return model = {
+            /**
+             * 
+             * @param {*} email 
+             * @param {*} otp 
+             * @returns 
+             */
+            getCredential(email, otp) {
+                try {
+                    let filterArray = [];
+                    if (otp) {
+                        filterArray.push("AND",
+                            ["custrecord_jj_request_otp", "is", otp],)
+                    }
+                    let credentialRecordId;
+                    const credentialSearchObj = search.create({
+                        type: "customrecord_jj_order_request_credential",
+                        filters:
+                            [
+                                ["custrecord_jj_request_email", "is", email],
+                                "AND",
+                                ["isinactive", "is", "F"],
+                                ...filterArray
+                            ],
+                        columns:
+                            [
+                                search.createColumn({ name: "internalid", label: "Internal ID" })
+                            ]
+                    });
+                    credentialSearchObj.run().each(function (result) {
+                        credentialRecordId = result.getValue({ name: "internalid", label: "Internal ID" })
+                        return false;
+                    });
+                    return credentialRecordId;
+                } catch (error) {
+                    log.error("Error @getCredential", error);
+                    return false;
+                }
+            },
+            /**
+            * Retrieves the customer details based on the provided ID.
+            * @param {string} id 
+            * @returns 
+            */
+            fetchCustomerDetails(id, customer) {
+                try {
+                    let filters = [["custrecord_jj_opp_creation_credential", "anyof", id], "AND", ["isinactive", "is", "F"]];
+                    filters.push("AND", ["custrecord_jj_allocated_lead", "anyof", "@NONE@"]);
+                    if (customer) {
+                        filters.push("AND", ["custrecord_jj_opp_creation_customer", "anyof", customer]);
+                    }
+
+                    log.debug("Fetching Customer Details for ID:", id);
+
+                    let customerDetails = [];
+                    const customerSearchObj = search.create({
+                        type: "customrecord_jj_sales_rep_cust_mapping",
+                        filters: filters,
+                        columns: [
+                            search.createColumn({ name: "custrecord_jj_opp_creation_customer", label: "Customer Name" }),
+                            search.createColumn({ name: "custrecord_jj_department_mapping", label: "Department" }),
+                            search.createColumn({ name: "custrecord_jj_class_mapping", label: "Class" }),
+                            search.createColumn({ name: "custrecord_jj_subsidiary_mapping", label: "Subsidiary" }),
+                            search.createColumn({ name: "custrecord_jj_sales_rep_cust_location", label: "Location" }),
+                            //search.createColumn({ name: "custrecord_jj_sales_rep_sales_type", label: "SalesType" }),
+                        ]
+                    });
+
+                    let searchResultCount = customerSearchObj.runPaged().count;
+                    log.debug("Customer Mapping Search Result Count", searchResultCount);
+
+                    customerSearchObj.run().each((result) => {
+                        customerDetails.push({
+                            id: result.getValue({ name: "custrecord_jj_opp_creation_customer" }),
+                            name: result.getText({ name: "custrecord_jj_opp_creation_customer" }),
+                            department: result.getValue({ name: "custrecord_jj_department_mapping" }),
+                            salesRepClass: result.getValue({ name: "custrecord_jj_class_mapping" }),
+                            subsidiary: result.getValue({ name: "custrecord_jj_subsidiary_mapping" }),
+                            location: result.getValue({ name: "custrecord_jj_sales_rep_cust_location" }),
+                            //salesType: result.getValue({ name: "custrecord_jj_sales_rep_sales_type" }),
+                        });
+                        return true; // Continue iterating
+                    });
+
+                    log.debug("Fetched Customer Details:", customerDetails);
+
+                    return {
+                        success: true,
+                        data: customerDetails
+                    };
+
+                } catch (error) {
+                    log.error("Error in fetchCustomerDetails", error);
+                    return {
+                        success: false,
+                        data: [],
+                        error: error.message
+                    };
+                }
+            },
+            /**
+             * to fetch customer status list
+             * @returns 
+             */
+            fetchCustomerStatusList() {
+                try {
+                    const customerStatusList = [];
+                    const customlist_customer_statusSearchObj = search.create({
+                        type: "customlist_customer_status",
+                        filters:
+                            [
+                                ["isinactive", "is", "F"]
+                            ],
+                        columns:
+                            [
+                                search.createColumn({ name: "name", label: "Name" }),
+                                search.createColumn({ name: "internalid", label: "Internal ID" })
+                            ]
+                    });
+                    const searchResultCount = customlist_customer_statusSearchObj.runPaged().count;
+                    log.debug("customlist_customer_statusSearchObj result count", searchResultCount);
+                    customlist_customer_statusSearchObj.run().each(function (result) {
+                        let temp = {}
+                        temp.name = result.getValue({ name: "name" }) || ' ';
+                        temp.id = result.getValue({ name: "internalid" }) || ' ';
+                        customerStatusList.push(temp);
+                        return true;
+                    });
+
+                    return {
+                        success: true,
+                        data: customerStatusList
+                    };
+
+                } catch (error) {
+                    log.error("Error in fetchCustomerStatusList", error);
+                    return {
+                        success: false,
+                        data: [],
+                        error: error.message
+                    };
+                }
+
+            },
+            /**
+             * To fetch leads for a solution engineer
+             * @param {*} id
+             * @returns 
+             */
+            fetchLeadList(id) {
+                try {
+                    log.debug("fetchLeadList", "Solution Engineer ID: " + id);
+                    const leadList = [];
+                    const leadSearchObj = search.create({
+                        type: "lead",
+                        filters:
+                            [
+                                ["stage", "anyof", "LEAD"],
+                                "AND",
+                                ["salesteammember", "anyof", id]
+                            ],
+                        columns:
+                            [
+                                search.createColumn({ name: "internalid", label: "Internal ID" }),
+                                search.createColumn({ name: "companyname", label: "Company Name" }),
+                                search.createColumn({ name: "email", label: "Email" }),
+                                search.createColumn({ name: "phone", label: "Phone" }),
+                                search.createColumn({ name: "entitystatus", label: "Status" }),
+                                search.createColumn({ name: "custentity_jj_customer_status", label: "Customer Status" }),
+                                search.createColumn({ name: "comments", label: "Comments" }),
+                                search.createColumn({ name: "custentity24", label: "Next Steps" })
+                            ]
+                    });
+                    const searchResultCount = leadSearchObj.runPaged().count;
+                    log.debug("leadSearchObj result count", searchResultCount);
+                    leadSearchObj.run().each(function (result) {
+                        let temp = {}
+                        temp.internalId = result.getValue({ name: "internalid" }) || ' ';
+                        temp.companyName = result.getValue({ name: "companyname" }) || ' ';
+                        temp.email = result.getValue({ name: "email" }) || ' ';
+                        temp.phone = result.getValue({ name: "phone" }) || ' ';
+                        temp.status = result.getText({ name: "entitystatus" }) || ' ';
+                        temp.customerStatus = result.getText({ name: "custentity_jj_customer_status" }) || ' ';
+                        temp.comments = result.getValue({ name: "comments" }) || ' ';
+                        temp.nextSteps = result.getValue({ name: "custentity24" }) || ' ';
+                        leadList.push(temp);
+                        return true;
+                    });
+
+                    return {
+                        success: true,
+                        data: leadList
+                    };
+
+                } catch (error) {
+                    log.error("Error in fetchLeadList", error);
+                    return {
+                        success: false,
+                        data: [],
+                        error: error.message
+                    };
+                }
+            },
+            /**
+             * 
+             * @param {*} solutionEngineer 
+             * @returns 
+             */
+            fetchOpportunityHistory(solutionEngineer, documentNumber, fromDate, toDate) {
+                try {
+                    log.debug("fetchOpportunityHistory", "solutionEngineer: " + solutionEngineer + ", documentNumber: " + documentNumber + ", fromDate: " + fromDate + ", toDate: " + toDate);
+                    const filters = [
+                        ["custbody_jj_opp_creation_se", "anyof", solutionEngineer],
+                        "AND",
+                        ["lineitem", "noneof", "@NONE@"],
+                        "AND",
+                        ["linememo", "isnot", "VAT"]
+                    ];
+                    if (documentNumber) {
+                        filters.push("AND",
+                            ["numbertext", "is", documentNumber]);
+                    }
+                    if (fromDate && toDate) {
+                        filters.push("AND", ["date", "within", fromDate, toDate]);
+                    }
+
+                    const opportunityHistory = {};
+                    const opportunityHistoryArray = [];
+                    const opportunitySearchObj = search.create({
+                        type: "opportunity",
+                        filters: filters,
+                        columns:
+                            [
+                                search.createColumn({ name: "trandate", label: "Date" }),
+                                search.createColumn({ name: "internalid", label: "InternalId" }),
+                                search.createColumn({ name: "tranid", label: "Document Number" }),
+                                search.createColumn({ name: "entity", label: "Customer" }),
+                                search.createColumn({ name: "title", label: "Title" }),
+                                search.createColumn({ name: "entitystatus", label: "Opportunity Status" }),
+                                search.createColumn({ name: "item", label: "Line Item" }),
+                                search.createColumn({
+                                    name: "formulatext",
+                                    formula: "{linememo}",
+                                    label: "Formula (Text)"
+                                }),
+                                search.createColumn({ name: "quantity", label: "Line Quantity" }),
+                                search.createColumn({
+                                    name: "formulatext",
+                                    formula: "{lineitem.id}",
+                                    label: "Formula (Text)"
+                                })
+                            ]
+                    });
+                    const searchResultCount = opportunitySearchObj.runPaged().count;
+                    log.debug("opportunitySearchObj result count", searchResultCount);
+                    opportunitySearchObj.run().each(function (result) {
+                        let temp = {}
+                        temp.internalId = result.getValue({ name: "internalid" }) || ' ';
+                        temp.date = result.getValue({ name: "trandate" }) || ' ';
+                        temp.tranId = result.getValue({ name: "tranid" }) || ' ';
+                        temp.entity = result.getText({ name: "entity" }) || ' ';
+
+                        temp.title = result.getValue({ name: "title" }) || ' ';
+                        temp.status = result.getText({ name: "entitystatus" }) || ' ';
+                        temp.item = result.getText({ name: "item" }) || ' ';
+                        temp.description = replaceSpecialCharacters(result.getValue(result.columns[7]))
+                        temp.hour = result.getValue({ name: "quantity" }) || ' ';
+                        temp.itemId = result.getValue({
+                            name: "formulatext",
+                            formula: "{lineitem.id}",
+                            label: "Formula (Text)"
+                        })
+                        opportunityHistoryArray.push(temp);
+
+                        // if (!opportunityHistory[internalId]) {
+                        //     opportunityHistory[internalId] = {
+                        //         tranDate: result.getValue({ name: "trandate" }),
+                        //         tranId: result.getValue({ name: "tranid" }),
+                        //         entity: result.getText({ name: "entity" }),
+                        //         memo: result.getValue({ name: "memo" }),
+                        //         title: result.getValue({ name: "title" }),
+                        //         status: result.getText({ name: "entitystatus" }),
+                        //         lines: []
+                        //     };
+                        // }
+
+                        // opportunityHistory[internalId].lines.push({
+                        //     item: result.getText({ name: "item" }),
+                        //     quantity: result.getValue({ name: "quantity" }),
+                        //     memo: result.getValue({ name: "memo", join: "item" })
+                        // });
+
+                        return true;
+                    });
+
+                    //return opportunityHistory;
+                    log.debug("opportunityHistoryArray", opportunityHistoryArray)
+                    return opportunityHistoryArray;
+                } catch (error) {
+                    log.error("Error @fetchOpportunityHistory", error);
+                    //return {};
+                    return []
+                }
+            },
+            /**
+             * To fetch employee data
+             * @returns {Object} employeeDetails
+             */
+            fetchEmployeeDetails() {
+                const employeeDetails = {};
+                try {
+                    const employeeSearchObj = search.create({
+                        type: "employee",
+                        filters:
+                            [
+                                ["isinactive", "is", "F"]
+                            ],
+                        columns:
+                            [
+                                search.createColumn({ name: "internalid", label: "Internal ID" }),
+                                search.createColumn({ name: "entityid", label: "ID" })
+                            ]
+                    });
+                    const searchResultCount = employeeSearchObj.runPaged().count;
+                    log.debug("employeeSearchObj result count", searchResultCount);
+                    employeeSearchObj.run().each(function (result) {
+                        employeeDetails[result.getValue({ name: "internalid" })] = result.getValue({ name: "entityid" });
+                        return true;
+                    });
+                    return {
+                        success: true,
+                        data: employeeDetails
+                    };
+                } catch (error) {
+                    log.error("Error @fetchEmployeeDetails", error);
+                    return {
+                        success: false,
+                        data: employeeDetails
+                    };
+                }
+
+            },
+
+            // /**
+            //  * Function to retrieve and sort only the qualified and unqualified leads from a customers using SuiteQL.
+            //  * @param {object} leadField - The field object containing lead criteria.
+            //  */
+            // fetchLeadDetails(leadField) {
+            //     try {
+            //         let suiteQl = `SELECT c.id, c.fullName, c.entityStatus FROM customer c WHERE c.entityStatus IN (6,7) ORDER BY c.fullName`;
+            //         let leadResults = query.runSuiteQL({ query: suiteQl }).asMappedResults();
+            //         let resultArray = []
+            //         for (i = 0; i < leadResults.length; i++) {
+            //             let result = leadResults[i];
+            //             resultArray.push({
+            //                 id: result.id,
+            //                 name: result.fullname,
+            //             });
+            //         }
+            //            return resultArray;
+
+            //     } catch (e) {
+            //         log.error("Error in leadFilter", e);
+            //     }
+            // }
+            fetchLeadDetails(id, entityid) {
+                try {
+                    let filters = [["custrecord_jj_opp_creation_credential", "anyof", id], "AND", ["isinactive", "is", "F"]];
+                    if (entityid) {
+                        filters.push("AND", ["custrecord_jj_allocated_lead", "anyof", entityid]);
+                    }
+
+                    filters.push("AND", ["custrecord_jj_opp_creation_customer", "anyof", "@NONE@"]);
+
+                    log.debug("Fetching Customer Details for ID:", id);
+
+                    let customerDetails = [];
+                    const customerSearchObj = search.create({
+                        type: "customrecord_jj_sales_rep_cust_mapping",
+                        filters: filters,
+                        columns: [
+                            search.createColumn({ name: "custrecord_jj_allocated_lead", label: "Lead Name" }),
+                            search.createColumn({
+                                name: "altname",
+                                join: "CUSTRECORD_JJ_ALLOCATED_LEAD",
+                                label: "Name"
+                            }),
+                            search.createColumn({ name: "custrecord_jj_department_mapping", label: "Department" }),
+                            search.createColumn({ name: "custrecord_jj_class_mapping", label: "Class" }),
+                            search.createColumn({ name: "custrecord_jj_subsidiary_mapping", label: "Subsidiary" }),
+                            search.createColumn({ name: "custrecord_jj_sales_rep_cust_location", label: "Location" }),
+                            search.createColumn({
+                                name: "type",
+                                join: "CUSTRECORD_JJ_ALLOCATED_LEAD",
+                                label: "Type"
+                            })
+                            //search.createColumn({ name: "custrecord_jj_sales_rep_sales_type", label: "SalesType" }),
+                        ]
+                    });
+
+                    let searchResultCount = customerSearchObj.runPaged().count;
+                    log.debug("Customer Mapping Search Result Count", searchResultCount);
+
+                    customerSearchObj.run().each((result) => {
+                        customerDetails.push({
+                            id: result.getValue({ name: "custrecord_jj_allocated_lead" }),
+                            name: result.getValue({
+                                name: "altname",
+                                join: "CUSTRECORD_JJ_ALLOCATED_LEAD",
+                                label: "Name"
+                            }),
+                            department: result.getValue({ name: "custrecord_jj_department_mapping" }),
+                            salesRepClass: result.getValue({ name: "custrecord_jj_class_mapping" }),
+                            subsidiary: result.getValue({ name: "custrecord_jj_subsidiary_mapping" }),
+                            location: result.getValue({ name: "custrecord_jj_sales_rep_cust_location" }),
+                            entityType: result.getValue({
+                                name: "type",
+                                join: "CUSTRECORD_JJ_ALLOCATED_LEAD",
+                                label: "Type"
+                            })
+                            //salesType: result.getValue({ name: "custrecord_jj_sales_rep_sales_type" }),
+                        });
+                        return true; // Continue iterating
+                    });
+
+                    log.debug("Fetched Customer Details:", customerDetails);
+
+                    return {
+                        success: true,
+                        data: customerDetails
+                    };
+
+                } catch (error) {
+                    log.error("Error in fetchCustomerDetails", error);
+                    return {
+                        success: false,
+                        data: [],
+                        error: error.message
+                    };
+                }
+
+            },
+            /**
+             * 
+             * @returns 
+             */
+            getMonthlyOrders(id) {
+
+                try {
+
+                    let resultArr = [];
+
+                    let transactionSearch = search.create({
+                        type: search.Type.TRANSACTION,
+                        filters: [
+                            ["type", "anyof", "SalesOrd"],
+                            "AND",
+                            ["opportunity.custbody_jj_opp_creation_se", "anyof", id],
+                            "AND",
+                            ["mainline", "is", "F"]
+                        ],
+                        columns: [
+                            search.createColumn({
+                                name: "formulatext",
+                                summary: "GROUP",
+                                formula: "TO_CHAR({datecreated}, 'Mon YYYY')",
+                                label: "Month",
+                            }),
+                            search.createColumn({
+                                name: "formulanumeric",
+                                summary: "GROUP",
+                                formula: "TO_NUMBER(TO_CHAR({datecreated}, 'YYYYMM'))",
+                                sort: search.Sort.ASC,
+                                label: "Month Sort",
+                            }),
+                            search.createColumn({
+                                name: "quantity",
+                                summary: "SUM",
+                                label: "Quantity"
+                            }),
+                        ],
+
+                    });
+
+                    transactionSearch.run().each(function (result) {
+
+                        const month = result.getValue({
+                            name: "formulatext",
+                            summary: search.Summary.GROUP,
+                        });
+
+                        const count = result.getValue({
+                            name: "quantity",
+                            summary: "SUM",
+                            label: "Quantity"
+                        });
+
+                        resultArr.push({ month, count });
+                        return true;
+
+                    });
+
+                    const labels = resultArr.map(function (data) {
+                        return data.month.trim();
+                    });
+
+                    const countData = resultArr.map(function (data) {
+                        return parseInt(data.count, 10);
+                    });
+
+                    return {
+                        labels: labels,
+                        countData: countData,
+                    };
+
+                } catch (error) {
+                    log.error("error", error.message);
+                }
+
+            },
+
+            getCustomerConversion(id) {
+
+                try {
+                    let convCustomerSearch = search.create({
+                        type: "transaction",
+                        filters: [
+                            ["type", "anyof", "SalesOrd"],
+                            "AND",
+                            ["mainline", "is", "F"],
+                            "AND",
+                            ["opportunity", "noneof", "@NONE@"],
+                            "AND",
+                            ["opportunity.custbody_jj_opp_creation_se", "anyof", id],
+
+                        ],
+                        columns: [
+                            // search.createColumn({
+                            //     name: "salesrep",
+                            //     summary: "GROUP",
+                            //     label: "Sales Rep",
+                            // }),
+                            // search.createColumn({
+                            //     name: "entityid",
+                            //     join: "customerMain",
+                            //     summary: "GROUP",
+                            //     label: "Name",
+                            // }),
+                            // search.createColumn({
+                            //     name: "formulanumeric",
+                            //     summary: "SUM",
+                            //     formula: "CASE WHEN {opportunity} IS NOT NULL THEN 1 ELSE 0 END",
+                            //     label: "Formula (Numeric)",
+                            // }),
+                            search.createColumn({
+                                name: "entity",
+                                summary: "GROUP",
+                                label: "Name"
+                            }),
+                            search.createColumn({
+                                name: "quantity",
+                                summary: "SUM",
+                                label: "Quantity"
+                            })
+                        ],
+                    });
+
+                    let resultData = [];
+
+                    convCustomerSearch.run().each(function (result) {
+                        const salesRep = result.getText({
+                            name: "entity",
+                            summary: "GROUP",
+                            label: "Name"
+                        });
+
+                        const customer = result.getValue({
+                            name: "entity",
+                            summary: "GROUP",
+                            label: "Name"
+                        });
+
+                        const count = parseInt(
+                            result.getValue({
+                                name: "quantity",
+                                summary: "SUM",
+                                label: "Quantity"
+                            }),
+                            10
+                        );
+
+                        resultData.push({ salesRep, customer, count });
+                        return true;
+
+                    });
+
+                    const salesRepSet = new Set();
+                    const customerMap = {};
+
+                    for (let i = 0; i < resultData.length; i++) {
+                        const { salesRep, customer, count } = resultData[i];
+                        salesRepSet.add(salesRep);
+                        customerMap[customer] = { salesRep, count };
+                    }
+
+                    const salesReps = Array.from(salesRepSet);
+                    const datasets = [];
+                    const colorPalette = ["#2177b1", "#db5624", "#359638", "#b22222", "#fddb00ff"];
+                    let colorIndex = 0;
+
+                    for (const customer in customerMap) {
+
+                        const { salesRep, count } = customerMap[customer];
+                        const dataArray = [];
+
+                        for (let i = 0; i < salesReps.length; i++) {
+                            dataArray.push(salesReps[i] === salesRep ? count : null);
+                        }
+
+                        datasets.push({
+                            label: customer,
+                            data: dataArray,
+                            backgroundColor: colorPalette[colorIndex % colorPalette.length],
+                            barThickness: 15,
+                        });
+
+                        colorIndex++;
+
+                    }
+
+                    const salesRepLabels = salesReps;
+                    const datasetStrings = datasets;
+
+                    return {
+                        salesRepLabels: salesRepLabels,
+                        datasetStrings: datasetStrings,
+                    };
+
+                } catch (error) {
+                    log.error("error", error.message);
+                }
+            },
+
+            getConversionSummary(id) {
+
+                try {
+
+                    let conversionSearch = search.create({
+                        type: "transaction",
+                        filters: [
+                            ["type", "anyof", "SalesOrd", "Opprtnty"],
+                            "AND",
+                            ["mainline", "is", "T"],
+                            "AND",
+                            [["opportunity.custbody_jj_opp_creation_se","anyof",id],"OR",["custbody_jj_opp_creation_se","anyof",id]]
+                        ],
+                        columns: [
+                            search.createColumn({
+                                name: "type",
+                                summary: "GROUP",
+                                label: "Type",
+                            }),
+                            search.createColumn({
+                                name: "internalid",
+                                summary: "COUNT",
+                                label: "Total Count",
+                            }),
+                            search.createColumn({
+                                name: "formulanumeric",
+                                summary: "SUM",
+                                formula: "CASE WHEN {opportunity} IS NOT NULL THEN 1 ELSE 0 END",
+                                label: "SO Created",
+                            }),
+                            search.createColumn({
+                                name: "formulatext",
+                                summary: "GROUP",
+                                formula: "TO_CHAR({datecreated}, 'Mon YYYY')",
+                                label: "Year",
+                            }),
+                            search.createColumn({
+                                name: "formuladate",
+                                summary: "GROUP",
+                                formula: "TRUNC({datecreated}, 'MM')",
+                                sort: search.Sort.ASC,
+                                label: "Sorted Date",
+                            }),
+                        ],
+
+                    });
+
+                    let resultObj = {};
+
+                    conversionSearch.run().each(function (result) {
+
+                        const year = result.getValue({
+                            name: "formulatext",
+                            summary: search.Summary.GROUP,
+                        });
+
+                        const type = result.getValue({
+                            name: "type",
+                            summary: search.Summary.GROUP,
+                        });
+
+                        const opportunityCount = parseInt(result.getValue({
+                            name: "internalid",
+                            summary: search.Summary.COUNT,
+                        })) || 0;
+
+                        const convertedCount = parseInt(result.getValue({
+                            name: "formulanumeric",
+                            summary: search.Summary.SUM,
+                        })) || 0;
+
+                        if (!resultObj[year]) {
+                            resultObj[year] = { opportunity: 0, converted: 0 };
+                        }
+
+                        if (type === "Opprtnty") {
+                            resultObj[year].opportunity = opportunityCount;
+                        } else if (type === "SalesOrd") {
+                            resultObj[year].converted = convertedCount;
+                        }
+
+                        return true;
+
+                    });
+
+                    const yearData = Object.keys(resultObj).map(function (data) {
+                        return data.trim();
+                    });
+
+                    const opportunityData = Object.values(resultObj).map(function (data) {
+                        return data.opportunity;
+                    });
+
+                    const convertedData = Object.values(resultObj).map(function (data) {
+                        return data.converted;
+                    });
+
+                    return {
+                        yearData: yearData,
+                        opportunityData: opportunityData,
+                        convertedData: convertedData,
+                    };
+
+                } catch (error) {
+                    log.error("error", error.message);
+                }
+
+            }
+        }
+
+    });

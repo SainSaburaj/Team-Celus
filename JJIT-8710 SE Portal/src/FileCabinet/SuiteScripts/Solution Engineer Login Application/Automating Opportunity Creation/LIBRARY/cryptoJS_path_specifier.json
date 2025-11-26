@@ -1,0 +1,7 @@
+{
+    "baseUrl": "./",
+    "paths": {
+      "crypto": "/SuiteScripts/Solution Engineer Login Application/Automating Opportunity Creation/LIBRARY/cryptoJS"
+    }
+  }
+  
