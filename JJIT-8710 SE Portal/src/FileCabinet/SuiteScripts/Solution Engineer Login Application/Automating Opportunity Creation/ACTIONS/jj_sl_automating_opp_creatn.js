@@ -918,7 +918,8 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     customerConversion: model.getCustomerConversion(id)
                 };
                 return responseData;
-            } catch (error) {
+            } 
+            catch (error) {
                 log.error("Error @getReportData", error);
                 return {};
             }
@@ -959,39 +960,39 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     isDynamic: false
                 });
 
-                job.setValue({ fieldId: "companyname", value: data.projectName });
-                job.setValue({ fieldId: "parent", value: data.customerId });
+                job.setValue({ fieldId: 'companyname', value: data.projectName });
+                job.setValue({ fieldId: 'parent', value: data.customerId });
                 job.setValue({
-                    fieldId: "custentity_jj_jira_start_date",
+                    fieldId: 'custentity_jj_jira_start_date',
                     value: new Date(formattedStart),
                 });
                 job.setValue({
-                    fieldId: "custentity_jj_jira_due_date",
+                    fieldId: 'custentity_jj_jira_due_date',
                     value: new Date(formattedEnd),
                 });
                 job.setValue({
-                    fieldId: "custentity_jj_jira_status",
+                    fieldId: 'custentity_jj_jira_status',
                     value: data.status || 1,
                 });
                 job.setValue({
-                    fieldId: "custentity_jj_jira_priority",
+                    fieldId: 'custentity_jj_jira_priority',
                     value: data.priority,
                 });
                 job.setValue({
-                    fieldId: "custentity_jj_jira_issue_type",
+                    fieldId: 'custentity_jj_jira_issue_type',
                     value: data.issue,
                 });
                 job.setValue({
-                    fieldId: "custentity_jj_jira_epic_assignee",
+                    fieldId: 'custentity_jj_jira_epic_assignee',
                     value: data.assigneeId,
                 });
                 job.setValue({
-                    fieldId: "custentity_jj_jira_epic_reporter",
+                    fieldId: 'custentity_jj_jira_epic_reporter',
                     value: data.reporterId,
                 });
 
-                job.setValue({ fieldId: "subsidiary", value: 1 });
-                job.setValue({ fieldId: "projectexpensetype", value: 1 });
+                job.setValue({ fieldId: 'subsidiary', value: 1 });
+                job.setValue({ fieldId: 'projectexpensetype', value: 1 });
 
                 const id = job.save();
 
