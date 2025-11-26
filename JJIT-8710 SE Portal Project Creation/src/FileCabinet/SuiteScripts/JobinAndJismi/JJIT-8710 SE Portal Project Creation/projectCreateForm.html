@@ -10,14 +10,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap" rel="stylesheet" />
     <title>Create Epic | Jobin & Jismi</title>
 
-    <script>
-        const EMPLOYEES = JSON.parse('%%EMPLOYEES%%');
-        const STATUSES = JSON.parse('%%STATUSES%%');
-        const PRIORITIES = JSON.parse('%%PRIORITIES%%');
-        const ISSUES = JSON.parse('%%ISSUES%%');
-        const CUSTOMERS = JSON.parse('%%CUSTOMERS%%');
-    </script>
-
     <style>
         body {
             font-family: "Exo 2", sans-serif;
@@ -39,9 +31,9 @@
     <div id="mainForm" class="w-full px-6 mt-10">
         <div class="relative flex flex-col min-w-0 break-words w-full mb-10 shadow-2xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-xl">
             
-            <div class="bg-gradient-to-r from-gray-800 via-gray-500 to-white px-6 py-6 rounded-t-xl text-white shadow-md">
+            <div class="bg-gradient-to-r from-[#91d4a8] via-[#c8d9ce] to-[#91d4a8] px-6 py-6 rounded-t-xl text-white shadow-md">
                 <div class="flex items-center justify-between">
-                    <h6 class="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-extrabold tracking-wide leading-tight">✨ Create Epic</h6>
+                    <h6 class="text-lg text-green-900 sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-extrabold tracking-wide leading-tight px-4">Create Epic</h6>
                     <a href="https://www.jobinandjismi.com" target="_blank" rel="noopener noreferrer">
                         <img src="https://www.jobinandjismi.com/images/secondary-logo.svg" class="w-32 sm:w-32 md:w-40 lg:w-48 xl:w-56 drop-shadow-lg" alt="Jobin And Jismi Logo"/>
                     </a>
@@ -52,40 +44,32 @@
                 <form id="projectForm" class="space-y-10">
 
                     <section class="rounded-xl">
-                        <h6 class="bg-gray-300 rounded-tr-xl rounded-tl-xl text-gray-700 text-lg font-semibold uppercase tracking-wider border-b p-3">⚙️ Project Information</h6>
-                        <div class="flex flex-wrap bg-gradient-to-b from-gray-200 to-transparent border border-gray-300 shadow-md rounded-bl-xl rounded-br-xl pb-8">
+                        <h6 class="bg-[#b8dec5] rounded-tr-xl rounded-tl-xl text-gray-700 text-lg font-bold uppercase tracking-wider border-b p-3 px-6">Project Information</h6>
+                        <div class="flex flex-wrap bg-gradient-to-b from-[#eefff4] to-transparent border border-[#b8dec5] shadow-md rounded-bl-xl rounded-br-xl pb-8">
 
                             <div class="w-full lg:w-1/2 mt-6 px-6">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Project Name</label>
                                 <div class="relative">
-                                    <input id="projectName" type="text" required placeholder="Enter project name" class="border border-gray-300 px-4 py-3 bg-white rounded-lg text-sm shadow-sm outline-none w-full transition"/>
+                                    <input id="projectName" type="text" required placeholder="Enter project name" class="border border-[#b8dec5] px-4 py-3 bg-white rounded-lg text-sm shadow-sm outline-none w-full transition"/>
                                 </div>
                             </div>
 
                             <div class="w-full lg:w-1/2 mt-6 px-6">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Client</label>
                                 <input type="hidden" id="customerId">
-                                <div class="customer-dropdown relative border border-gray-300 bg-white rounded-lg text-sm shadow-sm w-full">
+                                <div class="customer-dropdown relative border border-[#b8dec5] bg-white rounded-lg text-sm shadow-sm w-full">
                                     <input type="text" id="customerSearchInput" class="rounded-lg w-full p-3 outline-none" placeholder="Select Client">
-                                    <div class="customer-dropdown-panel absolute left-0 w-full bg-white border border-gray-300 rounded-lg shadow-lg hidden z-50 mt-1">
+                                    <div class="customer-dropdown-panel hidden absolute left-0 w-full bg-white border border-[#b8dec5] rounded-lg shadow-lg z-50 mt-1">
                                         <ul id="customerList" class="max-h-80 overflow-y-auto"></ul>
                                         <div id="customerNoResults" class="hidden text-center text-gray-900 py-3">No results found</div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="w-full mt-6 px-6">
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Project Description</label>
-                                <div class="relative">
-                                    <textarea id="description" placeholder="Describe your project..." class="border border-gray-300 px-4 py-3 bg-white rounded-lg text-sm shadow-sm outline-none w-full transition" rows="4"></textarea>
-                                </div>
+                            <div class="w-full mt-8 px-6">
+                               <hr class="border-t-2 border-gray-200">
                             </div>
-                        </div>
-                    </section>
 
-                    <section class="rounded-xl">
-                        <h6 class="bg-gray-300 rounded-tr-xl rounded-tl-xl text-gray-700 text-lg font-semibold uppercase tracking-wider border-b p-3">⏳ Timeline</h6>
-                        <div class="flex flex-wrap bg-gradient-to-b from-gray-200 to-transparent border border-gray-300 shadow-md rounded-bl-xl rounded-br-xl pb-8">
                             <div class="w-full lg:w-1/2 mt-6 px-6">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Start Date</label>
                                 <input id="startDate" type="date" class="border border-gray-300 px-4 py-3 bg-white rounded-lg text-sm shadow-sm outline-none w-full transition"/>
@@ -95,12 +79,11 @@
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Due Date</label>
                                 <input id="endDate" type="date" class="border border-gray-300 px-4 py-3 bg-white rounded-lg text-sm shadow-sm outline-none w-full transition" placeholder="MM/DD/YYYY" />
                             </div>
-                        </div>
-                    </section>
 
-                    <section class="rounded-xl">
-                        <h6 class="bg-gray-300 rounded-tr-xl rounded-tl-xl text-gray-700 text-lg font-semibold uppercase tracking-wider border-b p-3">⚙️ Project Settings</h6>
-                        <div class="flex flex-wrap bg-gradient-to-b from-gray-200 to-transparent border border-gray-300 shadow-md rounded-bl-xl rounded-br-xl pb-8">
+                            <div class="w-full mt-8 px-6">
+                               <hr class="border-t-2 border-gray-200">
+                            </div>
+
                             <div class="w-full lg:w-1/3 mt-6 px-6">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Project Status</label>
                                 <select id="status" class="border border-gray-300 px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full">
@@ -119,21 +102,18 @@
                                     <option value="" selected hidden>Loading...</option>
                                 </select>
                             </div>
-                        </div>
-                    </section>
-                    
-                    <section class="rounded-xl">
-                        <h6 class="bg-gray-300 rounded-tr-xl rounded-tl-xl text-gray-700 text-lg font-semibold uppercase tracking-wider border-b p-3">👥 Team & Assignment</h6>
-                        <div class="flex flex-wrap bg-gradient-to-b from-gray-200 to-transparent border border-gray-300 shadow-md rounded-bl-xl rounded-br-xl pb-8">
+
+                            <div class="w-full mt-8 px-6">
+                                <hr class="border-t-2 border-gray-200">
+                            </div>
+
                             <div class="w-full lg:w-1/2 mt-6 px-6">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Reporter</label>
                                 <input type="hidden" id="reporterId">
-
                                 <div class="reporter-dropdown relative border border-gray-300 bg-white rounded-lg text-sm shadow-sm w-full">
                                     <input type="text" id="reporterSearchInput" class="rounded-lg w-full p-3 outline-none" placeholder="Select Reporter">
-                                    <div class="reporter-dropdown-panel absolute bottom-full left-0 w-full bg-white border border-gray-300 rounded-lg shadow-lg hidden z-50 mb-1">
-                                        <ul id="reporterList" class="max-h-80 overflow-y-auto">
-                                        </ul>
+                                    <div class="reporter-dropdown-panel hidden absolute bottom-full left-0 w-full bg-white border border-gray-300 rounded-lg shadow-lg z-50 mb-1">
+                                        <ul id="reporterList" class="max-h-80 overflow-y-auto"></ul>
                                         <div id="reporterNoResults" class="hidden text-center text-gray-900 py-3">No results found</div>
                                     </div>
                                 </div>
@@ -142,306 +122,342 @@
                             <div class="w-full lg:w-1/2 mt-6 px-6">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Assignee</label>
                                 <input type="hidden" id="assigneeId">
-
                                 <div class="assignee-dropdown relative border border-gray-300 bg-white rounded-lg text-sm shadow-sm w-full">
                                     <input type="text" id="assigneeSearchInput" class="rounded-lg w-full p-3 outline-none" placeholder="Select Assignee">
-                                    <div class="assignee-dropdown-panel absolute bottom-full left-0 w-full bg-white border border-gray-300 rounded-lg shadow-lg hidden z-50 mb-1">
-                                        <ul id="assigneeList" class="assignee-options max-h-80 overflow-y-auto">
-                                        </ul>
-                                        <div id="noResults" class="hidden text-center text-gray-900 py-3">No results found</div>
+                                    <div class="assignee-dropdown-panel hidden absolute bottom-full left-0 w-full bg-white border border-gray-300 rounded-lg shadow-lg z-50 mb-1">
+                                        <ul id="assigneeList" class="max-h-80 overflow-y-auto"></ul>
+                                        <div id="assigneeNoResults" class="hidden text-center text-gray-900 py-3">No results found</div>
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="w-full px-4 mt-8">
+                                <button id="submitBtn" type="submit" class="w-full bg-gradient-to-r from-green-900 via-green-800 to-green-900 text-white font-bold uppercase text-sm px-6 py-3 rounded-lg hover:scale-103 hover:shadow-lg transform transition">
+                                    Create Epic
+                                </button>
+                            </div>
+
                         </div>
                     </section>
 
                     <script>
-                        (function(){
-                            const d = new Date();
-                            const yyyy = d.getFullYear();
-                            const mm = String(d.getMonth()+1).padStart(2,'0');
-                            const dd = String(d.getDate()).padStart(2,'0');
-                            const today = `${yyyy}-${mm}-${dd}`;
-                            const el = document.getElementById('startDate');
-                            if (el) el.value = today;
-                        })();
+                        
                     </script>
-                    
-                    <div class="w-full px-4 mt-8">
-                        <button id="submitBtn" type="submit"
-                            class="w-full bg-gradient-to-r from-gray-700 via-gray-500 to-gray-700 text-white font-bold uppercase text-sm px-6 py-3 rounded-lg hover:scale-103 hover:shadow-lg transform transition">
-                            🚀 Create Epic
-                        </button>
-                    </div>
 
                 </form>
             </div>
         </div>
     </div>
-
+    
     <script>
-        const populate = (id, data) => {
+        document.getElementById("projectForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            console.log("Form submitted → sending POST request...");
+
+            const payload = {
+                action: "createEpic",
+                projectName: document.getElementById("projectName").value,
+                customerId: document.getElementById("customerId").value,
+                reporterId: document.getElementById("reporterId").value,
+                assigneeId: document.getElementById("assigneeId").value,
+                priority: document.getElementById("priority").value,
+                status: document.getElementById("status").value,
+                issue: document.getElementById("issue").value,
+                startDate: document.getElementById("startDate").value,
+                endDate: document.getElementById("endDate").value
+            };
+
+            console.log("Payload:", payload);
+
+            fetch(BASE_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                console.log("POST Response:", data);
+
+                if (!data.success) {
+                    alert(data.message);
+                    return;
+                }
+
+                alert("Project created successfully!");
+            })
+            .catch(err => {
+                console.error("POST error:", err);
+                alert("Unexpected error occurred. Check console.");
+            });
+        });
+
+        (function(){
+            const d = new Date();
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth()+1).padStart(2,'0');
+            const dd = String(d.getDate()).padStart(2,'0');
+            const today = `${yyyy}-${mm}-${dd}`;
+            const el = document.getElementById('startDate');
+            if (el) el.value = today;
+        })();
+
+        const BASE_URL = "https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=96&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQM4o-uG7x2Glwa0xLxZCRoLZc__X_wFpicysprF48aRw";
+
+        function getDropdownData() {
+            fetch(`${BASE_URL}&action=getDropdownData`)
+                .then((response) => response.json())
+                .then((data) => {
+                    populateDropdown("status", data.statuses);
+                    populateDropdown("priority", data.priorities);
+                    populateDropdown("issue", data.issues);
+
+                    populateCustomerDropdown(data.customers);
+                    populateReporterDropdown(data.employees);
+                    populateAssigneeDropdown(data.employees);
+                })
+                .catch((err) => console.error("Error fetching dropdown data:", err));
+        }
+
+        function populateDropdown(id, data) {
             const el = document.getElementById(id);
             if (!el) return;
 
-            el.innerHTML = `<option selected hidden value="">Make Selection</option>`;
-            if (!Array.isArray(data)) return;
-
-            data.forEach(item => {
-                const value = item?.id ?? item?.value ?? item;
-                const label = item?.name ?? item?.label ?? item;
-                el.innerHTML += `<option value="${value}" class="hover:bg-gray-400 hover:text-black">${label}</option>`;
-            });
-        };
-
-        populate("status", STATUSES);
-        populate("priority", PRIORITIES);
-        populate("issue", ISSUES);
-
-        (function setDefaultIssueToEpic(){
-            const issueEl = document.getElementById('issue');
-            if (!issueEl) return;
-
-            const desired = 'Epic';
-            const match = Array.from(issueEl.options).find(o => {
-                const text = (o.textContent || o.innerText || '').trim();
-                return o.value === desired || text.toLowerCase() === desired.toLowerCase();
-            });
-
-            if (match) {
-                issueEl.value = match.value;
-            }
-        })();
-        
-        (function setDefaultIssueToToDo(){
-            const statusEl = document.getElementById('status');
-            if (!statusEl) return;
-
-            const desired = 'To Do';
-            const match = Array.from(statusEl.options).find(o => {
-                const text = (o.textContent || o.innerText || '').trim();
-                return o.value === desired || text.toLowerCase() === desired.toLowerCase();
-            });
-
-            if (match) {
-                statusEl.value = match.value;
-            }
-        })();
-
-        const populateAssigneeDropdown = (data) => {
-            const assigneeUL = document.getElementById('assigneeList');
-            const noResultsBox = document.getElementById('noResults');
-
-            if (!assigneeUL) return;
-
-            assigneeUL.innerHTML = "";
-            noResultsBox.classList.add("hidden");
+            el.innerHTML = `<option value="" hidden>Select Setting</option>`;
 
             if (!Array.isArray(data) || data.length === 0) {
-                noResultsBox.classList.remove("hidden");
+                el.innerHTML += `<option disabled>No options available</option>`;
                 return;
             }
 
-            data.forEach(employee => {
-                const li = document.createElement("li");
-                li.textContent = employee.name ?? employee.label ?? String(employee);
-                li.dataset.id = employee.id ?? employee.value ?? employee;
-                li.classList.add("cursor-pointer", "px-4", "py-2", "hover:bg-gradient-to-b", "from-gray-100", "to-gray-200");
-                assigneeUL.appendChild(li);
-            });
-        };
+            data.forEach((item) => {
+                const value = item.id ?? item.value ?? item;
+                const label = item.name ?? item.label ?? item;
 
-        populateAssigneeDropdown(EMPLOYEES);
-
-        document.getElementById("projectForm").addEventListener("submit", async (e) => {
-            e.preventDefault();
-
-            const payload = {
-                projectName: document.getElementById('projectName').value,
-                customer: document.getElementById('customerId').value,
-                description: document.getElementById('description').value,
-                startDate: document.getElementById('startDate').value,
-                endDate: document.getElementById('endDate').value,
-                status: document.getElementById('status').value,
-                priority: document.getElementById('priority').value,
-                issue: document.getElementById('issue').value,
-                reporter: document.getElementById('reporterId').value,
-                assignee: document.getElementById('assigneeId').value
-            };
-
-            console.log(payload);
-
-            try {
-                const res = await fetch(window.location.href, {
-                    method: "POST",
-                    body: JSON.stringify(payload),
-                    headers: { 'Content-Type': 'application/json' }
-                });
-
-                const result = await res.json();
-                alert(result.message ?? "Saved");
-            } 
-            catch (err) {
-                console.error("submit error", err);
-                alert("Failed to submit form. Check console.");
-            }
-        });
-
-        const assigneeDropdown = document.querySelector(".assignee-dropdown");
-        const assigneeSearchInput = document.getElementById("assigneeSearchInput");
-        const assigneeList = document.getElementById("assigneeList");
-        const assigneeIdField = document.getElementById("assigneeId");
-        const noResultsBox = document.getElementById("noResults");
-
-        assigneeSearchInput.addEventListener("focus", () => {
-            const panel = assigneeDropdown.querySelector(".assignee-dropdown-panel");
-            panel.style.display = "block";
-            assigneeDropdown.classList.add("open");
-        });
-
-        document.addEventListener("click", (e) => {
-            if (!assigneeDropdown.contains(e.target)) {
-                const panel = assigneeDropdown.querySelector(".assignee-dropdown-panel");
-                panel.style.display = "none";
-                assigneeDropdown.classList.remove("open");
-            }
-        });
-
-        assigneeList.addEventListener("click", (e) => {
-            const li = e.target.closest("li");
-            if (!li) return;
-
-            assigneeSearchInput.value = li.textContent;
-            assigneeIdField.value = li.dataset.id;
-
-            const panel = assigneeDropdown.querySelector(".assignee-dropdown-panel");
-            panel.style.display = "none";
-            assigneeDropdown.classList.remove("open");
-        });
-
-        assigneeSearchInput.addEventListener("keyup", () => {
-            const search = assigneeSearchInput.value.toUpperCase();
-
-            const filtered = EMPLOYEES.filter(emp => {
-                const name = (emp.name ?? emp.label ?? "").toUpperCase();
-                return name.includes(search);
+                el.innerHTML += `<option value="${value}">${label}</option>`;
             });
 
-            populateAssigneeDropdown(filtered);
-        });
+            if (id === "issue") {
+                const epic = data.find(i => i.name?.toLowerCase() === "epic");
+                if (epic) el.value = epic.id;
+            }
 
-        const reporterDropdown = document.querySelector(".reporter-dropdown");
-        const reporterSearchInput = document.getElementById("reporterSearchInput");
-        const reporterList = document.getElementById("reporterList");
-        const reporterIdField = document.getElementById("reporterId");
-        const reporterNoResults = document.getElementById("reporterNoResults");
+            if (id === "status") {
+                const todo = data.find(i => i.name?.toLowerCase() === "to do" || i.name?.toLowerCase() === "todo");
+                if (todo) el.value = todo.id;
+            }
+        }
 
-        const populateReporterDropdown = (data) => {
-            reporterList.innerHTML = "";
-            reporterNoResults.classList.add("hidden");
+        let CUSTOMERS = [];
+        let EMPLOYEES = [];
 
-            if (!Array.isArray(data) || data.length === 0) {
-                reporterNoResults.classList.remove("hidden");
+        function populateCustomerDropdown(data) {
+            const source = Array.isArray(data) ? data : [];
+
+            const panel = document.querySelector(".customer-dropdown-panel");
+            const list = document.getElementById("customerList");
+            const noResults = document.getElementById("customerNoResults");
+            const input = document.getElementById("customerSearchInput");
+
+            if (data === CUSTOMERS || CUSTOMERS.length === 0) {
+                CUSTOMERS = source;
+            }
+
+            list.innerHTML = "";
+            noResults.classList.add("hidden");
+
+            if (source.length === 0) {
+                noResults.classList.remove("hidden");
+                if (document.activeElement === input) panel.classList.remove("hidden");
                 return;
             }
 
-            data.forEach(emp => {
+            source.forEach((emp) => {
                 const li = document.createElement("li");
-                li.textContent = emp.name ?? emp.label ?? String(emp);
-                li.dataset.id = emp.id ?? emp.value ?? emp;
-
-                li.classList.add("cursor-pointer", "px-4", "py-2", "hover:bg-gradient-to-b", "from-gray-100", "to-gray-200");
-                reporterList.appendChild(li);
+                li.textContent = emp.name;
+                li.dataset.id = emp.id;
+                li.className =
+                    "cursor-pointer px-4 py-2 hover:bg-gradient-to-b from-[#ebfff3] to-[#c6ecd4]";
+                list.appendChild(li);
             });
-        };
 
-        populateReporterDropdown(EMPLOYEES);
-
-        reporterSearchInput.addEventListener("focus", () => {
-            reporterDropdown.querySelector(".reporter-dropdown-panel").style.display = "block";
-        });
-
-        document.addEventListener("click", (e) => {
-            if (!reporterDropdown.contains(e.target)) {
-                reporterDropdown.querySelector(".reporter-dropdown-panel").style.display = "none";
+            if (document.activeElement === input) {
+                panel.classList.remove("hidden");
             }
-        });
+        }
 
-        reporterList.addEventListener("click", (e) => {
-            const li = e.target.closest("li");
-            if (!li) return;
+        document.getElementById("customerSearchInput").addEventListener("keyup", function () {
+            const search = this.value.trim().toUpperCase();
 
-            reporterSearchInput.value = li.textContent;
-            reporterIdField.value = li.dataset.id;
-            reporterDropdown.querySelector(".reporter-dropdown-panel").style.display = "none";
-        });
-
-        reporterSearchInput.addEventListener("keyup", () => {
-            const search = reporterSearchInput.value.toUpperCase();
-
-            const filtered = EMPLOYEES.filter(emp => {
-                const name = (emp.name ?? emp.label ?? "").toUpperCase();
-                return name.includes(search);
-            });
-            populateReporterDropdown(filtered);
-        });
-
-        const customerDropdown = document.querySelector(".customer-dropdown");
-        const customerSearchInput = document.getElementById("customerSearchInput");
-        const customerList = document.getElementById("customerList");
-        const customerIdField = document.getElementById("customerId");
-        const customerNoResults = document.getElementById("customerNoResults");
-
-        const populateCustomerDropdown = (data) => {
-            customerList.innerHTML = "";
-            customerNoResults.classList.add("hidden");
-
-            if (!Array.isArray(data) || data.length === 0) {
-                customerNoResults.classList.remove("hidden");
-                return;
-            }
-
-            data.forEach(customer => {
-                const li = document.createElement("li");
-                li.textContent = customer.name ?? customer.label ?? String(customer);
-                li.dataset.id = customer.id ?? customer.value ?? customer;
-
-                li.classList.add("cursor-pointer", "px-4", "py-2", "hover:bg-gradient-to-b", "from-gray-100", "to-gray-200");
-                customerList.appendChild(li);
-            });
-        };
-
-        populateCustomerDropdown(CUSTOMERS);
-
-        customerSearchInput.addEventListener("focus", () => {
-            customerDropdown.querySelector(".customer-dropdown-panel").style.display = "block";
-        });
-
-        document.addEventListener("click", (e) => {
-            if (!customerDropdown.contains(e.target)) {
-                customerDropdown.querySelector(".customer-dropdown-panel").style.display = "none";
-            }
-        });
-
-        customerList.addEventListener("click", (e) => {
-            const li = e.target.closest("li");
-            if (!li) return;
-
-            customerSearchInput.value = li.textContent;
-            customerIdField.value = li.dataset.id;
-            customerDropdown.querySelector(".customer-dropdown-panel").style.display = "none";
-        });
-
-        customerSearchInput.addEventListener("keyup", () => {
-            const search = customerSearchInput.value.toUpperCase();
-
-            const filtered = CUSTOMERS.filter(cust => {
-                const name = (cust.name ?? cust.label ?? "").toUpperCase();
-                return name.includes(search);
-            });
+            const filtered = CUSTOMERS.filter((c) =>
+                c.name.toUpperCase().includes(search)
+            );
 
             populateCustomerDropdown(filtered);
         });
+
+        document.getElementById("customerList").addEventListener("click", function (e) {
+            const li = e.target.closest("li");
+            if (!li) return;
+
+            document.getElementById("customerSearchInput").value = li.textContent;
+            document.getElementById("customerId").value = li.dataset.id;
+
+            document.querySelector(".customer-dropdown-panel").classList.add("hidden");
+        });
+
+        document.getElementById("customerSearchInput").addEventListener("focus", () => {
+            populateCustomerDropdown(CUSTOMERS);
+            document.querySelector(".customer-dropdown-panel").classList.remove("hidden");
+        });
+
+        document.addEventListener("click", (e) => {
+            const input = document.getElementById("customerSearchInput");
+            const panel = document.querySelector(".customer-dropdown-panel");
+
+            if (!input.contains(e.target) && !panel.contains(e.target)) {
+                panel.classList.add("hidden");
+            }
+        });
+
+        function populateReporterDropdown(data) {
+            const source = Array.isArray(data) ? data : []; 
+
+            const panel = document.querySelector(".reporter-dropdown-panel");
+            const list = document.getElementById("reporterList");
+            const noResults = document.getElementById("reporterNoResults");
+            const input = document.getElementById("reporterSearchInput");
+
+            if (data === EMPLOYEES || EMPLOYEES.length === 0) {
+                EMPLOYEES = source;
+            }
+
+            list.innerHTML = "";
+            noResults.classList.add("hidden");
+
+            if (source.length === 0) {
+                noResults.classList.remove("hidden");
+                if (document.activeElement === input) panel.classList.remove("hidden");
+                return;
+            }
+
+            source.forEach((emp) => {
+                const li = document.createElement("li");
+                li.textContent = emp.name;
+                li.dataset.id = emp.id;
+                li.className =
+                    "cursor-pointer px-4 py-2 hover:bg-gradient-to-b from-[#ebfff3] to-[#c6ecd4]";
+                list.appendChild(li);
+            });
+
+            if (document.activeElement === input) {
+                panel.classList.remove("hidden");
+            }
+        }
+
+        document.getElementById("reporterSearchInput").addEventListener("keyup", function () {
+            const search = this.value.trim().toUpperCase();
+            const filtered = EMPLOYEES.filter((e) =>
+                e.name.toUpperCase().includes(search)
+            );
+            populateReporterDropdown(filtered);
+        });
+
+        document.getElementById("reporterList").addEventListener("click", function (e) {
+            const li = e.target.closest("li");
+            if (!li) return;
+
+            document.getElementById("reporterSearchInput").value = li.textContent;
+            document.getElementById("reporterId").value = li.dataset.id;
+
+            document.querySelector(".reporter-dropdown-panel").classList.add("hidden");
+        });
+
+        document.getElementById("reporterSearchInput").addEventListener("focus", () => {
+            populateReporterDropdown(EMPLOYEES);
+            document.querySelector(".reporter-dropdown-panel").classList.remove("hidden");
+        });
+
+        document.addEventListener("click", (e) => {
+            const input = document.getElementById("reporterSearchInput");
+            const panel = document.querySelector(".reporter-dropdown-panel");
+
+            if (!input.contains(e.target) && !panel.contains(e.target)) {
+                panel.classList.add("hidden");
+            }
+        });
+
+        function populateAssigneeDropdown(data) {
+            const source = Array.isArray(data) ? data : []; 
+
+            const panel = document.querySelector(".assignee-dropdown-panel");
+            const list = document.getElementById("assigneeList");
+            const noResults = document.getElementById("assigneeNoResults");
+            const input = document.getElementById("assigneeSearchInput");
+
+            if (data === EMPLOYEES || EMPLOYEES.length === 0) {
+                EMPLOYEES = source;
+            }
+
+            list.innerHTML = "";
+            noResults.classList.add("hidden");
+
+            if (source.length === 0) {
+                noResults.classList.remove("hidden");
+                if (document.activeElement === input) panel.classList.remove("hidden");
+                return;
+            }
+
+            source.forEach((emp) => {
+                const li = document.createElement("li");
+                li.textContent = emp.name;
+                li.dataset.id = emp.id;
+                li.className =
+                    "cursor-pointer px-4 py-2 hover:bg-gradient-to-b from-[#ebfff3] to-[#c6ecd4]";
+                list.appendChild(li);
+            });
+
+            if (document.activeElement === input) {
+                panel.classList.remove("hidden");
+            }
+        }
+
+        document.getElementById("assigneeSearchInput").addEventListener("keyup", function () {
+            const search = this.value.trim().toUpperCase();
+            const filtered = EMPLOYEES.filter((e) =>
+                e.name.toUpperCase().includes(search)
+            );
+            populateAssigneeDropdown(filtered);
+        });
+
+        document.getElementById("assigneeList").addEventListener("click", function (e) {
+            const li = e.target.closest("li");
+            if (!li) return;
+
+            document.getElementById("assigneeSearchInput").value = li.textContent;
+            document.getElementById("assigneeId").value = li.dataset.id;
+
+            document.querySelector(".assignee-dropdown-panel").classList.add("hidden");
+        });
+
+        document.getElementById("assigneeSearchInput").addEventListener("focus", () => {
+            populateAssigneeDropdown(EMPLOYEES);
+            document.querySelector(".assignee-dropdown-panel").classList.remove("hidden");
+        });
+
+        document.addEventListener("click", (e) => {
+            const input = document.getElementById("assigneeSearchInput");
+            const panel = document.querySelector(".assignee-dropdown-panel");
+
+            if (!input.contains(e.target) && !panel.contains(e.target)) {
+                panel.classList.add("hidden");
+            }
+        });
+
+        getDropdownData();
+
     </script>
 
 </body>
