@@ -13,9 +13,6 @@
         body {
             font-family: "Montserrat", sans-serif;
         }
-       * {
-            accent-color: #0c6c73;
-        }
     </style>
 
 </head>
@@ -259,7 +256,7 @@
                 const epic = data.find(i => i.name?.toLowerCase() === "epic");
                 if (epic) {
                     el.value = epic.id;
-                    el.disabled = true; // disable dropdown
+                    el.disabled = true;
                 }
             }
         }
