@@ -75,10 +75,24 @@ define(['N/file', 'N/log', 'N/search', 'N/ui/serverWidget', 'N/record'],
                         const jobId = job.save();
                         log.audit("Job Successfully Created", `Job ID: ${jobId}`);
 
+                        let jiraLink = "";
+                        try {
+                            const savedJob = record.load({
+                                type: record.Type.JOB,
+                                id: jobId
+                            });
+
+                            jiraLink = savedJob.getValue("custentity_jj_jira_task_link") || "";
+                        }
+                        catch (linkErr) {
+                            log.error("Error fetching Jira link", linkErr);
+                        }
+
                         scriptContext.response.write(JSON.stringify({
                             success: true,
                             message: "New Epic Created in Jira! Please navigate to Jira and add the description to the newly created Epic task.",
-                            jobId: jobId
+                            jobId: jobId,
+                            jiraLink: jiraLink
                         }));
                     } 
                     catch (e) {
