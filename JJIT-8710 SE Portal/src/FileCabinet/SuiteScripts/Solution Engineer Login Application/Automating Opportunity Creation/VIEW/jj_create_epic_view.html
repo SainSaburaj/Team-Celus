@@ -142,13 +142,61 @@
     </div>
     
     <script>
+        const BASE_URL = "https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM";
+
+        function getDropdownData() {
+            const payload = { action: "getDropdownData" };
+
+            fetch(BASE_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.text())
+            .then(text => {
+                let data;
+                try { 
+                    data = JSON.parse(text); 
+                } 
+                catch (err) {
+                    console.error("Parse error:", err, text);
+                    alert("Unexpected server response.");
+                    return;
+                }
+
+                console.log("Dropdown POST Response:", data);
+
+                populateDropdown("status", data.statuses || []);
+                populateDropdown("priority", data.priorities || []);
+                populateDropdown("issue", data.issues || []);
+
+                populateCustomerDropdown(data.customers || []);
+                populateReporterDropdown(data.employees || []);
+                populateAssigneeDropdown(data.employees || []);
+            })
+            .catch(err => console.error("Error fetching dropdown data via POST:", err));
+        }
+
         document.getElementById("projectForm").addEventListener("submit", function (e) {
             e.preventDefault();
 
-            console.log("Form submitted → sending POST request...");
+            const loadingDiv = document.createElement("div");
+            loadingDiv.id = "loadingMsg";
+            loadingDiv.innerHTML = "Creating Epic... Please wait...";
+            loadingDiv.style.position = "fixed";
+            loadingDiv.style.top = "50%";
+            loadingDiv.style.left = "50%";
+            loadingDiv.style.transform = "translate(-50%, -50%)";
+            loadingDiv.style.padding = "100px";
+            loadingDiv.style.background = "#000000c7";
+            loadingDiv.style.fontWeight = "bold";
+            loadingDiv.style.color = "#fff";
+            loadingDiv.style.borderRadius = "8px";
+            loadingDiv.style.zIndex = "9999";
+            document.body.appendChild(loadingDiv);
 
             const payload = {
-                action: "createEpic",
+                action: "createepic",
                 projectName: document.getElementById("projectName").value,
                 customerId: document.getElementById("customerId").value,
                 reporterId: document.getElementById("reporterId").value,
@@ -160,41 +208,43 @@
                 endDate: document.getElementById("endDate").value
             };
 
-            console.log("Payload:", payload);
-
             fetch(BASE_URL, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
             })
-            .then(res => res.text()) // <-- use text() first
+            .then(res => res.text())
             .then(text => {
                 let data;
-                try {
-                    data = JSON.parse(text); // try parsing JSON
-                } catch (err) {
-                    console.error("Error parsing response:", err, text);
-                    alert("Unexpected response from server. Check console.");
+                try { data = JSON.parse(text); }
+                catch (err) {
+                    console.error("Parse error:", err, text);
+                    alert("Unexpected server response.");
+                    loadingDiv.remove();
                     return;
                 }
 
                 console.log("POST Response:", data);
+                loadingDiv.remove();
 
                 if (data.success) {
-                    alert(data.message || "Epic created successfully!");
-                } 
+                    if (!data.jiraLink) {
+                        alert("Epic created, but Jira link is missing!");
+                        return;
+                    }
+                    const go = confirm("Epic created successfully!\n\nDo you want to open the Jira task?");
+                    if (go) window.open(data.jiraLink, "_blank");
+                }
                 else {
                     alert(data.message || "Error creating Epic!");
                 }
             })
             .catch(err => {
                 console.error("POST error:", err);
-                alert("Unexpected error occurred. Check console.");
+                loadingDiv.remove();
+                alert("Unexpected error occurred.");
             });
         });
-
 
         (function(){
             const d = new Date();
@@ -205,23 +255,6 @@
             const el = document.getElementById('startDate');
             if (el) el.value = today;
         })();
-
-        const BASE_URL = "https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=94&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQrDlwptKYI10xcZm8TvwdXzDsdGxEhcV6yzzd44YhFUA";
-
-        function getDropdownData() {
-            fetch(`${BASE_URL}&action=getDropdownData`)
-                .then((response) => response.json())
-                .then((data) => {
-                    populateDropdown("status", data.statuses);
-                    populateDropdown("priority", data.priorities);
-                    populateDropdown("issue", data.issues);
-
-                    populateCustomerDropdown(data.customers);
-                    populateReporterDropdown(data.employees);
-                    populateAssigneeDropdown(data.employees);
-                })
-                .catch((err) => console.error("Error fetching dropdown data:", err));
-        }
 
         function populateDropdown(id, data) {
             const el = document.getElementById(id);

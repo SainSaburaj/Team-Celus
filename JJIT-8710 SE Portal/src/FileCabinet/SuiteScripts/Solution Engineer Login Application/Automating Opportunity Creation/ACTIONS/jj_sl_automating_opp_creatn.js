@@ -17,8 +17,8 @@
 * REVISION HISTORY
 * Version 1.0.0 : 21-February-2024 : Created the initial build by JJ0149
 **************************************************************************************************************************************/
-define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', 'N/email', 'N/search'],
-    (file, crypto, nscrypto, record, model, mail, search) => {
+define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', 'N/email', 'N/search', 'N/runtime'],
+    (file, crypto, nscrypto, record, model, mail, search, runtime) => {
         const FOLDER_ID = 165218;
         const XORCipher = {
             encode: function encode(key, data) {
@@ -241,6 +241,8 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 const email = requestBody.email;
                 const credentialRecordId = model.getCredential(email, false);
                 log.debug("credentialRecordId", credentialRecordId)
+                log.debug("is sales manager", checkIfSalesManager(credentialRecordId));
+
                 let response;
                 if (credentialRecordId) {
                     const decryptedPassword = this.decryptPassword(requestBody);
@@ -288,6 +290,8 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 }
                 return response;
             },
+
+
             /**
              * Creates a new order request with the provided information and file.
              * 
@@ -579,6 +583,32 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 }
             }
         };
+
+        function getEmployeeIdByEmail(emailId) {
+            try {
+                const employeeSearch = search.create({
+                    type: search.Type.EMPLOYEE,
+                    filters: [
+                        ['email', 'is', emailId]
+                    ],
+                    columns: [
+                        search.createColumn({ name: 'internalid' })
+                    ]
+                });
+
+                const results = employeeSearch.run().getRange({ start: 0, end: 1 });
+
+                if (results && results.length > 0) {
+                    return results[0].getValue({ name: 'internalid' });
+                }
+            }
+            catch (error) {
+                log.error("Error in getEmployeeIdByEmail", error);
+            }
+
+            return null;
+        }
+
         /**
          * Modifies the folder property of the provided file object and saves it.
          * @param {Object} fileObj - The file object to be saved.
@@ -590,6 +620,37 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             fileObj.name = newName;
             return fileObj.save();
         }
+        /**
+         * Function to check if logged in employee is sales manager
+         */
+        function checkIfSalesManager(recordId) {
+            // Convert recordId to string
+            recordId = String(recordId);
+
+            const salesManagerSearch = search.create({
+                type: "customrecord_jj_order_request_credential",
+                filters: [
+                    ["internalid", "anyof", recordId]
+                ],
+                columns: [
+                    search.createColumn({ name: "name", label: "Name" }),
+                    search.createColumn({ name: "custrecord_jj_sales_manager", label: "Sales Manager" })
+                ]
+            });
+
+            // Run the search
+            const result = salesManagerSearch.run().getRange({ start: 0, end: 1 });
+
+            // Extract the Sales Manager value properly
+            let isSalesManager = result && result.length > 0
+                ? result[0].getValue("custrecord_jj_sales_manager")
+                : null;
+
+            return isSalesManager;
+        }
+
+
+
         /**
          * Creates an order request record with the given parameters and attaches a file to it.
          * @param {number} fileId - The ID of the file to be attached to the order request.
@@ -687,8 +748,8 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
          * @param {string} action - The action for which the file path is required ('reset', 'upload', 'forgot', or any other).
          * @returns {string} - The file path corresponding to the provided action.
          */
-        function 
-        getPageFilePath(action) {
+        function
+            getPageFilePath(action) {
             switch (action) {
                 case 'reset':
                     return '../VIEW/jj_home_page.html';
@@ -710,10 +771,14 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     return '../VIEW/jj_home_page.html';
                 case 'leaddetails':
                     return '../VIEW/jj_home_page.html';
+                case 'kanbanBoard':
+                    return '../VIEW/jj_sales_process_kanban_board.html';
                 case 'createepic':
                     return '../VIEW/jj_create_epic_view.html';
+                case 'listestimate':
+                    return '../VIEW/jj_list_estimates.html';
                 default:
-                    return '../VIEW/jj_home_page.html';
+                    return '../VIEW/jj_login_page.html';
             }
         }
         /**
@@ -907,9 +972,9 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 };
             }
         }
-        function getReportData(request ) {
+        function getReportData(request) {
             try {
-                 let key = 'tdgakweufjgjh'
+                let key = 'tdgakweufjgjh'
                 let id = XORCipher.decode(key, request.id);
                 log.debug(" decoded id", id);
                 const responseData = {
@@ -918,98 +983,656 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     customerConversion: model.getCustomerConversion(id)
                 };
                 return responseData;
-            } 
-            catch (error) {
+            } catch (error) {
                 log.error("Error @getReportData", error);
                 return {};
             }
         }
 
-        function createEpicRecord(req) {
+        // kanban board functions
+
+        /**
+         * Converts a date string from 'YYYY-MM-DD' to 'M/D/YYYY' format.
+         *
+         * @param {string} dateStr - The date string in 'YYYY-MM-DD' format.
+         * @returns {string} - The formatted date string in 'M/D/YYYY' format.
+         */
+        function dateFormatter(dateStr) {
             try {
-                const data = {
-                    projectName: req.projectName,
-                    customerId: req.customerId,
-                    startDate: req.startDate,
-                    endDate: req.endDate,
-                    status: req.status,
-                    priority: req.priority,
-                    issue: req.issue,
-                    assigneeId: req.assigneeId,
-                    reporterId: req.reporterId
+                if (!dateStr) {
+                    log.error("Invalid date string", dateStr);
+                    return null;
+                }
+                const [year, month, day] = dateStr.split('-');
+                return `${parseInt(month)}/${parseInt(day)}/${year}`;
+            } catch (error) {
+                log.error('Error @ dateFormatter', error);
+            }
+        }
+
+        /**
+         * Fetches Kanban dashboard data including transaction records and summary totals.
+         *
+         * @param {string} startDate - The start date for filtering records (ISO format or NetSuite-compatible).
+         * @param {string} endDate - The end date for filtering records (ISO format or NetSuite-compatible).
+         * @returns {Object} An object containing:
+         * @property {Array} data - List of filtered transaction records for the Kanban board.
+         * @property {Object|null} recordTypeTotal - Summary totals by record type (opportunity, estimate, salesorder),
+         *                                           or null if the user is not authorized to view totals.
+         */
+        function fetchKanbanData(startDate, endDate) {
+            try {
+                return {
+                    data: getRecords(startDate, endDate),
+                    recordTypeTotal: salesSummaryByType(startDate, endDate),
                 };
+            } catch (error) {
+                log.error('Error @ fetchKanbanData', error);
+            }
+        }
 
-                const startDate = new Date(data.startDate);
-                const endDate = new Date(data.endDate);
+        /**
+         * Fetches transaction records (Opportunity, Sales Order, Estimate) within a given date range.
+         *
+         * @param {Date|string} startDate - The start date for the search range.
+         * @param {Date|string} endDate - The end date for the search range.
+         * @returns {Array<Object>} An array of transaction objects containing:
+         *   - id {string} Internal ID
+         *   - transactionNumber {string} Transaction Number
+         *   - stage {string} Derived stage/type
+         *   - date {string} Transaction date
+         *   - desc {string|null} Memo
+         *   - status {string} Status reference
+         *   - entity {string} Customer/Entity name
+         *   - amount {string|number} Transaction amount
+         *   - probability {string|number} Probability
+         *   - entityStatus {string} Entity status
+         *   - currency {string} Currency name
+         */
+        function getRecords(startDate, endDate) {
+            const resultRow = [];
+            try {
+                let formattedStartDate = '';
+                let formattedEndDate = '';
+                if (startDate && endDate) {
+                    formattedStartDate = dateFormatter(startDate);
+                    formattedEndDate = dateFormatter(endDate);
+                    if (formattedStartDate && formattedEndDate) {
+                        const transactionSearchObj = search.create({
+                            type: "transaction",
+                            settings: [{ "name": "consolidationtype", "value": "ACCTTYPE" }],
+                            filters:
+                                [
+                                    ["type", "anyof", "Opprtnty", "SalesOrd", "Estimate"],
+                                    "AND",
+                                    ["mainline", "is", "T"],
+                                    "AND",
+                                    ["trandate", "within", formattedStartDate, formattedEndDate],
+                                    "AND",
+                                    ["status", "noneof", "Opprtnty:C", "Estimate:C", "Estimate:X", "Estimate:B", "Estimate:V", "Opprtnty:D", "Opprtnty:B"]
+                                ],
+                            columns:
+                                [
+                                    search.createColumn({ name: "transactionnumber", label: "Transaction Number" }),
+                                    search.createColumn({ name: "internalid", label: "Internal ID" }),
+                                    search.createColumn({ name: "recordtype", label: "Record Type" }),
+                                    search.createColumn({ name: "trandate", label: "Date" }),
+                                    search.createColumn({ name: "memomain", label: "Memo (Main)" }),
+                                    search.createColumn({ name: "type", label: "Type" }),
+                                    search.createColumn({
+                                        name: "formulatext",
+                                        formula: "CASE WHEN {type}='Opportunity' THEN 'opportunity' WHEN {type}='Sales Order' THEN 'salesorder' WHEN {type}='Quote' THEN 'estimate' ELSE {recordtype} END",
+                                        label: "Formula (Text)"
+                                    }),
+                                    search.createColumn({
+                                        name: "formulatext",
+                                        formula: "NVL({title}, {tranid})",
+                                        label: "Formula (Text)"
+                                    }),
+                                    search.createColumn({ name: "statusref", label: "Status" }),
+                                    search.createColumn({
+                                        name: "formulatext",
+                                        formula: "{entitystatus}",
+                                        label: "Formula (Text)"
+                                    }),
+                                    search.createColumn({ name: "entity", label: "Name" }),
+                                    search.createColumn({ name: "amount", label: "Amount" }),
+                                    search.createColumn({ name: "probability", label: "Probability" }),
+                                    search.createColumn({ name: "currency", label: "Currency" })
+                                ]
+                        });
+                        const pagedSearchData = transactionSearchObj.runPaged({
+                            pagesize: 1000
+                        });
+                        pagedSearchData.pageRanges.forEach(function (pageRange) {
+                            const currentPage = pagedSearchData.fetch({ index: pageRange.index });
+                            currentPage.data.forEach(function (result) {
+                                resultRow.push({
+                                    id: result.getValue('internalid'),
+                                    transactionNumber: result.getValue('transactionnumber'),
+                                    stage: result.getValue(result.columns[6]), // Custom formula column for stage
+                                    date: result.getValue('trandate'),
+                                    desc: result.getValue('memomain'),
+                                    status: result.getValue({ name: "statusref", label: "Status" }),
+                                    entity: result.getText('entity'),
+                                    amount: result.getValue('amount'),
+                                    probability: result.getValue('probability'),
+                                    entityStatus: result.getValue({
+                                        name: "formulatext",
+                                        formula: "{entitystatus}",
+                                        label: "Formula (Text)"
+                                    }),
+                                    currency: result.getText('currency')
+                                });
+                            })
+                        });
+                        return resultRow;
+                    } else {
+                        log.debug('Formatted date is not available in the getRecord search');
+                        return [];
+                    }
+                } else {
+                    log.debug('Start date or end date did not available in getRecord');
+                    return [];
+                }
+            } catch (e) {
+                log.error('Error @ getRecords', e);
+                return []
+            }
+        }
 
-                if (endDate < startDate) {
-                    return {
-                        success: false,
-                        message: "Error: End date cannot be before start date."
-                    };
+        /**
+         * Calculates total amounts for Sales Orders, Estimates (Quotes), and Opportunities
+         * within a specified date range using a NetSuite transaction search.
+         *
+         * @param {Date|string} startDate - The start date for the search range.
+         * @param {Date|string} endDate - The end date for the search range.
+         * @returns {{salesorderTotal: number, estimateTotal: number, opportunityTotal: number}} 
+         *          An object containing summed totals for each transaction type.
+         */
+        function salesSummaryByType(startDate, endDate) {
+            try {
+                const totals = {
+                    salesorderTotal: 0,
+                    estimateTotal: 0,
+                    opportunityTotal: 0
+                };
+                let formattedStartDate = '';
+                let formattedEndDate = '';
+                if (startDate && endDate) {
+                    formattedStartDate = dateFormatter(startDate);
+                    formattedEndDate = dateFormatter(endDate);
+
+                    if (formattedStartDate && formattedEndDate) {
+                        const searchTotal = search.create({
+                            type: "transaction",
+                            settings: [{ "name": "consolidationtype", "value": "ACCTTYPE" }],
+                            filters:
+                                [
+                                    ["type", "anyof", "Estimate", "SalesOrd", "Opprtnty"],
+                                    "AND",
+                                    ["memorized", "is", "F"],
+                                    "AND",
+                                    ["mainline", "is", "T"],
+                                    "AND",
+                                    ["trandate", "within", formattedStartDate, formattedEndDate],
+                                    "AND",
+                                    ["status", "noneof", "Opprtnty:C", "Opprtnty:B", "Opprtnty:D", "Estimate:C", "Estimate:X", "Estimate:B", "Estimate:V"]
+                                ],
+                            columns:
+                                [
+                                    search.createColumn({
+                                        name: "formulatext",
+                                        summary: "GROUP",
+                                        formula: "CASE  WHEN {type} = 'Opportunity' THEN 'opportunity'  WHEN {type} = 'Sales Order' THEN 'salesorder'  WHEN {type} = 'Quote' THEN 'estimate'  ELSE {recordtype}END",
+                                        label: "Record Type"
+                                    }),
+                                    search.createColumn({
+                                        name: "amount",
+                                        summary: "SUM",
+                                        label: "Amount"
+                                    }),
+                                ]
+                        });
+                        searchTotal.run().each(function (result) {
+                            const recordType = result.getValue(result.columns[0]);
+                            const totalAmount = parseFloat(result.getValue(result.columns[1])) || 0;
+                            if (recordType === 'salesorder') {
+                                totals.salesorderTotal = totalAmount;
+                            } else if (recordType === 'estimate') {
+                                totals.estimateTotal = totalAmount;
+                            } else if (recordType === 'opportunity') {
+                                totals.opportunityTotal = totalAmount;
+                            }
+                            return true;
+                        });
+                        return totals;
+                    } else {
+                        log.debug('Formatted date is not available in the salesSummaryByType search');
+                        return totals;
+                    }
+                } else {
+                    log.debug('Start date or end date did not available in salesSummaryByType');
+                    return totals;
+                }
+            } catch (error) {
+                log.error('Error @ salesSummaryByType', error.toString());
+            }
+        }
+
+        /**
+         * Retrieves the total transaction amounts for each record type (opportunity, estimate, salesorder)
+         * within a specified date range using a NetSuite saved search.
+         * Filters out closed or irrelevant statuses and returns grouped totals.
+         *
+         * @function
+         * @param {string} startDate - The raw start date string (e.g., '2025-10-01').
+         * @param {string} endDate - The raw end date string (e.g., '2025-10-30').
+         * @returns {Object} totals - An object containing summed amounts by record type.
+         * @property {number} totals.opportunityTotal - Total amount for opportunities.
+         * @property {number} totals.estimateTotal - Total amount for estimates.
+         * @property {number} totals.salesorderTotal - Total amount for sales orders.
+         */
+        function updateRecordStage(fromRecordType, toRecordType, fromId) {
+            try {
+                if (!fromRecordType || !toRecordType || !fromId) {
+                    log.error('Missing parameters for updating record stage');
+                    return false;
+                }
+                if (fromRecordType !== toRecordType) {
+                    let transactionRecord = record.transform({
+                        fromType: fromRecordType,
+                        fromId: fromId,
+                        toType: toRecordType,
+                        isDynamic: true
+                    });
+                    transactionRecord.setValue({
+                        fieldId: 'custbody_jj_skb_created_via_kanba',
+                        value: true // Example custom body field
+                    });
+                    let newRecordId = transactionRecord.save();
+                    log.debug('Record transformed', `New ${toRecordType} ID: ${newRecordId}`);
+                    return true;
+                }
+            } catch (e) {
+                log.error('Error updating record stage', e);
+                return false;
+            }
+        }
+
+        /**
+         * Retrieves basic information about the currently logged-in NetSuite user.
+         * Includes ID, name, role, email, and a timestamp for last login.
+         *
+         * @function
+         * @returns {Object} userInfo - Object containing user details.
+         * @property {number|string} userInfo.id - Internal ID of the user.
+         * @property {string} userInfo.name - Full name of the user.
+         * @property {string} userInfo.role - Role name or ID.
+         * @property {string} userInfo.email - Email address of the user.
+         * @property {string} userInfo.lastLogin - Localized timestamp of the current session.
+         */
+        function userInformation() {
+            try {
+                const userObj = runtime.getCurrentUser();
+                return {
+                    id: userObj.id,
+                    name: userObj.name,
+                    role: userObj.role,
+                    email: userObj.email,
+                    lastLogin: new Date().toLocaleString()
+                };
+            } catch (error) {
+                log.error('Error @ userInformation');
+            }
+        }
+
+        /**
+         * Retrieves the three most recent transaction records created via the Kanban interface.
+         * Filters by record type and a custom body field, and returns simplified metadata.
+         *
+         * @function
+         * @returns {Object} resultSummary - Object containing recent records and count.
+         * @property {Array<Object>} resultSummary.data - Array of recent record objects.
+         * @property {string} resultSummary.data[].stage - Normalized record type ('opportunity', 'estimate', 'salesorder').
+         * @property {string} resultSummary.data[].timestamp - Creation date of the record.
+         * @property {string} resultSummary.data[].title - Title or transaction ID.
+         * @property {number} resultSummary.noOfRecords - Total number of records returned.
+         */
+        function getRecentRecords() {
+            const result = [];
+            try {
+                const transactionSearchObj = search.create({
+                    type: "transaction",
+                    settings: [{ "name": "consolidationtype", "value": "ACCTTYPE" }],
+                    filters:
+                        [
+                            ["type", "anyof", "Opprtnty", "Estimate", "SalesOrd"],
+                            "AND",
+                            ["mainline", "is", "T"],
+                            "AND",
+                            ["custbody_jj_skb_created_via_kanba", "is", "T"]
+                        ],
+                    columns:
+                        [
+                            search.createColumn({
+                                name: "formulatext",
+                                formula: "CASE WHEN {type}='Opportunity' THEN 'opportunity' WHEN {type}='Sales Order' THEN 'salesorder' WHEN {type}='Quote' THEN 'estimate' ELSE {recordtype} END",
+                                label: "orderType"
+                            }),
+                            search.createColumn({ name: "datecreated", label: "Date Created", sort: search.Sort.DESC }),
+                            search.createColumn({
+                                name: "formulatext",
+                                formula: "NVL({title}, {tranid})",
+                                label: "title"
+                            })
+                        ]
+                });
+                let searchResult = transactionSearchObj.run().getRange({
+                    start: 0,
+                    end: 3
+                });
+                for (let i = 0; i < searchResult.length; i++) {
+                    let resultRow = searchResult[i];
+                    result.push({
+                        stage: resultRow.getValue(resultRow.columns[0]),
+                        timestamp: resultRow.getValue(resultRow.columns[1]),
+                        title: resultRow.getValue(resultRow.columns[2])
+                    });
+                }
+                return result;
+            } catch (e) {
+                log.error(`Error fetching ${recordType} records`, e);
+            }
+            return { data: result, noOfRecords: result.length };
+        }
+
+        /**
+         * Returns a list of Estimate records filtered by request parameters.
+         */
+        function getEstimatesList(params) {
+            const estimateArray = [];
+
+            // Get the full URL
+            let currentURL = window.location.href;
+
+            // Parse query parameters
+            let urlParams = new URLSearchParams(new URL(currentURL).search);
+
+            // Get the encoded email
+            let encodedEmail = urlParams.get("userId");
+
+            // Decode it
+            let decodedEmail = decodeURIComponent(encodedEmail);
+            console.log(decodedEmail); // emma.davies@oracle.com
+            
+            const searchInternalId = getEmployeeIdByEmail(decodedEmail);
+
+            try {
+                const stringSearchInternalId = String(searchInternalId);
+                const filters = [
+                    ['mainline', 'is', 'T'],
+                    'AND',
+                    ['salesteammember', 'anyof', stringSearchInternalId]
+                ];
+                if (params.status) {
+                    filters.push('AND', ['status', 'anyof', params.status]);
                 }
 
-                const format = (d) =>
-                    `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+                const estimateSearch = search.create({
+                    type: 'estimate',
+                    filters: filters,
+                    columns: [
+                        search.createColumn({ name: 'tranid' }),
+                        search.createColumn({ name: 'entity' }),
+                        search.createColumn({ name: 'trandate' }),
+                        search.createColumn({ name: 'status' }),
+                        search.createColumn({ name: 'total' })
+                    ]
+                });
 
-                const formattedStart = format(startDate);
-                const formattedEnd = format(endDate);
+                estimateSearch.run().each(function (result) {
+                    estimateArray.push({
+                        id: result.id,
+                        estimateNumber: result.getValue({ name: 'tranid' }),
+                        customerName: result.getText({ name: 'entity' }),
+                        date: result.getValue({ name: 'trandate' }),
+                        status: result.getText({ name: 'status' }),
+                        total: result.getValue({ name: 'total' })
+                    });
+                    return true;
+                });
+            }
+            catch (error) {
+                log.error('Error in getEstimatesList', JSON.stringify(error));
+            }
 
+            return estimateArray;
+        }
+
+        /**
+         * Fetches all active employees from NetSuite.
+         * @returns {Array<Object>} Array of employee objects: [{id, name}]
+         */
+        function getAllEmployees() {
+            try {
+                let list = [];
+                search.create({
+                    type: "employee",
+                    filters: [
+                        ['isinactive', 'is', 'F'],
+                        'AND',
+                        ['subsidiary', 'anyof', '1']
+                    ],
+                    columns: ['internalid', 'firstname', 'lastname']
+                }).run().each(res => {
+                    list.push({
+                        id: res.getValue('internalid'),
+                        name: `${res.getValue('firstname')} ${res.getValue('lastname')}`
+                    });
+                    return true;
+                });
+                return list;
+            } 
+            catch (e) {
+                log.error('Error in getEmployees', e);
+                return [];
+            }
+        }
+
+        /**
+         * Fetches all active customers with Jira project name.
+         * @returns {Array<Object>} Array of customers: [{id, name}]
+         */
+        function getAllCustomers() {
+            try {
+                const customers = [];
+                search.create({
+                    type: search.Type.CUSTOMER,
+                    filters: [
+                        ['isinactive', 'is', 'F'],
+                        'AND',
+                        ['subsidiary', 'anyof', '1'],
+                        'AND',
+                        ['custentity_jj_jira_project_name', 'isnotempty', '']
+                    ],
+                    columns: ['entityid', 'companyname', 'firstname', 'lastname']
+                }).run().each(result => {
+                    const companyName = result.getValue('companyname');
+                    const firstName = result.getValue('firstname');
+                    const lastName = result.getValue('lastname');
+                    let finalName = companyName || `${firstName} ${lastName}`.trim();
+                    if (!finalName) finalName = result.getValue('entityid');
+                    customers.push({ id: result.id, name: finalName });
+                    return true;
+                });
+                return customers;
+            } 
+            catch (e) {
+                log.error('Error in getAllCustomers', e);
+                return [];
+            }
+        }
+
+        /**
+         * Fetch all status values from custom status record.
+         * @returns {Array<Object>} Array of status values: [{id, name}]
+         */
+        function getStatusValues() {
+            try {
+                let values = [];
+                search.create({
+                    type: 'customrecord_jj_jira_status_record',
+                    filters: [['isinactive', 'is', 'F']],
+                    columns: ['internalid', 'custrecord_jj_status_name']
+                }).run().each(res => {
+                    values.push({
+                        id: res.getValue('internalid'),
+                        name: res.getValue('custrecord_jj_status_name')
+                    });
+                    return true;
+                });
+                return values;
+            } 
+            catch (e) {
+                log.error('Error in getStatusValues', e);
+                return [];
+            }
+        }
+
+        /**
+         * Fetch all priority values from custom priority record.
+         * @returns {Array<Object>} Array of priority values: [{id, name}]
+         */
+        function getPriorityValues() {
+            try {
+                let values = [];
+                search.create({
+                    type: 'customrecord_jj_jira_priority_record',
+                    filters: [['isinactive', 'is', 'F']],
+                    columns: ['internalid', 'custrecord_jj_priority_name']
+                }).run().each(res => {
+                    values.push({
+                        id: res.getValue('internalid'),
+                        name: res.getValue('custrecord_jj_priority_name')
+                    });
+                    return true;
+                });
+                return values;
+            } 
+            catch (e) {
+                log.error('Error in getPriorityValues', e);
+                return [];
+            }
+        }
+
+        /**
+         * Fetch all issue type values from custom issue type record.
+         * @returns {Array<Object>} Array of issue type values: [{id, name}]
+         */
+        function getIssueValues() {
+            try {
+                let values = [];
+                search.create({
+                    type: 'customrecord_jj_jira_issue_type_record',
+                    filters: [['isinactive', 'is', 'F']],
+                    columns: ['internalid', 'custrecord_jj_issue_type_name']
+                }).run().each(res => {
+                    values.push({
+                        id: res.getValue('internalid'),
+                        name: res.getValue('custrecord_jj_issue_type_name')
+                    });
+                    return true;
+                });
+                return values;
+            } 
+            catch (e) {
+                log.error('Error in getIssueValues', e);
+                return [];
+            }
+        }
+
+        /**
+         * Create a Job record (Epic) in NetSuite.
+         * @param {Object} data Payload from front-end
+         * @returns {Record|null} NetSuite Job record object or null on error
+         */
+        function createJobRecord(data) {
+            try {
                 const job = record.create({
                     type: record.Type.JOB,
                     isDynamic: false
                 });
 
+                const startDate = new Date(data.startDate);
+                const endDate = new Date(data.endDate);
+
+                if (endDate < startDate) {
+                    return { 
+                        error: true, 
+                        message: 'End Date cannot be earlier than Start Date!' 
+                    };
+                }
+
                 job.setValue({ fieldId: 'companyname', value: data.projectName });
                 job.setValue({ fieldId: 'parent', value: data.customerId });
-                job.setValue({
-                    fieldId: 'custentity_jj_jira_start_date',
-                    value: new Date(formattedStart),
-                });
-                job.setValue({
-                    fieldId: 'custentity_jj_jira_due_date',
-                    value: new Date(formattedEnd),
-                });
-                job.setValue({
-                    fieldId: 'custentity_jj_jira_status',
-                    value: data.status || 1,
-                });
-                job.setValue({
-                    fieldId: 'custentity_jj_jira_priority',
-                    value: data.priority,
-                });
-                job.setValue({
-                    fieldId: 'custentity_jj_jira_issue_type',
-                    value: data.issue,
-                });
-                job.setValue({
-                    fieldId: 'custentity_jj_jira_epic_assignee',
-                    value: data.assigneeId,
-                });
-                job.setValue({
-                    fieldId: 'custentity_jj_jira_epic_reporter',
-                    value: data.reporterId,
-                });
-
+                job.setValue({ fieldId: 'custentity_jj_jira_start_date', value: startDate });
+                job.setValue({ fieldId: 'custentity_jj_jira_due_date', value: endDate });
+                job.setValue({ fieldId: 'custentity_jj_jira_status', value: data.status });
+                job.setValue({ fieldId: 'custentity_jj_jira_priority', value: data.priority });
+                job.setValue({ fieldId: 'custentity_jj_jira_issue_type', value: data.issue });
+                job.setValue({ fieldId: 'custentity_jj_jira_epic_assignee', value: data.assigneeId });
+                job.setValue({ fieldId: 'custentity_jj_jira_epic_reporter', value: data.reporterId });
                 job.setValue({ fieldId: 'subsidiary', value: 1 });
                 job.setValue({ fieldId: 'projectexpensetype', value: 1 });
 
-                const id = job.save();
+                return job;
+            } 
+            catch (e) {
+                log.error('Error in createJobRecord', e);
+                return null;
+            }
+        }
+
+        /**
+         * Create an Epic with dropdown values.
+         * @param {Object} data Payload from front-end
+         * @returns {Object} Result object with success status and message
+         */
+        function createEpicWithDropdowns(data) {
+            const job = createJobRecord(data);
+
+            if (job && job.error) {
+                return { success: false, message: job.message };
+            }
+
+            if (!job) {
+                return { success: false, message: 'Failed to create Job record' };
+            }
+
+            try {
+                const jobId = job.save();
+
+                // Load job record to read Jira Task ID
+                const savedJob = record.load({
+                    type: record.Type.JOB,
+                    id: jobId
+                });
+
+                const jiraCode = savedJob.getValue('custentity_jj_jira_task_id');
+                const jiraURL = 'https://jobinandjismi.atlassian.net/browse/' + jiraCode;
 
                 return {
                     success: true,
-                    jobId: id,
-                    message: "Epic created successfully",
+                    message: 'Epic created successfully',
+                    jobId: jobId,
+                    jiraLink: jiraURL
                 };
+
             } 
             catch (e) {
-                log.error("Error in createEpicRecord", e);
-
-                return {
-                    success: false,
-                    message: "Unexpected error occurred.",
-                    error: e.message,
-                };
+                log.error('Error saving Job record', e);
+                return { success: false, message: 'Error saving Job record' };
             }
         }
 
@@ -1021,33 +1644,61 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
          * @since 2015.2
          */
         const onRequest = (scriptContext) => {
-            log.debug("onRequest", scriptContext);
             const { request, response } = scriptContext;
             try {
                 if (request.method === 'GET') {
+                    const params = request.parameters;
                     try {
-                        const params = request.parameters;
+                        if (params.action === 'fetchEstimates') {
+                            const estimateData = { estimatesList: getEstimatesList(params) };
+                            response.setHeader({ name: 'Content-Type', value: 'application/json' });
+                            response.write(JSON.stringify({ success: true, data: estimateData }));
+                            return;
+                        }
+
                         const fileId = getPageFilePath(params.action);
-                        const pageContents = file.load({ id: fileId }).getContents();
-                        response.write(pageContents || "OOPS.... SOMETHING WENT WRONG!");
-                    } catch (error) {
-                        log.error("Error @onRequest", error);
-                        response.write("OOPS.... SOMETHING WENT WRONG!");
+                        try {
+                            const pageContents = file.load({ id: fileId }).getContents();
+                            response.write(pageContents || "OOPS.... SOMETHING WENT WRONG!");
+                        } catch (fileError) {
+                            log.error("Error loading file", fileError);
+                            response.write("OOPS.... SOMETHING WENT WRONG!");
+                        }
+
+                    } 
+                    catch (error) {
+                        log.error("Error @onRequest-GET", error);
+                        response.setHeader({ name: 'Content-Type', value: 'application/json' });
+                        response.write(JSON.stringify({ success: false, message: "GET request failed" }));
+                    }
+                }
+
+                else if (request.method === 'POST') {
+                    let action = request.parameters.action || null;
+                    let req = null;
+
+                    if (action === 'upload') {
+                        req = request.files;
+
+                    } 
+                    else if (action === 'updateLead') {
+                        req = request.parameters;
+
+                    } 
+                    else {
+                        try {
+                            if (request.body) req = JSON.parse(request.body);
+                        } 
+                        catch (e) {
+                            log.error("JSON body parse failed", e);
+                            req = {};
+                        }
                     }
 
-                } 
-                else if (request.method === 'POST') {
-                    log.debug("request", request.parameters)
-                    const { action } = request.parameters;
-                    log.debug("action", action)
-                    let req;
-                    if (action === 'upload') {
-                        req = request.files
-                    } else if (action === 'updateLead') {
-                        req = request.parameters;
-                    } else {
-                        req = JSON.parse(request.body)
+                    if (!action && req && req.action) {
+                        action = req.action;
                     }
+
                     let res;
                     switch (action) {
                         case 'reset':
@@ -1086,21 +1737,44 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                         case 'fetchReportData':
                             res = getReportData(req)
                             break;
-                        case 'createEpic':
-                            res = createEpicRecord(req)
+                        // Kanban board integration
+                        case 'fetchRecords':
+                            res = fetchKanbanData(req.startDate, req.endDate);
                             break;
+                        case 'updateStage':
+                            res = { success: updateRecordStage(req.fromRecordType, req.toRecordType, req.fromId) };
+                            break;
+                        case 'getUserInfo':
+                            res = userInformation();
+                            break;
+                        case 'getRecentActivity':
+                            res = getRecentRecords();
+                            break;
+
+                        case 'getDropdownData':
+                            res = {
+                                statuses: getStatusValues(),
+                                priorities: getPriorityValues(),
+                                issues: getIssueValues(),
+                                customers: getAllCustomers(),
+                                employees: getAllEmployees()
+                            };
+                            break;
+                        case 'createepic':
+                            res = createEpicWithDropdowns(req);
+                            break;
+
                         default:
                             res = { success: false, message: 'Invalid action' };
                             break;
                     }
-                    log.debug("response", res)
                     response.write(JSON.stringify(res));
                 }
-            } catch (error) {
+            } 
+            catch (error) {
                 log.error("Error @onRequest", error);
                 response.write(JSON.stringify({ success: false, message: 'OOPS.... SOMETHING WENT WRONG!' }));
             }
         };
-
         return { onRequest };
     });

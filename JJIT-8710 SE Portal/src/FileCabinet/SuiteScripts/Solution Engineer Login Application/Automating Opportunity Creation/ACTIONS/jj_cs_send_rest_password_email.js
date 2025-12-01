@@ -30,7 +30,7 @@ define(['N/email', 'N/record', 'N/runtime', 'N/ui/message', 'N/search'],
      */
     function (email, record, runtime, message, search) {
 
-        const BASE_URL = 'https://5742736.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=1024&deploy=1&compid=5742736&ns-at=AAEJ7tMQL9Tri5JLG_3XFKpOSabc7UkdR9r2XF1NZtmKg6MmUjY'
+        const BASE_URL = 'https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM'
         /**
          * Sends a password reset email to the user associated with the given record ID.
          * @param {number|string} recordId - The internal ID of the custom record containing the user's email.

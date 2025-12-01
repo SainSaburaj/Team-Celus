@@ -1,4 +1,4 @@
-const BASE_URL = 'https://5742736.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=1024&deploy=1&compid=5742736&ns-at=AAEJ7tMQL9Tri5JLG_3XFKpOSabc7UkdR9r2XF1NZtmKg6MmUjY';
+const BASE_URL = 'https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM';
 
 /**
  * Change user password.
@@ -203,8 +203,10 @@ function handleError(message, error) {
  * User login function.
  */
 function login() {
+    console.log("Login function triggered");
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
+    console.log(email,password);
 
     if (!isValidEmail(email)) {
         showAlert('error', 'Invalid Email', 'Please enter a valid email address.');
@@ -1004,6 +1006,7 @@ function createLineItemRow(line = {}, index = null) {
 
     container.appendChild(row);
 }
+
 
 function addNewLine() {
     const index = lineItems.length;
