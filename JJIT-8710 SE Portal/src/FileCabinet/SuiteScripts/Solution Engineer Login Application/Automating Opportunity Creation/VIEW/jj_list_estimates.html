@@ -97,7 +97,7 @@
     }
 
     .printBtn {
-      padding: 6px 10px;
+      padding: 0px 10px 0px 10px;
       background-color: #0c6c73;
       color: white;
       border: none;
@@ -149,16 +149,48 @@
     const rowsPerPage = 10;
 
     async function loadEstimates() {
-      try {
-        const response = await fetch('https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM&action=fetchEstimates');
-        const data = await response.json();
-        estimatesData = data.estimatesList || [];
-        renderTable();
-        renderPagination();
-      } catch (err) {
-        console.error('Error loading estimates:', err);
-      }
+        try {
+            const currentURL = window.location.href;
+            console.log("current url", currentURL);
+            const urlParams = new URLSearchParams(new URL(currentURL).search);
+
+            const encodedUserId = urlParams.get("userId");
+
+            if (!encodedUserId) {
+                console.error("UserId missing in URL");
+                return;
+            }
+            
+            const response = await fetch(
+                "https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM",
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        action: "fetchEstimates",
+                        userId: encodedUserId
+                    })
+                }
+            );
+
+            const data = await response.json();
+            console.log("POST Response:", data);
+
+            if (data.success) {
+                estimatesData = data.estimatesList || [];
+            } 
+            else {
+                console.error("Error fetching estimates:", data.message);
+            }
+
+            renderTable();
+            renderPagination();
+
+        } catch (err) {
+            console.error('Error loading estimates:', err);
+        }
     }
+
 
     function renderTable() {
       const tbody = document.getElementById('estimate-body');

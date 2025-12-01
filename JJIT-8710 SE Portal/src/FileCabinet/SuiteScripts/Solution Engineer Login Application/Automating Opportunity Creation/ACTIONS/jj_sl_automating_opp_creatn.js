@@ -623,31 +623,35 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
         /**
          * Function to check if logged in employee is sales manager
          */
-        function checkIfSalesManager(recordId) {
-            // Convert recordId to string
-            recordId = String(recordId);
+        function checkIfSalesManager(userEmail) {
+            try {
+                const result = search.create({
+                    type: "customrecord_jj_order_request_credential",
+                    filters: [
+                        ["custrecord_jj_request_email", "is", userEmail] // use your email field ID
+                    ],
+                    columns: [
+                        "custrecord_jj_sales_manager"
+                    ]
+                }).run().getRange({ start: 0, end: 1 });
 
-            const salesManagerSearch = search.create({
-                type: "customrecord_jj_order_request_credential",
-                filters: [
-                    ["internalid", "anyof", recordId]
-                ],
-                columns: [
-                    search.createColumn({ name: "name", label: "Name" }),
-                    search.createColumn({ name: "custrecord_jj_sales_manager", label: "Sales Manager" })
-                ]
-            });
+                const isSalesManager = result && result.length > 0
+                    ? result[0].getValue("custrecord_jj_sales_manager") === true || result[0].getValue("custrecord_jj_sales_manager") === "T"
+                    : false;
 
-            // Run the search
-            const result = salesManagerSearch.run().getRange({ start: 0, end: 1 });
+                log.debug("isSalesManager", isSalesManager);
+                return isSalesManager;
 
-            // Extract the Sales Manager value properly
-            let isSalesManager = result && result.length > 0
-                ? result[0].getValue("custrecord_jj_sales_manager")
-                : null;
-
-            return isSalesManager;
+            } catch (err) {
+                log.error("Error in checkIfSalesManager", err);
+                return false;
+            }
         }
+
+
+
+
+
 
 
 
@@ -1350,34 +1354,20 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
         /**
          * Returns a list of Estimate records filtered by request parameters.
          */
-        function getEstimatesList(params) {
+        function getEstimatesList(email) {
             const estimateArray = [];
 
-            // Get the full URL
-            let currentURL = window.location.href;
-
-            // Parse query parameters
-            let urlParams = new URLSearchParams(new URL(currentURL).search);
-
-            // Get the encoded email
-            let encodedEmail = urlParams.get("userId");
-
-            // Decode it
-            let decodedEmail = decodeURIComponent(encodedEmail);
-            console.log(decodedEmail); // emma.davies@oracle.com
-            
-            const searchInternalId = getEmployeeIdByEmail(decodedEmail);
+            const searchInternalId = getEmployeeIdByEmail(email);
+            log.debug("employee internalid", searchInternalId);
 
             try {
                 const stringSearchInternalId = String(searchInternalId);
+                log.debug("String internalid", stringSearchInternalId);
                 const filters = [
                     ['mainline', 'is', 'T'],
                     'AND',
                     ['salesteammember', 'anyof', stringSearchInternalId]
                 ];
-                if (params.status) {
-                    filters.push('AND', ['status', 'anyof', params.status]);
-                }
 
                 const estimateSearch = search.create({
                     type: 'estimate',
@@ -1426,9 +1416,9 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 const endDate = new Date(data.endDate);
 
                 if (endDate < startDate) {
-                    return { 
-                        error: true, 
-                        message: 'End Date cannot be earlier than Start Date!' 
+                    return {
+                        error: true,
+                        message: 'End Date cannot be earlier than Start Date!'
                     };
                 }
 
@@ -1445,7 +1435,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 job.setValue({ fieldId: 'projectexpensetype', value: 1 });
 
                 return job;
-            } 
+            }
             catch (e) {
                 log.error('Error in createJobRecord', e);
                 return null;
@@ -1487,7 +1477,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     jiraLink: jiraURL
                 };
 
-            } 
+            }
             catch (e) {
                 log.error('Error saving Job record', e);
                 return { success: false, message: 'Error saving Job record' };
@@ -1507,12 +1497,9 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 if (request.method === 'GET') {
                     const params = request.parameters;
                     try {
-                        if (params.action === 'fetchEstimates') {
-                            const estimateData = { estimatesList: getEstimatesList(params) };
-                            response.setHeader({ name: 'Content-Type', value: 'application/json' });
-                            response.write(JSON.stringify({ success: true, data: estimateData }));
-                            return;
-                        }
+                        const params = request.parameters;
+                        log.debug("params userid", params.userId)
+
 
                         const fileId = getPageFilePath(params.action);
                         try {
@@ -1523,7 +1510,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             response.write("OOPS.... SOMETHING WENT WRONG!");
                         }
 
-                    } 
+                    }
                     catch (error) {
                         log.error("Error @onRequest-GET", error);
                         response.setHeader({ name: 'Content-Type', value: 'application/json' });
@@ -1537,14 +1524,22 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
 
                     if (action === 'upload') {
                         req = request.files;
-                    } 
+                    }
                     else if (action === 'updateLead') {
                         req = request.parameters;
-                    } 
+                    }
+                    else if (request.body.action === 'kanbanBoard') {
+                        log.debug("Kanban Board Request Body", request.body);
+                        let reqBody = JSON.parse(request.body);
+                        // req = reqBody;
+                        res = fetchKanbanData(reqBody.startDate, reqBody.endDate);
+                        // log.debug("Parsed Kanban Board Request Body", reqBody);
+                        // req =request.parameters;
+                    }
                     else {
                         try {
                             if (request.body) req = JSON.parse(request.body);
-                        } 
+                        }
                         catch (e) {
                             log.error("JSON body parse failed", e);
                             req = {};
@@ -1607,6 +1602,20 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             res = getRecentRecords();
                             break;
 
+                        case 'checkSalesManager':
+                            const userEmail = req.userId || request.parameters.userId;
+                            const managerStatus = checkIfSalesManager(userEmail);
+                            res = { success: true, isSalesManager: managerStatus };
+                            break;
+
+
+                        case 'fetchEstimates':
+                            res = {
+                                success: true,
+                                estimatesList: getEstimatesList(req.userId)
+                            };
+                            break;
+
                         case 'getDropdownData':
                             res = {
                                 statuses: model.getStatusValues(),
@@ -1626,7 +1635,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     }
                     response.write(JSON.stringify(res));
                 }
-            } 
+            }
             catch (error) {
                 log.error("Error @onRequest", error);
                 response.write(JSON.stringify({ success: false, message: 'OOPS.... SOMETHING WENT WRONG!' }));
