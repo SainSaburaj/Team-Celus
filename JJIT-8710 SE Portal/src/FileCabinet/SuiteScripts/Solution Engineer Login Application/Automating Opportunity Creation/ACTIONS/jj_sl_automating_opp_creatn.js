@@ -1411,148 +1411,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
         }
 
         /**
-         * Fetches all active employees from NetSuite.
-         * @returns {Array<Object>} Array of employee objects: [{id, name}]
-         */
-        function getAllEmployees() {
-            try {
-                let list = [];
-                search.create({
-                    type: "employee",
-                    filters: [
-                        ['isinactive', 'is', 'F'],
-                        'AND',
-                        ['subsidiary', 'anyof', '1']
-                    ],
-                    columns: ['internalid', 'firstname', 'lastname']
-                }).run().each(res => {
-                    list.push({
-                        id: res.getValue('internalid'),
-                        name: `${res.getValue('firstname')} ${res.getValue('lastname')}`
-                    });
-                    return true;
-                });
-                return list;
-            } 
-            catch (e) {
-                log.error('Error in getEmployees', e);
-                return [];
-            }
-        }
-
-        /**
-         * Fetches all active customers with Jira project name.
-         * @returns {Array<Object>} Array of customers: [{id, name}]
-         */
-        function getAllCustomers() {
-            try {
-                const customers = [];
-                search.create({
-                    type: search.Type.CUSTOMER,
-                    filters: [
-                        ['isinactive', 'is', 'F'],
-                        'AND',
-                        ['subsidiary', 'anyof', '1'],
-                        'AND',
-                        ['custentity_jj_jira_project_name', 'isnotempty', '']
-                    ],
-                    columns: ['entityid', 'companyname', 'firstname', 'lastname']
-                }).run().each(result => {
-                    const companyName = result.getValue('companyname');
-                    const firstName = result.getValue('firstname');
-                    const lastName = result.getValue('lastname');
-                    let finalName = companyName || `${firstName} ${lastName}`.trim();
-                    if (!finalName) finalName = result.getValue('entityid');
-                    customers.push({ id: result.id, name: finalName });
-                    return true;
-                });
-                return customers;
-            } 
-            catch (e) {
-                log.error('Error in getAllCustomers', e);
-                return [];
-            }
-        }
-
-        /**
-         * Fetch all status values from custom status record.
-         * @returns {Array<Object>} Array of status values: [{id, name}]
-         */
-        function getStatusValues() {
-            try {
-                let values = [];
-                search.create({
-                    type: 'customrecord_jj_jira_status_record',
-                    filters: [['isinactive', 'is', 'F']],
-                    columns: ['internalid', 'custrecord_jj_status_name']
-                }).run().each(res => {
-                    values.push({
-                        id: res.getValue('internalid'),
-                        name: res.getValue('custrecord_jj_status_name')
-                    });
-                    return true;
-                });
-                return values;
-            } 
-            catch (e) {
-                log.error('Error in getStatusValues', e);
-                return [];
-            }
-        }
-
-        /**
-         * Fetch all priority values from custom priority record.
-         * @returns {Array<Object>} Array of priority values: [{id, name}]
-         */
-        function getPriorityValues() {
-            try {
-                let values = [];
-                search.create({
-                    type: 'customrecord_jj_jira_priority_record',
-                    filters: [['isinactive', 'is', 'F']],
-                    columns: ['internalid', 'custrecord_jj_priority_name']
-                }).run().each(res => {
-                    values.push({
-                        id: res.getValue('internalid'),
-                        name: res.getValue('custrecord_jj_priority_name')
-                    });
-                    return true;
-                });
-                return values;
-            } 
-            catch (e) {
-                log.error('Error in getPriorityValues', e);
-                return [];
-            }
-        }
-
-        /**
-         * Fetch all issue type values from custom issue type record.
-         * @returns {Array<Object>} Array of issue type values: [{id, name}]
-         */
-        function getIssueValues() {
-            try {
-                let values = [];
-                search.create({
-                    type: 'customrecord_jj_jira_issue_type_record',
-                    filters: [['isinactive', 'is', 'F']],
-                    columns: ['internalid', 'custrecord_jj_issue_type_name']
-                }).run().each(res => {
-                    values.push({
-                        id: res.getValue('internalid'),
-                        name: res.getValue('custrecord_jj_issue_type_name')
-                    });
-                    return true;
-                });
-                return values;
-            } 
-            catch (e) {
-                log.error('Error in getIssueValues', e);
-                return [];
-            }
-        }
-
-        /**
          * Create a Job record (Epic) in NetSuite.
          * @param {Object} data Payload from front-end
          * @returns {Record|null} NetSuite Job record object or null on error
@@ -1679,11 +1537,9 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
 
                     if (action === 'upload') {
                         req = request.files;
-
                     } 
                     else if (action === 'updateLead') {
                         req = request.parameters;
-
                     } 
                     else {
                         try {
@@ -1753,11 +1609,11 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
 
                         case 'getDropdownData':
                             res = {
-                                statuses: getStatusValues(),
-                                priorities: getPriorityValues(),
-                                issues: getIssueValues(),
-                                customers: getAllCustomers(),
-                                employees: getAllEmployees()
+                                statuses: model.getStatusValues(),
+                                priorities: model.getPriorityValues(),
+                                issues: model.getIssueValues(),
+                                customers: model.getAllCustomers(),
+                                employees: model.getAllEmployees()
                             };
                             break;
                         case 'createepic':
