@@ -302,7 +302,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 log.debug("request", request);
                 log.debug("parameters", parameters);
                 let file = request.file;
-                const { title, description, customer, fileData, recordId} = parameters;
+                const { title, description, customer, fileData, recordId } = parameters;
                 log.debug("fileData", fileData);
                 let fileDataArray = JSON.parse(fileData);
                 log.debug("fileDataArray", fileDataArray);
@@ -626,22 +626,22 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
         function checkIfSalesManager(userEmail) {
             try {
                 const result = search.create({
-                type: "customrecord_jj_order_request_credential",
-                filters: [
+                    type: "customrecord_jj_order_request_credential",
+                    filters: [
                         ["custrecord_jj_request_email", "is", userEmail] // use your email field ID
-                ],
-                columns: [
+                    ],
+                    columns: [
                         "custrecord_jj_sales_manager"
-                ]
+                    ]
                 }).run().getRange({ start: 0, end: 1 });
 
                 const isSalesManager = result && result.length > 0
                     ? result[0].getValue("custrecord_jj_sales_manager") === true || result[0].getValue("custrecord_jj_sales_manager") === "T"
                     : false;
 
-            log.debug("isSalesManager", isSalesManager);
+                log.debug("isSalesManager", isSalesManager);
                 return isSalesManager;
- 
+
             } catch (err) {
                 log.error("Error in checkIfSalesManager", err);
                 return false;
@@ -772,6 +772,8 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     return '../VIEW/jj_home_page.html';
                 case 'kanbanBoard':
                     return '../VIEW/jj_sales_process_kanban_board.html';
+                case 'getKanbanEstimateDetails':
+                    return '../VIEW/jj_estimate_details.html';
                 case 'createepic':
                     return '../VIEW/jj_create_epic_view.html';
                 case 'listestimate':
@@ -1351,7 +1353,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
          */
         function getEstimatesList(email) {
             const estimateArray = [];
-            
+
             const searchInternalId = getEmployeeIdByEmail(email);
             log.debug("employee internalid", searchInternalId);
 
@@ -1411,9 +1413,9 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 const endDate = new Date(data.endDate);
 
                 if (endDate < startDate) {
-                    return { 
-                        error: true, 
-                        message: 'End Date cannot be earlier than Start Date!' 
+                    return {
+                        error: true,
+                        message: 'End Date cannot be earlier than Start Date!'
                     };
                 }
 
@@ -1430,7 +1432,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 job.setValue({ fieldId: 'projectexpensetype', value: 1 });
 
                 return job;
-            } 
+            }
             catch (e) {
                 log.error('Error in createJobRecord', e);
                 return null;
@@ -1472,12 +1474,28 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     jiraLink: jiraURL
                 };
 
-            } 
+            }
             catch (e) {
                 log.error('Error saving Job record', e);
                 return { success: false, message: 'Error saving Job record' };
             }
         }
+
+        function getKanbanEstimateDetails(estimateId) {
+            try {
+                return {
+                    success: true,
+                    estimateId: estimateId,
+                    message: "Page connection successful. Data loading will be implemented later."
+                };
+            } catch (e) {
+                log.error("Error @ getKanbanEstimateDetails", e);
+                return { success: false, message: "Failed to load estimate details." };
+            }
+        }
+
+
+
 
         /**
          * Defines the Suitelet script trigger point.
@@ -1491,21 +1509,22 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             try {
                 if (request.method === 'GET') {
                     const params = request.parameters;
-                     try {
+                    try {
                         const params = request.parameters;
                         log.debug("params userid", params.userId)
-                        
+
 
                         const fileId = getPageFilePath(params.action);
                         try {
                             const pageContents = file.load({ id: fileId }).getContents();
                             response.write(pageContents || "OOPS.... SOMETHING WENT WRONG!");
-                        } catch (fileError) {
+                        }
+                        catch (fileError) {
                             log.error("Error loading file", fileError);
                             response.write("OOPS.... SOMETHING WENT WRONG!");
                         }
 
-                    } 
+                    }
                     catch (error) {
                         log.error("Error @onRequest-GET", error);
                         response.setHeader({ name: 'Content-Type', value: 'application/json' });
@@ -1519,22 +1538,22 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
 
                     if (action === 'upload') {
                         req = request.files;
-                    } 
+                    }
                     else if (action === 'updateLead') {
                         req = request.parameters;
-                    } 
+                    }
                     else if (request.body.action === 'kanbanBoard') {
                         log.debug("Kanban Board Request Body", request.body);
                         let reqBody = JSON.parse(request.body);
                         // req = reqBody;
-                         res = fetchKanbanData(reqBody.startDate, reqBody.endDate);
+                        res = fetchKanbanData(reqBody.startDate, reqBody.endDate);
                         // log.debug("Parsed Kanban Board Request Body", reqBody);
                         // req =request.parameters;
                     }
                     else {
                         try {
                             if (request.body) req = JSON.parse(request.body);
-                        } 
+                        }
                         catch (e) {
                             log.error("JSON body parse failed", e);
                             req = {};
@@ -1597,12 +1616,15 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             res = getRecentRecords();
                             break;
 
+                        case 'getKanbanEstimateDetails':
+                            res = getKanbanEstimateDetails(req.estimateId);
+                            break;
+
                         case 'checkSalesManager':
                             const userEmail = req.userId || request.parameters.userId;
                             const managerStatus = checkIfSalesManager(userEmail);
                             res = { success: true, isSalesManager: managerStatus };
                             break;
-
 
                         case 'fetchEstimates':
                             res = {
@@ -1630,7 +1652,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     }
                     response.write(JSON.stringify(res));
                 }
-            } 
+            }
             catch (error) {
                 log.error("Error @onRequest", error);
                 response.write(JSON.stringify({ success: false, message: 'OOPS.... SOMETHING WENT WRONG!' }));
