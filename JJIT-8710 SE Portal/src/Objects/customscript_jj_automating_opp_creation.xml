@@ -1,14 +1,14 @@
-<suitelet scriptid="customscript_jj_sl_project_form">
+<suitelet scriptid="customscript_jj_automating_opp_creation">
   <description></description>
   <isinactive>F</isinactive>
-  <name>JJ SL Project Form</name>
+  <name>JJ Automating Opp Creation</name>
   <notifyadmins>F</notifyadmins>
   <notifyemails></notifyemails>
   <notifyowner>T</notifyowner>
   <notifyuser>F</notifyuser>
-  <scriptfile>[/SuiteScripts/JobinAndJismi/JJIT-8710 SE Portal Project Creation/jj_sl_project_form.js]</scriptfile>
+  <scriptfile>[/SuiteScripts/Solution Engineer Login Application/Automating Opportunity Creation/ACTIONS/jj_sl_automating_opp_creatn.js]</scriptfile>
   <scriptdeployments>
-    <scriptdeployment scriptid="customdeploy_jj_sl_project_form">
+    <scriptdeployment scriptid="customdeploy_jj_automating_opp_creation">
       <allemployees>T</allemployees>
       <allpartners>F</allpartners>
       <allroles>T</allroles>
@@ -19,7 +19,7 @@
       <loglevel>DEBUG</loglevel>
       <runasrole>ADMINISTRATOR</runasrole>
       <status>RELEASED</status>
-      <title>JJ SL Project Form</title>
+      <title>JJ Automating Opp Creation</title>
     </scriptdeployment>
   </scriptdeployments>
 </suitelet>

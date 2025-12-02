@@ -1,4 +1,20 @@
 <manifest projecttype="ACCOUNTCUSTOMIZATION">
   <projectname>JJIT-8690 SE Portal update</projectname>
   <frameworkversion>1.0</frameworkversion>
+  <dependencies>
+    <features>
+      <feature required="false">SUITESIGNON</feature>
+      <feature required="false">MULTILANGUAGE</feature>
+      <feature required="false">WEBSITE</feature>
+      <feature required="true">SERVERSIDESCRIPTING</feature>
+      <feature required="false">CRM</feature>
+      <feature required="false">JOBS</feature>
+      <feature required="false">EXTREMELIST</feature>
+      <feature required="false">ADVANCEDJOBS</feature>
+      <feature required="false">MAILMERGE</feature>
+      <feature required="false">ACCOUNTING</feature>
+      <feature required="true">CUSTOMRECORDS</feature>
+      <feature required="false">CREATESUITEBUNDLES</feature>
+    </features>
+  </dependencies>
 </manifest>
