@@ -244,8 +244,8 @@
 
     .kanban-card .card-status {
       color: var(--bg-primary);
-      position: absolute; 
-      font-size: 0.75rem; 
+      position: absolute;
+      font-size: 0.75rem;
       width: auto;
       border-radius: 0.5rem;
       display: inline-block;
@@ -258,7 +258,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
       display: block;
-      max-width: 195px; 
+      max-width: 195px;
     }
 
     @media (max-width: 768px) {
@@ -302,7 +302,8 @@
 
       .sidebar {
         position: fixed;
-        top: 4rem; /* below the topbar */
+        top: 4rem;
+        /* below the topbar */
         left: 0;
         width: 16rem;
         height: calc(100vh - 4rem);
@@ -348,7 +349,7 @@
       transform: translateY(-2px);
       box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
     }
-    
+
     .custom-svg-container.opportunity {
       position: relative;
       width: 50px;
@@ -368,7 +369,7 @@
       height: 34px;
       display: block;
       margin: auto;
-      fill: currentColor;   
+      fill: currentColor;
       flex-shrink: 0;
       font-size: 24px;
       transform: rotate(45deg);
@@ -427,21 +428,21 @@
 
     .stats-card {
       display: flex;
-      align-items: center; 
-      justify-content: flex-start; 
+      align-items: center;
+      justify-content: flex-start;
       padding: 1rem;
     }
 
     .stats-card .icon-text {
       display: flex;
-      flex-direction: row; 
-      align-items: center; 
+      flex-direction: row;
+      align-items: center;
       width: 100%;
       height: 90px;
     }
 
     .stats-card .icon-text svg {
-      margin-right: 8px; 
+      margin-right: 8px;
     }
 
     .quick-actions {
@@ -620,8 +621,13 @@
     }
 
     @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
     }
 
     .loader-text {
@@ -710,7 +716,7 @@
     .alert-close:hover {
       background: var(--accent-opportunity);
     }
-    
+
     .filter-container {
       gap: 0.5rem;
       align-items: left;
@@ -737,8 +743,8 @@
     }
 
     .apply-filter-btn {
-      background-color: var(--accent-primary); 
-      color: white; 
+      background-color: var(--accent-primary);
+      color: white;
       border-radius: 0.5rem;
     }
 
@@ -746,29 +752,29 @@
       background-color: var(--accent-opportunity);
     }
 
-      #oppCount,
-      #oppTotal,
-      #estCount,
-      #estTotal,
-      #soCount,
-      #soTotal {
-        color: var(--text-primary);
-      }
+    #oppCount,
+    #oppTotal,
+    #estCount,
+    #estTotal,
+    #soCount,
+    #soTotal {
+      color: var(--text-primary);
+    }
 
-      [data-theme="light"] #oppCount,
-      [data-theme="light"] #oppTotal {
-        color: var(--accent-opportunity);
-      }
+    [data-theme="light"] #oppCount,
+    [data-theme="light"] #oppTotal {
+      color: var(--accent-opportunity);
+    }
 
-      [data-theme="light"] #estCount,
-      [data-theme="light"] #estTotal {
-        color: var(--accent-estimate);
-      }
+    [data-theme="light"] #estCount,
+    [data-theme="light"] #estTotal {
+      color: var(--accent-estimate);
+    }
 
-      [data-theme="light"] #soCount,
-      [data-theme="light"] #soTotal {
-        color: var(--accent-salesorder);
-      }
+    [data-theme="light"] #soCount,
+    [data-theme="light"] #soTotal {
+      color: var(--accent-salesorder);
+    }
   </style>
 </head>
 
@@ -804,19 +810,23 @@
         <div class="flex flex-col gap-2">
           <label class="text-xs font-medium" style="color: var(--text-secondary);">Date Range</label>
           <div class="flex flex-col gap-2">
-            <input id="startDateFilter" type="date" class="filter-input w-full p-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500" 
+            <input id="startDateFilter" type="date"
+              class="filter-input w-full p-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500"
               placeholder="Start Date" />
-            <input id="endDateFilter" type="date" class="filter-input w-full p-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500" 
+            <input id="endDateFilter" type="date"
+              class="filter-input w-full p-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500"
               placeholder="End Date" />
           </div>
         </div>
         <!-- Apply Filter Button -->
-        <button id="applyFilterBtn" class="apply-filter-btn py-2 px-2 text-sm transition text-center flex items-center justify-center mt-2">
+        <button id="applyFilterBtn"
+          class="apply-filter-btn py-2 px-2 text-sm transition text-center flex items-center justify-center mt-2">
           <span>Apply Filter</span>
         </button>
       </div>
       <!-- Export Button -->
-      <button class="quick-actions py-2 px-3 text-sm transition text-left flex items-center mt-3" onclick="exportData()">
+      <button class="quick-actions py-2 px-3 text-sm transition text-left flex items-center mt-3"
+        onclick="exportData()">
         <span class="mr-2">📊</span>Export Report
       </button>
       <div class="mt-auto pt-4 border-t" style="border-color: var(--border-primary);"></div>
@@ -830,25 +840,32 @@
       <!-- Stats Row -->
       <div class="p-4 grid grid-cols-3 gap-4"
         style="background-color: var(--bg-secondary); border-bottom: 1px solid var(--border-primary);">
-        <div class="stats-card opportunity p-4 text-center" style="position: relative;" onclick="filterByStage('opportunity')">
+        <div class="stats-card opportunity p-4 text-center" style="position: relative;"
+          onclick="filterByStage('opportunity')">
           <div class="icon-text">
             <div class="custom-svg-container opportunity">
               <svg class="custom-svg-icon opportunity" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-                <path fill-rule="evenodd" d="M3 3v8h8V3zm6 6H5V5h4zm-6 4v8h8v-8zm6 6H5v-4h4zm4-16v8h8V3zm6 6h-4V5h4zm-6 4v8h8v-8zm6 6h-4v-4h4z"></path>
+                <path fill-rule="evenodd"
+                  d="M3 3v8h8V3zm6 6H5V5h4zm-6 4v8h8v-8zm6 6H5v-4h4zm4-16v8h8V3zm6 6h-4V5h4zm-6 4v8h8v-8zm6 6h-4v-4h4z">
+                </path>
               </svg>
             </div>
             <div style="position: absolute; text-align: right; right: 0.75rem;">
               <div class="text-2xl font-bold" id="oppCount" style="right: 0.75rem;"></div>
-              <div class="text-m" style="color: var(--text-primary); right: 0.75rem; line-height: 2rem;">Opportunities</div>
+              <div class="text-m" style="color: var(--text-primary); right: 0.75rem; line-height: 2rem;">Opportunities
+              </div>
               <div class="text-l font-bold" id="oppTotal" style="right: 0.75rem;"></div>
-            </div>  
+            </div>
           </div>
         </div>
-        <div class="stats-card estimate p-4 text-center" style="position: relative;" onclick="filterByStage('estimate')">
+        <div class="stats-card estimate p-4 text-center" style="position: relative;"
+          onclick="filterByStage('estimate')">
           <div class="icon-text">
             <div class="custom-svg-container estimate">
               <svg class="custom-svg-icon estimate" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-                <path fill-rule="evenodd" d="m16.66 4.52 2.83 2.83-2.83 2.83-2.83-2.83zM9 5v4H5V5zm10 10v4h-4v-4zM9 15v4H5v-4zm7.66-13.31L11 7.34 16.66 13l5.66-5.66zM11 3H3v8h8zm10 10h-8v8h8zm-10 0H3v8h8z"></path>
+                <path fill-rule="evenodd"
+                  d="m16.66 4.52 2.83 2.83-2.83 2.83-2.83-2.83zM9 5v4H5V5zm10 10v4h-4v-4zM9 15v4H5v-4zm7.66-13.31L11 7.34 16.66 13l5.66-5.66zM11 3H3v8h8zm10 10h-8v8h8zm-10 0H3v8h8z">
+                </path>
               </svg>
             </div>
             <div style="position: absolute; text-align: right; right: 0.75rem;">
@@ -858,15 +875,19 @@
             </div>
           </div>
         </div>
-        <div class="stats-card salesorder p-4 text-center" style="position: relative;" onclick="filterByStage('salesorder')">
+        <div class="stats-card salesorder p-4 text-center" style="position: relative;"
+          onclick="filterByStage('salesorder')">
           <div class="icon-text">
-            <div class="custom-svg-container salesorder" style="background-color: #c1fdd6; color: var(--accent-salesorder-sec);">
+            <div class="custom-svg-container salesorder"
+              style="background-color: #c1fdd6; color: var(--accent-salesorder-sec);">
               <svg class="custom-svg-icon salesorder" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2M4 9h10.5v3.5H4zm0 5.5h10.5V18H4zM20 18h-3.5V9H20z"></path>
+                <path
+                  d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2M4 9h10.5v3.5H4zm0 5.5h10.5V18H4zM20 18h-3.5V9H20z">
+                </path>
               </svg>
             </div>
             <div style="position: absolute; text-align: right; right: 0.75rem;">
-              <div class="text-2xl font-bold" id="soCount" ></div>
+              <div class="text-2xl font-bold" id="soCount"></div>
               <div class="text-m" style="color: var(--text-primary); line-height: 2rem;">Sales Orders</div>
               <div class="text-l font-bold" id="soTotal"></div>
             </div>
@@ -945,7 +966,7 @@
   <script>
     //Suitelet URL
     const BASE_URL = 'https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM';
-   console.log('BASE_URL:', BASE_URL);
+    console.log('BASE_URL:', BASE_URL);
     $(document).ready(function () {
       $('#filterToggleBtn').on('click', function () {
         const $filterSection = $('#filterSection');
@@ -962,6 +983,15 @@
       });
     });
 
+
+
+    // Extract email (userId) from current URL
+    const currentURL = window.location.href;
+    const urlParams = new URLSearchParams(new URL(currentURL).search);
+    const emailParam = urlParams.get("userId");   // expects ?userId=emma.davies%40oracle.com
+    console.log("Email from URL:", emailParam);
+
+
     /**
      * Sets default values for the start and end date filters in the dashboard.
      * The start date is set to 30 days before today, and the end date is set to today.
@@ -970,7 +1000,7 @@
      * @returns {void}
      */
     function setDefaultDateValues() {
-      try{
+      try {
         const currentDate = new Date();
         const pastDate = new Date();
         pastDate.setDate(currentDate.getDate() - 30);
@@ -982,7 +1012,7 @@
         };
         document.getElementById('startDateFilter').value = formatDate(pastDate);
         document.getElementById('endDateFilter').value = formatDate(currentDate);
-      } catch(error) {
+      } catch (error) {
         log.error('Error @ setDefaultDateValues');
       }
     }
@@ -996,13 +1026,13 @@
      * @returns {void}
      */
     function fetchFilteredRecords() {
-      try{
+      try {
 
         showLoader();
         const startDate = document.getElementById('startDateFilter').value;
         const endDate = document.getElementById('endDateFilter').value;
         console.log('Fetching records with date range:', startDate, 'to', endDate);
-        fetch(BASE_URL+'&action=fetchRecords', {
+        fetch(BASE_URL + '&action=fetchRecords', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -1010,51 +1040,52 @@
           body: JSON.stringify({
             // action: 'fetchRecords',
             startDate: startDate,
-            endDate: endDate
+            endDate: endDate,
+            userId: emailParam
           })
         })
-      
-        .then(response => response.json())
-        .then(data => {
-          console.log('Filtered data received:', data);
-          allCards = [...data.data];
-          ['opportunity', 'estimate', 'salesorder'].forEach(stage => {
-            const col = document.getElementById(`${stage}-col`);
-            if (col) {
-              [...col.querySelectorAll('.kanban-card')].forEach(card => card.remove());
-            }
-          });
-          if (Array.isArray(data.data)) {
-            data.data.forEach(card => {
-              addCardToColumn(card);
+
+          .then(response => response.json())
+          .then(data => {
+            console.log('Filtered data received:', data);
+            allCards = [...data.data];
+            ['opportunity', 'estimate', 'salesorder'].forEach(stage => {
+              const col = document.getElementById(`${stage}-col`);
+              if (col) {
+                [...col.querySelectorAll('.kanban-card')].forEach(card => card.remove());
+              }
             });
-          }
-          const totals = data.recordTypeTotal || {};
-          const counts = {
-            opportunity: data.data.filter(c => c.stage === 'opportunity').length,
-            estimate: data.data.filter(c => c.stage === 'estimate').length,
-            salesorder: data.data.filter(c => c.stage === 'salesorder').length
-          };
-          const updateEl = (id, value) => {
-            const el = document.getElementById(id);
-            if (el) el.textContent = value;
-          };
-          updateEl('oppTotal', formatNumberWithCommas(totals.opportunityTotal));
-          updateEl('estTotal', formatNumberWithCommas(totals.estimateTotal));
-          updateEl('soTotal', formatNumberWithCommas(totals.salesorderTotal));
-          updateEl('oppCount', counts.opportunity);
-          updateEl('estCount', counts.estimate);
-          updateEl('soCount', counts.salesorder);
-        })
-        .catch(error => {
-          hideLoader();
-          console.error('Fetch error:', error);
-        })
-        .finally(() => {
-          hideLoader();
-        });
-      } catch(error){
-        log.error('Error @ fetchFilteredRecords',error);
+            if (Array.isArray(data.data)) {
+              data.data.forEach(card => {
+                addCardToColumn(card);
+              });
+            }
+            const totals = data.recordTypeTotal || {};
+            const counts = {
+              opportunity: data.data.filter(c => c.stage === 'opportunity').length,
+              estimate: data.data.filter(c => c.stage === 'estimate').length,
+              salesorder: data.data.filter(c => c.stage === 'salesorder').length
+            };
+            const updateEl = (id, value) => {
+              const el = document.getElementById(id);
+              if (el) el.textContent = value;
+            };
+            updateEl('oppTotal', formatNumberWithCommas(totals.opportunityTotal));
+            updateEl('estTotal', formatNumberWithCommas(totals.estimateTotal));
+            updateEl('soTotal', formatNumberWithCommas(totals.salesorderTotal));
+            updateEl('oppCount', counts.opportunity);
+            updateEl('estCount', counts.estimate);
+            updateEl('soCount', counts.salesorder);
+          })
+          .catch(error => {
+            hideLoader();
+            console.error('Fetch error:', error);
+          })
+          .finally(() => {
+            hideLoader();
+          });
+      } catch (error) {
+        log.error('Error @ fetchFilteredRecords', error);
       }
     }
 
@@ -1067,11 +1098,11 @@
      * @returns {void}
      */
     function setTheme(theme) {
-      try{
+      try {
         document.documentElement.setAttribute('data-theme', theme);
         document.querySelector('.theme-toggle').classList.toggle('active', theme === 'light');
         localStorage.setItem('theme', theme);
-      } catch(error) {
+      } catch (error) {
         log.error('Error @ setTheme');
       }
     }
@@ -1083,10 +1114,10 @@
      * @returns {void}
      */
     function toggleTheme() {
-      try{
+      try {
         const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
         setTheme(currentTheme === 'dark' ? 'light' : 'dark');
-      } catch(error) {
+      } catch (error) {
         log.error('Error @ toggleTheme');
       }
     }
@@ -1103,9 +1134,9 @@
      * @returns {void}
      */
     function showLoader() {
-      try{
+      try {
         document.getElementById('globalLoader').classList.add('show');
-      } catch(error) {
+      } catch (error) {
         log.error('Error @ showLoader');
       }
     }
@@ -1117,9 +1148,9 @@
      * @returns {void}
      */
     function hideLoader() {
-      try{
-        document.getElementById('globalLoader').classList.remove('show');            
-      } catch(error) {
+      try {
+        document.getElementById('globalLoader').classList.remove('show');
+      } catch (error) {
         log.error('Error @ hideLoader');
       }
     }
@@ -1133,11 +1164,11 @@
      * @returns {void}
      */
     function showAlert(title, message) {
-      try{
+      try {
         document.getElementById('alertTitle').textContent = title;
         document.getElementById('alertMessage').textContent = message;
         document.getElementById('alertModal').classList.add('show');
-      } catch(error) {
+      } catch (error) {
         log.error('Error @ showAlert');
       }
     }
@@ -1149,13 +1180,13 @@
      * @returns {void}
      */
     function closeAlert() {
-      try{
+      try {
         document.getElementById('alertModal').classList.remove('show');
-      } catch(error) {
+      } catch (error) {
         log.error('Error @ closeAlert');
       }
     }
-    
+
     /**
      * Clears all existing Kanban cards from the board and displays new cards in their respective columns.
      *
@@ -1165,14 +1196,14 @@
      * @returns {void}
      */
     function displayCards(cards) {
-      try{
+      try {
         document.querySelectorAll('.kanban-card').forEach(card => card.remove());
-        cards.forEach(card => addCardToColumn(card));   
-      } catch(error) {
+        cards.forEach(card => addCardToColumn(card));
+      } catch (error) {
         log.error('Error @ displayCards');
       }
     }
-    
+
     /**
      * Updates the count indicators for each Kanban column based on the provided list of records.
      *
@@ -1182,7 +1213,7 @@
      * @returns {void}
      */
     function updateCountsLocal(list) {
-      try{
+      try {
         const oppCount = list.filter(c => c.stage === 'opportunity').length;
         const estCount = list.filter(c => c.stage === 'estimate').length;
         const soCount = list.filter(c => c.stage === 'salesorder').length;
@@ -1192,11 +1223,11 @@
         document.querySelector('#opportunity-col h3 span').textContent = `(${oppCount})`;
         document.querySelector('#estimate-col h3 span').textContent = `(${estCount})`;
         document.querySelector('#salesorder-col h3 span').textContent = `(${soCount})`;
-      } catch(error){
+      } catch (error) {
         log.error('Error @ updateCountsLocal');
       }
     }
-    
+
     /**
      * Converts a string to camelCase format.
      * Capitalizes letters after spaces and lowercases the first character.
@@ -1206,15 +1237,15 @@
      * @returns {string} - The camelCase formatted string.
      */
     function toCamelCase(str) {
-      try{
+      try {
         return str
-          .replace(/\s(.)/g, function(match, group1) {
+          .replace(/\s(.)/g, function (match, group1) {
             return group1.toUpperCase();
           })
-          .replace(/^(.)/, function(match, group1) {
+          .replace(/^(.)/, function (match, group1) {
             return group1.toLowerCase();
           });
-      } catch(error) {
+      } catch (error) {
         log.error('Error @ toCamelCase');
       }
     }
@@ -1250,19 +1281,19 @@
     async function fetchUserInfo() {
       try {
         showLoader();
-        const response = await fetch(BASE_URL+'&action=getUserInfo', {
+        const response = await fetch(BASE_URL + '&action=getUserInfo', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify(
-            { 
+            {
               // action: 'getUserInfo'
-             }
+            }
           )
         });
         const data = await response.json();
-        if(data.name == '-System-'){
+        if (data.name == '-System-') {
           document.getElementById('userInfo').textContent = `Welcome`;
         } else {
           document.getElementById('userInfo').textContent = `Hello, ${data.name}`;
@@ -1298,9 +1329,9 @@
     async function fetchKanbanData() {
       try {
         showLoader();
-        const response = await fetch(BASE_URL+'&action=fetchRecords', {
+        const response = await fetch(BASE_URL + '&action=fetchRecords', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json'},
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             // action: 'fetchRecords'
           })
@@ -1334,7 +1365,7 @@
         hideLoader();
       }
     }
-    
+
     /**
      * Formats a camelCase status string into a human-readable format.
      * Adds spaces before capital letters and capitalizes the first letter.
@@ -1344,11 +1375,11 @@
      * @returns {string} - The formatted status string.
      */
     function formatStatus(status) {
-      try{
+      try {
         return status
-        .replace(/([a-z])([A-Z])/g, '$1 $2') // Add space before capital letters
-        .replace(/^./, str => str.toUpperCase()); // Capitalize first letter
-      } catch(error) {
+          .replace(/([a-z])([A-Z])/g, '$1 $2') // Add space before capital letters
+          .replace(/^./, str => str.toUpperCase()); // Capitalize first letter
+      } catch (error) {
         log.error('Error @ formatStatus');
       }
     }
@@ -1362,10 +1393,10 @@
      * @returns {Promise<void>} - Resolves when cards are fetched and stored.
      */
     async function initCards() {
-      try{
-       allCards = await fetchFilteredRecords();
-       console.log('allCards', allCards);
-      } catch(error) {
+      try {
+        allCards = await fetchFilteredRecords();
+        console.log('allCards', allCards);
+      } catch (error) {
         log.error('Error @ initCards');
       }
     }
@@ -1378,9 +1409,9 @@
      * @returns {Promise<void>} - Resolves when user info is fetched and rendered.
      */
     async function updateUserInfo() {
-      try{
+      try {
         await fetchUserInfo();
-      } catch(error) {
+      } catch (error) {
         log.error('Error @ updateUserInfo', error);
       }
     }
@@ -1403,7 +1434,7 @@
      * @returns {void}
      */
     function addCardToColumn(card) {
-      try{
+      try {
         const readableStatus = formatStatus(card.status);
         const formattedCurrency = formatCurrency(card.amount, card.currency)
         const col = document.getElementById(`${card.stage}-col`);
@@ -1414,24 +1445,35 @@
         div.dataset.id = card.id;
         let stageInUrl = card.stage === 'opportunity' ? 'opprtnty.nl' : card.stage === 'estimate' ? 'estimate.nl' : 'salesord.nl';
         div.onclick = () => {
-            const fileUrl = BASE_URL + '&action=getKanbanEstimateDetails&estimateId=' + card.id;
-            window.open(fileUrl, "_blank"); // open in a new tab
+          let action = '';
+          if (card.stage === 'estimate') action = 'getKanbanEstimateDetails';
+          else if (card.stage === 'opportunity') action = 'getKanbanOpportunityDetails';
+          else if (card.stage === 'salesorder') action = 'getKanbanSalesOrderDetails';
+
+          let urlParam = '';
+          if (card.stage === 'estimate') urlParam = `estimateId=${card.id}`;
+          else if (card.stage === 'opportunity') urlParam = `opportunityId=${card.id}`;
+          else if (card.stage === 'salesorder') urlParam = `salesOrderId=${card.id}`;
+
+          const fileUrl = `${BASE_URL}&action=${action}&${urlParam}&type=${card.stage}`;
+          window.open(fileUrl, "_blank"); // Opens in a new tab
         };
+
 
         // Determine badge color based on status
         let badgeColor = '';
         if (card.status.includes('inProgress')) badgeColor = 'var(--accent-opportunity-sec)';
         else if (card.status.includes('open')) badgeColor = 'var(--accent-estimate-sec)';
-        else if (card.status.includes('pendingFulfillment') || 
-        card.status.includes('fullyBilled') || 
-        card.status.includes('pendingApproval') ||
-        card.status.includes('partiallyBilled') ||
-        card.status.includes('partiallyFulfilled') ||
-        card.status.includes('closed') ||
-        card.status.includes('approved') ||
-        card.status.includes('due') ||
-        card.status.includes('created') ||
-        card.status.includes('pendingBilling')) badgeColor = 'var(--accent-salesorder-sec)';
+        else if (card.status.includes('pendingFulfillment') ||
+          card.status.includes('fullyBilled') ||
+          card.status.includes('pendingApproval') ||
+          card.status.includes('partiallyBilled') ||
+          card.status.includes('partiallyFulfilled') ||
+          card.status.includes('closed') ||
+          card.status.includes('approved') ||
+          card.status.includes('due') ||
+          card.status.includes('created') ||
+          card.status.includes('pendingBilling')) badgeColor = 'var(--accent-salesorder-sec)';
         else badgeColor = 'var(--accent-primary)';
 
         if (card.stage === 'opportunity') {
@@ -1454,7 +1496,7 @@
           `;
         }
         col.appendChild(div);
-      } catch(error) {
+      } catch (error) {
         log.error('Error @ userInformation');
       }
     }
@@ -1467,13 +1509,13 @@
      * @returns {string} Formatted currency string (e.g., "INR 1,234.56").
      */
     function formatCurrency(amount, currencyCode = 'INR') {
-      try{
+      try {
         if (!amount || isNaN(amount)) return `${currencyCode} 0.00`;
         return `${currencyCode} ${parseFloat(amount).toLocaleString('en-IN', {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2
         })}`;
-      } catch(error) {
+      } catch (error) {
         log.error('Error @ formatCurrency', error);
       }
     }
@@ -1485,13 +1527,13 @@
      * @returns {string} Formatted number string (e.g., "1,234.56").
      */
     function formatNumberWithCommas(amount) {
-      try{
+      try {
         if (!amount || isNaN(amount)) return '0.00';
         return parseFloat(amount).toLocaleString('en-IN', {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2
-        });  
-      } catch(error) {
+        });
+      } catch (error) {
         log.error('Error @ userInformation');
       }
     }
@@ -1516,7 +1558,7 @@
      * @property {string} newCard.amount - Default amount (e.g., '$0' for opportunities).
      */
     function createNewCard(stage, title, desc = '') {
-      try{
+      try {
         const newCard = {
           id: cardCounter++,
           title,
@@ -1533,7 +1575,7 @@
         updateCounts();
         closeAddModal();
         return newCard;
-      } catch(error) {
+      } catch (error) {
         log.error('Error @ createNewCard', error);
       }
     }
@@ -1547,7 +1589,7 @@
      * @returns {Promise<void>} - Resolves when counts are updated in the DOM.
      */
     async function updateCounts() {
-      try{
+      try {
         const cards = await fetchFilteredRecords();
         const oppCount = cards.filter(c => c.stage === 'opportunity').length;
         const estCount = cards.filter(c => c.stage === 'estimate').length;
@@ -1560,7 +1602,7 @@
         document.querySelector('#opportunity-col h3 span').textContent = `(${oppCount})`;
         document.querySelector('#estimate-col h3 span').textContent = `(${estCount})`;
         document.querySelector('#salesorder-col h3 span').textContent = `(${soCount})`;
-      } catch(error){
+      } catch (error) {
         log.error('Error @ updateCounts');
       }
     }
@@ -1572,16 +1614,16 @@
      * @returns {void}
      */
     function closeAddModal() {
-      try{
+      try {
         const modal = document.getElementById('addCardModal');
         const addCardForm = document.getElementById('addCardForm');
         modal.style.display = 'none';
         modal.classList.remove('active');
         addCardForm.reset();
-      } catch(error){
+      } catch (error) {
         log.error('Error @ ');
       }
-      
+
     }
 
     /**
@@ -1593,15 +1635,15 @@
      * @returns {void}
      */
     function toggleCollapse(stage) {
-      try{
+      try {
         const col = document.getElementById(`${stage}-col`);
         const toggleBtn = col.querySelector('.collapse-toggle-opportunity, .collapse-toggle-estimate, .collapse-toggle-salesorder');
         const cards = col.querySelectorAll('.kanban-card');
         const isCollapsed = toggleBtn.textContent === '−';
         cards.forEach(card => card.classList.toggle('collapsed', isCollapsed));
         toggleBtn.textContent = isCollapsed ? '+' : '−';
-      } catch(error){
-        log.error('Error @ toggleCollapse',error);
+      } catch (error) {
+        log.error('Error @ toggleCollapse', error);
       }
     }
 
@@ -1614,7 +1656,7 @@
      * @returns {void}
      */
     function toggleSidebar() {
-      try{
+      try {
         const sidebar = document.querySelector('.sidebar');
         const toggleBtn = document.getElementById('sidebarToggleBtn');
         const screenWidth = window.innerWidth;
@@ -1625,8 +1667,8 @@
           sidebar.classList.toggle('hidden');
           toggleBtn.textContent = sidebar.classList.contains('hidden') ? '»' : '«';
         }
-      } catch(error){
-        log.error('Error @ ',error);
+      } catch (error) {
+        log.error('Error @ ', error);
       }
     }
 
@@ -1656,7 +1698,7 @@
      * @returns {void}
      */
     function exportData() {
-      try{
+      try {
         let csv = "Stage,Title,Description\n";
         $(".kanban-column").each(function () {
           const stage = $(this).attr("id").replace("-col", "");
@@ -1673,8 +1715,8 @@
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-      } catch(error){
-        log.error('Error @ ',error);
+      } catch (error) {
+        log.error('Error @ ', error);
       }
     }
 
@@ -1687,15 +1729,15 @@
      * @returns {void}
      */
     function filterByStage(stage) {
-      try{
+      try {
         const columns = document.querySelectorAll('.kanban-column');
         columns.forEach(col => col.style.opacity = '0.5');
         document.getElementById(`${stage}-col`).style.opacity = '1';
         setTimeout(() => {
           columns.forEach(col => col.style.opacity = '1');
         }, 3000);
-      } catch(error){
-        log.error('Error @ ',error);
+      } catch (error) {
+        log.error('Error @ ', error);
       }
     }
 
@@ -1770,7 +1812,7 @@
           if (validTransitions[fromRecordType] && validTransitions[fromRecordType].includes(toRecordType)) {
             console.log(`Transforming ${fromRecordType} → ${toRecordType} for record ID ${fromId}`);
             showLoader();
-            fetch(BASE_URL+'&action=updateStage', {
+            fetch(BASE_URL + '&action=updateStage', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -1827,7 +1869,7 @@
     * @returns {void}
     */
     function initDashboard() {
-      try{
+      try {
         setDefaultDateValues();
         showLoader();
         updateUserInfo().then(() => {
@@ -1835,12 +1877,13 @@
             hideLoader();
           });
         });
-      } catch(error){
-        log.error('Error @ initDashboard',error);
+      } catch (error) {
+        log.error('Error @ initDashboard', error);
       }
     }
 
     initDashboard();
   </script>
 </body>
+
 </html>

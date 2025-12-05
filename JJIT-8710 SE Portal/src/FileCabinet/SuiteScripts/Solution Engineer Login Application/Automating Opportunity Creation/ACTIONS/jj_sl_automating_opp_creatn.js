@@ -114,6 +114,47 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 return rta.join("");
             }
         };
+        const opportunityStatuses = [
+            { id: '17', name: 'Qualified Prospect' },
+            { id: '8', name: 'In Discussion' },
+            { id: '10', name: 'Proposal' },
+            { id: '11', name: 'In Negotiation' },
+            { id: '12', name: 'Purchasing' },
+            { id: '13', name: 'Closed Won' },
+            { id: '14', name: 'Closed Lost' },
+            { id: '15', name: 'Renewal' },
+            { id: '16', name: 'Lost Customer' },
+            { id: '9', name: 'Identified Decision Makers' }
+        ];
+
+        /**
+         * Forecast type dropdown options
+         * @type {Array<Object>}
+         */
+        const forecastTypes = [
+            { id: '0', name: 'Omitted' },
+            { id: '1', name: 'Worst Case' },
+            { id: '2', name: 'Most Likely' },
+            { id: '3', name: 'Upside' }
+        ];
+
+        /**
+         * Sales type dropdown options
+         * @type {Array<Object>}
+         */
+        const salesTypes = [
+            { id: '1', name: 'New Business' },
+            { id: '2', name: 'Renewal' },
+            { id: '3', name: 'Upsell' }
+        ];
+
+        /**
+         * Opportunity forms dropdown options
+         * @type {Array<Object>}
+         */
+        const opportunityForms = [
+        ];
+
         const USER_AUTH = {
             BASE_URL: 'https://5742736.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=1024&deploy=1&compid=5742736&ns-at=AAEJ7tMQL9Tri5JLG_3XFKpOSabc7UkdR9r2XF1NZtmKg6MmUjY',
             /**
@@ -583,7 +624,58 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 }
             }
         };
+        /**
+         * Get customers by email, returning an object with id:name pairs
+         *
+         * @param {string} email - The email address to filter by
+         * @returns {Object} customersObj - Object with {id: name}
+         */
+        function getCustomersByEmail(email) {
+            const customersObj = {};
 
+            const customrecordSearch = search.create({
+                type: "customrecord_jj_order_request_credential",
+                filters: [
+                    ["custrecord_jj_request_email", "is", email]
+                ],
+                columns: [
+                    search.createColumn({
+                        name: "custrecord_jj_opp_creation_customer",
+                        join: "CUSTRECORD_JJ_OPP_CREATION_CREDENTIAL",
+                        label: "Customer"
+                    })
+                ]
+            });
+
+            customrecordSearch.run().each(function (result) {
+                const customerId = result.getValue({
+                    name: "custrecord_jj_opp_creation_customer",
+                    join: "CUSTRECORD_JJ_OPP_CREATION_CREDENTIAL"
+                });
+
+                const customerName = result.getText({
+                    name: "custrecord_jj_opp_creation_customer",
+                    join: "CUSTRECORD_JJ_OPP_CREATION_CREDENTIAL"
+                });
+
+                if (customerId) {
+                    customersObj[String(customerId)] = customerName || `Customer ${customerId}`;
+                }
+
+                return true; // continue iteration
+            });
+
+            log.debug("customer id-name object", customersObj);
+            return customersObj;
+        }
+
+
+        /**
+         * Get internal ID of employee
+         *
+         * @param {string} emailId - The email address to filter by
+         * @returns internal ID using email
+         */
         function getEmployeeIdByEmail(emailId) {
             try {
                 const employeeSearch = search.create({
@@ -758,8 +850,8 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     return '../VIEW/jj_home_page.html';
                 case 'home':
                     return '../VIEW/jj_home_page.html';
-                case 'history':
-                    return '../VIEW/jj_home_page.html';
+                case 'opportunityform':
+                    return '../VIEW/jj_opportunity_layouts.html';
                 case 'editopp':
                     return '../VIEW/jj_home_page.html';
                 case 'help':
@@ -772,12 +864,22 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     return '../VIEW/jj_home_page.html';
                 case 'kanbanBoard':
                     return '../VIEW/jj_sales_process_kanban_board.html';
+
                 case 'getKanbanEstimateDetails':
                     return '../VIEW/jj_estimate_details.html';
+                case 'getKanbanOpportunityDetails':
+                    return '../VIEW/jj_opportunity_details.html';
+                case 'getKanbanSalesOrderDetails':
+                    return '../VIEW/jj_salesorder_details.html';
+
                 case 'createepic':
                     return '../VIEW/jj_create_epic_view.html';
                 case 'listestimate':
                     return '../VIEW/jj_list_estimates.html';
+
+                case 'approveso':
+                    return '../VIEW/jj_approve_sales_order.html';
+
                 default:
                     return '../VIEW/jj_login_page.html';
             }
@@ -990,7 +1092,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             }
         }
 
-        // kanban board functions
 
         /**
          * Converts a date string from 'YYYY-MM-DD' to 'M/D/YYYY' format.
@@ -1249,7 +1350,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     });
                     transactionRecord.setValue({
                         fieldId: 'custbody_jj_skb_created_via_kanba',
-                        value: true // Example custom body field
+                        value: true
                     });
                     let newRecordId = transactionRecord.save();
                     log.debug('Record transformed', `New ${toRecordType} ID: ${newRecordId}`);
@@ -1348,23 +1449,76 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             return { data: result, noOfRecords: result.length };
         }
 
+
+        /**
+        * Returns all available status options for Quote (Estimate) as an object.
+        * Keys = internal IDs, Values = display text
+        */
+        function getQuoteStatuses() {
+            const statusMap = {};
+
+            // Perform a search to get distinct entity statuses from Estimate transactions
+            const estimateSearch = search.create({
+                type: search.Type.ESTIMATE,
+                columns: ['entitystatus'],
+                filters: [] // No filters to apply
+            });
+
+            // Iterate through results to fetch distinct statuses
+        estimateSearch.run().each(function(result) {
+                const status = result.getValue({ name: 'entitystatus' });
+                if (status && !statusMap[status]) {
+                    const statusText = result.getText({ name: 'entitystatus' });
+                    statusMap[status] = statusText;  // Map status id to status text
+                }
+                return true; // Continue iterating through results
+            });
+
+            return statusMap;
+        }
+
+
         /**
          * Returns a list of Estimate records filtered by request parameters.
          */
-        function getEstimatesList(email) {
+        function getEstimatesList(email, selectedCustomerId, selectedStatusId) {
             const estimateArray = [];
 
+            // Get employee internal ID from email
             const searchInternalId = getEmployeeIdByEmail(email);
             log.debug("employee internalid", searchInternalId);
+
+            // Get all customers linked to this email
+            const customerInternalObj = getCustomersByEmail(email);
+            let customerInternalIds = Object.keys(customerInternalObj);
+
+            let statusId = selectedStatusId || "10";
+
+            // If a specific customer filter was selected in the frontend, override
+            if (selectedCustomerId) {
+                customerInternalIds = [selectedCustomerId];
+            }
 
             try {
                 const stringSearchInternalId = String(searchInternalId);
                 log.debug("String internalid", stringSearchInternalId);
+
+                // Build filters dynamically
                 const filters = [
                     ['mainline', 'is', 'T'],
                     'AND',
                     ['salesteammember', 'anyof', stringSearchInternalId]
                 ];
+
+                // Add customer filter if IDs exist
+                if (customerInternalIds.length > 0) {
+                    filters.push('AND', ['customersubof', 'anyof', customerInternalIds]);
+                }
+
+                // Add status filter if provided
+                if (statusId) {
+                    filters.push('AND', ['entitystatus', 'anyof', statusId]);
+                }
 
                 const estimateSearch = search.create({
                     type: 'estimate',
@@ -1373,29 +1527,29 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                         search.createColumn({ name: 'tranid' }),
                         search.createColumn({ name: 'entity' }),
                         search.createColumn({ name: 'trandate' }),
-                        search.createColumn({ name: 'status' }),
+                        search.createColumn({ name: 'entitystatus' }),
                         search.createColumn({ name: 'total' })
                     ]
                 });
 
-                estimateSearch.run().each(function (result) {
+                estimateSearch.run().each(result => {
                     estimateArray.push({
                         id: result.id,
                         estimateNumber: result.getValue({ name: 'tranid' }),
                         customerName: result.getText({ name: 'entity' }),
                         date: result.getValue({ name: 'trandate' }),
-                        status: result.getText({ name: 'status' }),
+                        status: result.getText({ name: 'entitystatus' }),
                         total: result.getValue({ name: 'total' })
                     });
                     return true;
                 });
-            }
-            catch (error) {
+            } catch (error) {
                 log.error('Error in getEstimatesList', JSON.stringify(error));
             }
 
             return estimateArray;
         }
+
 
         /**
          * Create a Job record (Epic) in NetSuite.
@@ -1481,13 +1635,230 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             }
         }
 
+        /**
+         * Approve sales order(s)
+         * @param {Object} req - Request object containing salesOrderId or salesOrderIds
+         * @returns {Object} Result object with success status and message
+         */
+        function approveSo(req) {
+            try {
+                const salesOrderId = req.salesOrderId;
+                const salesOrderIds = req.salesOrderIds;
+
+                if ((!salesOrderId && !salesOrderIds)) {
+                    const salesOrders = [];
+                    const salesOrderSearch = search.create({
+                        type: search.Type.SALES_ORDER,
+                        filters: [
+                            ['mainline', 'is', 'T'],
+                            'AND',
+                            ['status', 'anyof', 'SalesOrd:A'] // Pending Approval
+                        ],
+                        columns: [
+                            search.createColumn({ name: 'tranid' }),
+                            search.createColumn({ name: "entity", label: "Name" }),
+                            search.createColumn({ name: "statusref", label: "Status" }),
+                            search.createColumn({ name: "trandate", label: "Date" }),
+                            search.createColumn({ name: "datecreated", label: "Date Created" }),
+                            search.createColumn({ name: "memo", label: "Memo" }),
+                            search.createColumn({ name: "salesrep", label: "Sales Rep" }),
+                            search.createColumn({ name: "currency", label: "Currency" }),
+                            search.createColumn({ name: "terms", label: "Terms" }),
+                            search.createColumn({ name: "shipdate", label: "Ship Date" }),
+                            search.createColumn({ name: "location", label: "Location" }),
+                            search.createColumn({ name: "department", label: "Department" }),
+                            search.createColumn({ name: "class", label: "Class" }),
+                            search.createColumn({ name: 'total' })
+                        ]
+                    });
+
+                    salesOrderSearch.run().each(function (result) {
+                        salesOrders.push({
+                            id: result.id,
+                            tranid: result.getValue({ name: 'tranid' }),
+                            customer: result.getText({ name: 'entity' }),
+                            status: result.getText({ name: 'statusref' }),
+                            date: result.getValue({ name: 'trandate' }),
+                            created: result.getValue({ name: 'datecreated' }),
+                            memo: result.getValue({ name: 'memo' }),
+                            salesRep: result.getText({ name: 'salesrep' }),
+                            currency: result.getText({ name: 'currency' }),
+                            terms: result.getText({ name: 'terms' }),
+                            shipDate: result.getValue({ name: 'shipdate' }),
+                            location: result.getText({ name: 'location' }),
+                            department: result.getText({ name: 'department' }),
+                            class: result.getText({ name: 'class' }),
+                            total: result.getValue({ name: 'total' })
+                        });
+                        return true;
+                    });
+
+                    return { success: true, data: salesOrders };
+                }
+
+                const idsToApprove = salesOrderIds || [salesOrderId];
+                const results = [];
+                let successCount = 0;
+                let failCount = 0;
+
+                idsToApprove.forEach(function (id) {
+                    try {
+                        record.submitFields({
+                            type: record.Type.SALES_ORDER,
+                            id: id,
+                            values: {
+                                orderstatus: 'B'
+                            },
+                            options: {
+                                enableSourcing: true,
+                                ignoreMandatoryFields: true
+                            }
+                        });
+
+                        successCount++;
+                        results.push({
+                            id: id,
+                            success: true,
+                            message: 'Approved'
+                        });
+
+                    } catch (e) {
+                        log.error(`Error approving Sales Order ${id}`, e);
+                        failCount++;
+                        results.push({
+                            id: id,
+                            success: false,
+                            message: e.message
+                        });
+                    }
+                });
+
+                return {
+                    success: successCount > 0,
+                    message: `Approved ${successCount} order(s). Failed: ${failCount}`,
+                    results: results
+                };
+            } catch (e) {
+                log.error('Error @ approveSo', e);
+                return {
+                    success: false,
+                    message: 'Failed to process approval: ' + e.message
+                };
+            }
+        }
+
+
         function getKanbanEstimateDetails(estimateId) {
             try {
+                if (!estimateId) {
+                    return { success: false, message: "No Estimate ID provided." };
+                }
+
+                const estimateRecord = record.load({
+                    type: record.Type.ESTIMATE,
+                    id: estimateId,
+                    isDynamic: false
+                });
+
+                // ------------------------
+                // HEADER
+                // ------------------------
+                const header = {
+                    tranid: estimateRecord.getValue("tranid"),
+                    trandate: estimateRecord.getText("trandate"),
+                    entity: estimateRecord.getText("entity"),
+                    statusRef: estimateRecord.getValue("statusRef"),
+                    status: estimateRecord.getText("entitystatus"),
+                    job: estimateRecord.getText("job"),
+                    probability: estimateRecord.getValue("probability"),
+                    title: estimateRecord.getValue("title"),
+                    expectedCloseDate: estimateRecord.getText("expectedclosedate"),
+                    expirationDate: estimateRecord.getText("duedate"),
+                    memo: estimateRecord.getValue("memo"),
+
+                    salesRep: estimateRecord.getText("salesrep"),
+                    salesRepId: estimateRecord.getValue("salesrep"),
+
+                    opportunity: estimateRecord.getText("opportunity"),
+                    forecastType: estimateRecord.getText("forecasttype"),
+                    leadSource: estimateRecord.getText("leadsource"),
+                    partner: estimateRecord.getText("partner"),
+
+                    subsidiary: estimateRecord.getText("subsidiary"),
+                    subsidiaryId: estimateRecord.getValue("subsidiary"),
+
+                    department: estimateRecord.getText("department"),
+                    class: estimateRecord.getText("class"),
+                    location: estimateRecord.getText("location"),
+
+                    jobDetails: {},
+                };
+
+                // ------------------------
+                // LINE ITEMS
+                // ------------------------
+                const items = [];
+                const itemCount = estimateRecord.getLineCount("item");
+
+                for (let i = 0; i < itemCount; i++) {
+                    items.push({
+                        lineKey: estimateRecord.getSublistValue({ sublistId: "item", fieldId: "lineuniquekey", line: i }),
+                        itemId: estimateRecord.getSublistValue({ sublistId: "item", fieldId: "item", line: i }),
+                        item: estimateRecord.getSublistText({ sublistId: "item", fieldId: "item", line: i }),
+                        quantity: estimateRecord.getSublistValue({ sublistId: "item", fieldId: "quantity", line: i }),
+                        units: estimateRecord.getSublistText({ sublistId: "item", fieldId: "units", line: i }),
+                        description: estimateRecord.getSublistValue({ sublistId: "item", fieldId: "description", line: i }),
+                        priceLevel: estimateRecord.getSublistText({ sublistId: "item", fieldId: "price", line: i }),
+                        rate: estimateRecord.getSublistValue({ sublistId: "item", fieldId: "rate", line: i }),
+                        amount: estimateRecord.getSublistValue({ sublistId: "item", fieldId: "amount", line: i }),
+
+                        classId: estimateRecord.getSublistValue({ sublistId: "item", fieldId: "class", line: i }),
+                        class: estimateRecord.getSublistText({ sublistId: "item", fieldId: "class", line: i }),
+                        departmentId: estimateRecord.getSublistValue({ sublistId: "item", fieldId: "department", line: i }),
+                        department: estimateRecord.getSublistText({ sublistId: "item", fieldId: "department", line: i })
+                    });
+                }
+
+                // ------------------------
+                // SALES TEAM
+                // ------------------------
+                const salesTeam = [];
+                const salesCount = estimateRecord.getLineCount("salesteam");
+
+                for (let i = 0; i < salesCount; i++) {
+                    salesTeam.push({
+                        employee: estimateRecord.getSublistText({ sublistId: "salesteam", fieldId: "employee", line: i }),
+                        employeeId: estimateRecord.getSublistValue({ sublistId: "salesteam", fieldId: "employee", line: i }),
+                        salesRole: estimateRecord.getSublistText({ sublistId: "salesteam", fieldId: "salesrole", line: i }),
+                        primary: estimateRecord.getSublistValue({ sublistId: "salesteam", fieldId: "isprimary", line: i }) ? "Yes" : "No",
+                        contribution: estimateRecord.getSublistValue({ sublistId: "salesteam", fieldId: "contribution", line: i }) || 0
+                    });
+                }
+
+                // ------------------------
+                // SALES REP LIST
+                // ------------------------
+                const repListResult = model.salesRepList();
+                const repList = repListResult.reps || [];
+
+                // ------------------------
+                // CLASS & DEPARTMENT LIST (with subsidiary filter)
+                // ------------------------
+                header.classList = model.classList(estimateId);
+                header.departmentList = model.departmentList(estimateId);
+
+                log.debug("Estimate Details", { header, items, salesTeam, repList });
+
                 return {
                     success: true,
-                    estimateId: estimateId,
-                    message: "Page connection successful. Data loading will be implemented later."
+                    data: {
+                        header,
+                        items,
+                        salesTeam,
+                        repList
+                    }
                 };
+
             } catch (e) {
                 log.error("Error @ getKanbanEstimateDetails", e);
                 return { success: false, message: "Failed to load estimate details." };
@@ -1496,6 +1867,1162 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
 
 
 
+
+
+        function getKanbanOpportunityDetails(opportunityId) {
+            try {
+                if (!opportunityId) {
+                    return { success: false, message: "No Opportunity ID provided." };
+                }
+
+                const opportunityRecord = record.load({
+                    type: record.Type.OPPORTUNITY,
+                    id: opportunityId,
+                    isDynamic: false
+                });
+
+                const header = {
+                    tranid: opportunityRecord.getValue('tranid'),
+                    trandate: opportunityRecord.getText('trandate'),
+                    entity: opportunityRecord.getText('entity'),
+                    status: opportunityRecord.getText('entitystatus'),
+                    job: opportunityRecord.getText('job'),
+                    probability: opportunityRecord.getValue('probability'),
+                    title: opportunityRecord.getValue('title'),
+                    expectedCloseDate: opportunityRecord.getText('expectedclosedate'),
+                    actualCloseDate: opportunityRecord.getText('actualclosedate'),
+                    winLossReason: opportunityRecord.getText('custbody_win_loss_reason'),
+                    details: opportunityRecord.getValue('custbody_details'),
+                    projectedTotal: opportunityRecord.getValue('projectedtotal'),
+                    rangelow: opportunityRecord.getValue('rangelow'),
+                    rangehigh: opportunityRecord.getValue('rangehigh'),
+                    forecastType: opportunityRecord.getText('forecasttype'),
+                    weightedTotal: opportunityRecord.getValue('weightedtotal'),
+                    department: opportunityRecord.getText('department'),
+                    projectType: opportunityRecord.getText('custbody_project_type'),
+                    priority: opportunityRecord.getText('custbody_priority'),
+                    location: opportunityRecord.getText('location'),
+                    salesRep: opportunityRecord.getText('salesrep'),
+                    partner: opportunityRecord.getText('partner'),
+                    leadSource: opportunityRecord.getText('leadsource'),
+                    solutionEngineer: opportunityRecord.getText('custbody_jj_opp_creation_se')
+                };
+
+                // ---- LINE ITEMS ----
+                const itemCount = opportunityRecord.getLineCount("item");
+                const items = [];
+
+                for (let i = 0; i < itemCount; i++) {
+                    items.push({
+                        item: opportunityRecord.getSublistText({ sublistId: "item", fieldId: "item", line: i }),
+                        quantity: opportunityRecord.getSublistValue({ sublistId: "item", fieldId: "quantity", line: i }),
+                        units: opportunityRecord.getSublistText({ sublistId: "item", fieldId: "units", line: i }),
+                        description: opportunityRecord.getSublistValue({ sublistId: "item", fieldId: "description", line: i }),
+                        priceLevel: opportunityRecord.getSublistText({ sublistId: "item", fieldId: "price", line: i }),
+                        rate: opportunityRecord.getSublistValue({ sublistId: "item", fieldId: "rate", line: i }),
+                        amount: opportunityRecord.getSublistValue({ sublistId: "item", fieldId: "amount", line: i }),
+                        options: opportunityRecord.getSublistValue({ sublistId: "item", fieldId: "options", line: i }),
+                        expectedShipDate: opportunityRecord.getSublistText({ sublistId: "item", fieldId: "expectedshipdate", line: i }),
+                        projectItem: opportunityRecord.getSublistText({ sublistId: "item", fieldId: "custcol_project_item", line: i }),
+                        billableEstimate: opportunityRecord.getSublistText({ sublistId: "item", fieldId: "custcol_billable_estimate", line: i }),
+                        costEstimateType: opportunityRecord.getSublistText({ sublistId: "item", fieldId: "costestimatetype", line: i }),
+                        estExtendedCost: opportunityRecord.getSublistValue({ sublistId: "item", fieldId: "costestimate", line: i }),
+                        estGrossProfit: opportunityRecord.getSublistValue({ sublistId: "item", fieldId: "grossamt", line: i }),
+                        estGrossProfitPercent: opportunityRecord.getSublistValue({ sublistId: "item", fieldId: "grosspct", line: i })
+                    });
+                }
+
+                // ---- RELATIONSHIPS ----
+                const relationshipCount = opportunityRecord.getLineCount("contactroles");
+                const relationships = [];
+
+                for (let i = 0; i < relationshipCount; i++) {
+                    relationships.push({
+                        contact: opportunityRecord.getSublistText({ sublistId: "contactroles", fieldId: "contact", line: i }),
+                        role: opportunityRecord.getSublistText({ sublistId: "contactroles", fieldId: "role", line: i }),
+                        email: opportunityRecord.getSublistValue({ sublistId: "contactroles", fieldId: "email", line: i }),
+                        phone: opportunityRecord.getSublistValue({ sublistId: "contactroles", fieldId: "phone", line: i })
+                    });
+                }
+
+                // ---- COMMUNICATION ----
+                const messageCount = opportunityRecord.getLineCount("messages");
+                const communications = [];
+
+                for (let i = 0; i < messageCount; i++) {
+                    communications.push({
+                        subject: opportunityRecord.getSublistValue({ sublistId: "messages", fieldId: "subject", line: i }),
+                        author: opportunityRecord.getSublistText({ sublistId: "messages", fieldId: "author", line: i }),
+                        date: opportunityRecord.getSublistText({ sublistId: "messages", fieldId: "messageDate", line: i }),
+                        message: opportunityRecord.getSublistValue({ sublistId: "messages", fieldId: "message", line: i })
+                    });
+                }
+
+                // ---- SALES TEAM ----
+                const salesTeamCount = opportunityRecord.getLineCount("salesteam");
+                const salesTeam = [];
+
+                for (let i = 0; i < salesTeamCount; i++) {
+                    salesTeam.push({
+                        salesRep: opportunityRecord.getSublistText({ sublistId: "salesteam", fieldId: "employee", line: i }),
+                        contributionPercent: opportunityRecord.getSublistValue({ sublistId: "salesteam", fieldId: "contribution", line: i }),
+                        role: opportunityRecord.getSublistText({ sublistId: "salesteam", fieldId: "role", line: i }),
+                        isPrimary: opportunityRecord.getSublistValue({ sublistId: "salesteam", fieldId: "isprimary", line: i })
+                    });
+                }
+
+
+                log.debug("Opportunity Details", { header, items });
+
+                return {
+                    success: true,
+                    data: {
+                        header,
+                        items,
+                        relationships,
+                        communications,
+                        salesTeam
+                    }
+                };
+
+            } catch (e) {
+                log.error("Error @ getKanbanOpportunityDetails", e);
+                return { success: false, message: "Failed to load opportunity details." };
+            }
+        }
+
+        function getKanbanSalesOrderDetails(salesOrderId) {
+            try {
+                if (!salesOrderId) {
+                    return { success: false, message: "No sales order ID provided." };
+                }
+
+                const salesOrderRecord = record.load({
+                    type: record.Type.SALES_ORDER,
+                    id: salesOrderId,
+                    isDynamic: false
+                });
+
+                const data = {
+                    tranid: salesOrderRecord.getValue('tranid'),                    // Quote #
+                    trandate: salesOrderRecord.getText('trandate'),                // Date
+                    entity: salesOrderRecord.getText('entity'),                    // Customer
+                    enddate: salesOrderRecord.getText('enddate'),
+                    memo: salesOrderRecord.getValue('memo'),                       // Memo
+                    status: salesOrderRecord.getText('status'),
+                    po: salesOrderRecord.getValue('otherrefnum'),
+                    job: salesOrderRecord.getText('job'),
+                    startdate: salesOrderRecord.getText('startdate'),
+                    total: salesOrderRecord.getText('total'),
+
+                    salesrep: salesOrderRecord.getText('salesrep'),
+                    saleseffectivedate: salesOrderRecord.getText('saleseffectivedate'),
+                    leadsource: salesOrderRecord.getText('leadsource'),
+
+                    subsidiary: salesOrderRecord.getText('subsidiary'),
+                    class: salesOrderRecord.getText('class'),
+                    location: salesOrderRecord.getText('location'),
+                    department: salesOrderRecord.getText('department'),
+
+                    items: [],
+                    salesteam: [],
+
+                };
+                const itemLineCount = salesOrderRecord.getLineCount({ sublistId: 'item' });
+                for (let i = 0; i < itemLineCount; i++) {
+                    const lineData = {
+                        item: salesOrderRecord.getSublistText({ sublistId: 'item', fieldId: 'item', line: i }),
+                        quantitycommitted: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'quantitycommitted', line: i }),
+                        location: salesOrderRecord.getSublistText({ sublistId: 'item', fieldId: 'location', line: i }),
+                        requestedquantity: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'quantityrequestedtofulfill', line: i }),
+                        quantitypicked: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'quantitypicked', line: i }),
+                        quantitypacked: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'quantitypacked', line: i }),
+                        quantityfulfilled: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'quantityfulfilled', line: i }),
+                        quantitybilled: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'quantitybilled', line: i }),
+                        quantitybackordered: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'quantitybackordered', line: i }),
+                        quantity: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'quantity', line: i }),
+                        units: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'units', line: i }),
+                        pricelevel: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'price', line: i }),
+                        rate: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'rate', line: i }),
+                        amount: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'amount', line: i }),
+
+                    };
+
+                    data.items.push(lineData);
+                }
+                const salesTeamLineCount = salesOrderRecord.getLineCount({ sublistId: 'salesteam' });
+                for (let i = 0; i < salesTeamLineCount; i++) {
+                    const lineData = {
+                        employee: salesOrderRecord.getSublistText({ sublistId: 'salesteam', fieldId: 'employee',line: i }),
+                        salesrole: salesOrderRecord.getSublistText({ sublistId: 'salesteam', fieldId: 'salesrole', line: i }),
+                        primary: salesOrderRecord.getSublistText({ sublistId: 'salesteam', fieldId: 'isprimary', line: i }),
+                        contribution: salesOrderRecord.getSublistValue({ sublistId: 'salesteam', fieldId: 'contribution', line: i })
+                    }
+                    data.salesteam.push(lineData);
+                }
+                log.debug("sales team sublist", data.salesteam);
+
+
+                log.debug("item sublist", data.items);
+
+                log.debug("Sales order details", data);
+
+                return {
+                    success: true,
+                    data: data
+                };
+
+            }
+            catch (e) {
+                log.error("Error @ getKanbanSalesOrderDetails", e);
+                return { success: false, message: "Failed to load sales order details." };
+            }
+        }
+
+        function getOpportunityFormData(requestData) {
+            try {
+                const opportunityFormData = model.getOpportunityFormData(requestData);
+                return { success: true, data: opportunityFormData };
+            } catch (error) {
+                log.error("Error @getOpportunityFormData", error);
+                return { success: false, message: "Failed to load opportunity form data." };
+            }
+        }
+
+        function getOpportunityDropdowns() {
+            try {
+                const companies = getActiveCompanies(search);
+                const statuses = getOpportunityStatuses();
+                const forecastTypes = getForecastTypes();
+                const departments = getActiveDepartments(search);
+                const classes = getActiveClasses(search);
+                const locations = getActiveLocations(search);
+                const salesTypes = getActiveSalesTypes();
+                const forms = getOpportunityForms();
+                const items = getActiveItems(search);
+                const employees = getActiveEmployees(search);
+                const salesRoles = getActiveSalesRoles(search);
+
+                return {
+                    success: true,
+                    companies,
+                    statuses,
+                    forecastTypes,
+                    departments,
+                    classes,
+                    locations,
+                    salesTypes,
+                    forms,
+                    items,
+                    employees,
+                    salesRoles
+                };
+            } catch (e) {
+                log.error('Error building dropdown JSON', e);
+                return { success: false, error: e.message };
+            }
+        }
+
+        function getSubsidiaryDependents(search, subsidiaryId) {
+            try {
+                return {
+                    departments: getDepartmentsBySubsidiary(search, subsidiaryId),
+                    locations: getLocationsBySubsidiary(search, subsidiaryId),
+                    classes: getClassesBySubsidiary(search, subsidiaryId),
+                    items: getItemsBySubsidiary(search, subsidiaryId)
+                };
+            } catch (e) {
+                log.error('Error getting subsidiary dependents', e);
+                return { success: false, error: e.message };
+            }
+        }
+
+        function loadOpportunityForEdit(opportunityId, response, record) {
+            try {
+                if (!opportunityId) {
+                    throw error.create({
+                        name: 'MISSING_OPPORTUNITY_ID',
+                        message: 'Opportunity ID is required'
+                    });
+                }
+                const opportunityRecord = record.load({
+                    type: record.Type.OPPORTUNITY,
+                    id: opportunityId,
+                    isDynamic: false
+                });
+                const formData = {
+                    title: opportunityRecord.getValue({ fieldId: 'title' }),
+                    details: opportunityRecord.getValue({ fieldId: 'memo' }),
+                    company: opportunityRecord.getValue({ fieldId: 'entity' }),
+                    status: opportunityRecord.getValue({ fieldId: 'entitystatus' }),
+                    probability: opportunityRecord.getValue({ fieldId: 'probability' }),
+                    expectedClose: formatDateForInput(opportunityRecord.getValue({ fieldId: 'expectedclosedate' })),
+                    projectedTotal: opportunityRecord.getValue({ fieldId: 'projectedtotal' }),
+                    subsidiary: opportunityRecord.getValue({ fieldId: 'subsidiary' }),
+                    subsidiaryName: opportunityRecord.getText({ fieldId: 'subsidiary' }),
+                    forecastType: opportunityRecord.getValue({ fieldId: 'forecasttype' }),
+                    department: opportunityRecord.getValue({ fieldId: 'department' }),
+                    departmentName: opportunityRecord.getText({ fieldId: 'department' }) || '',
+                    class: opportunityRecord.getValue({ fieldId: 'class' }),
+                    className: opportunityRecord.getText({ fieldId: 'class' }) || '',
+                    location: opportunityRecord.getValue({ fieldId: 'location' }),
+                    locationName: opportunityRecord.getText({ fieldId: 'location' }) || '',
+                    opportunityNumber: opportunityRecord.getValue({ fieldId: 'tranid' }),
+                    salesType: opportunityRecord.getValue({ fieldId: 'cseg_jj_sales_type' }),
+                };
+                const lineCount = opportunityRecord.getLineCount({ sublistId: 'item' });
+                const lineItems = [];
+                for (let lineIndex = 0; lineIndex < lineCount; lineIndex++) {
+                    lineItems.push({
+                        itemId: opportunityRecord.getSublistValue({ sublistId: 'item', fieldId: 'item', line: lineIndex }),
+                        itemName: opportunityRecord.getSublistText({ sublistId: 'item', fieldId: 'item', line: lineIndex }),
+                        desc: opportunityRecord.getSublistValue({ sublistId: 'item', fieldId: 'description', line: lineIndex }) || '',
+                        qty: opportunityRecord.getSublistValue({ sublistId: 'item', fieldId: 'quantity', line: lineIndex }),
+                        rate: opportunityRecord.getSublistValue({ sublistId: 'item', fieldId: 'rate', line: lineIndex }),
+                        amount: opportunityRecord.getSublistValue({ sublistId: 'item', fieldId: 'amount', line: lineIndex }),
+                        classId: opportunityRecord.getSublistValue({
+                            sublistId: 'item',
+                            fieldId: 'class',
+                            line: lineIndex
+                        }),
+                        departmentId: opportunityRecord.getSublistValue({
+                            sublistId: 'item',
+                            fieldId: 'department',
+                            line: lineIndex
+                        }),
+                    });
+                }
+                formData.lines = lineItems;
+                const stCount = opportunityRecord.getLineCount({ sublistId: 'salesteam' });
+                const salesTeam = [];
+                for (let s = 0; s < stCount; s++) {
+                    salesTeam.push({
+                        employeeId: opportunityRecord.getSublistValue({
+                            sublistId: 'salesteam',
+                            fieldId: 'employee',
+                            line: s
+                        }),
+                        employeeText: opportunityRecord.getSublistText({
+                            sublistId: 'salesteam',
+                            fieldId: 'employee',
+                            line: s
+                        }) || '',
+                        roleId: opportunityRecord.getSublistValue({
+                            sublistId: 'salesteam',
+                            fieldId: 'role',
+                            line: s
+                        }) || opportunityRecord.getSublistValue({
+                            sublistId: 'salesteam',
+                            fieldId: 'salesrole',
+                            line: s
+                        }),
+                        roleText: opportunityRecord.getSublistText({
+                            sublistId: 'salesteam',
+                            fieldId: 'role',
+                            line: s
+                        }) || opportunityRecord.getSublistText({
+                            sublistId: 'salesteam',
+                            fieldId: 'salesrole',
+                            line: s
+                        }) || '',
+                        contribution: opportunityRecord.getSublistValue({
+                            sublistId: 'salesteam',
+                            fieldId: 'contribution',
+                            line: s
+                        }) || 0,
+                        isPrimary: !!opportunityRecord.getSublistValue({
+                            sublistId: 'salesteam',
+                            fieldId: 'isprimary',
+                            line: s
+                        })
+                    });
+                }
+                formData.salesTeam = salesTeam;
+                response.setHeader({ name: 'Content-Type', value: 'application/json' });
+                response.write(JSON.stringify({ success: true, opportunity: formData }));
+            } catch (e) {
+                response.setHeader({ name: 'Content-Type', value: 'application/json' });
+                response.write(JSON.stringify({ success: false, error: e.message }));
+            }
+        }
+
+        function formatDateForInput(dateObj) {
+            try {
+                if (!dateObj) return '';
+                if (!(dateObj instanceof Date)) return '';
+                return dateObj.toISOString().split('T')[0];
+            } catch (e) {
+                log.error('Error formatting date for input', e);
+                return '';
+            }
+        }
+
+        function createOpportunityRecord(request, record) {
+            try {
+                const opp = record.create({
+                    type: record.Type.OPPORTUNITY,
+                    isDynamic: true
+                });
+                setRequiredOpportunityFields(opp, request);
+                setOptionalOpportunityFields(opp, request);
+                const id = opp.save();
+                return {
+                    success: true,
+                    opportunityId: id,
+                    message: "Opportunity created successfully"
+                };
+            } catch (e) {
+                log.error('Error in createOpportunityRecord', e);
+                throw e;
+            }
+        }
+
+        function setRequiredOpportunityFields(opportunityRecord, request) {
+            try {
+                const company = request.parameters.company ? String(request.parameters.company).trim() : '';
+                const status = request.parameters.status ? String(request.parameters.status).trim() : '';
+                const probability = request.parameters.probability ? String(request.parameters.probability).trim() : '';
+                const projectedTotal = request.parameters.projectedTotal ? String(request.parameters.projectedTotal).trim() : '';
+                const subsidiary = request.parameters.subsidiary ? String(request.parameters.subsidiary).trim() : '';
+                const expectedCloseParam = request.parameters.expectedClose ? String(request.parameters.expectedClose).trim() : '';
+                if (!company) throw new Error('Company is required');
+                if (!status) throw new Error('Status is required');
+                if (!probability) throw new Error('Probability is required');
+                if (!projectedTotal) throw new Error('Projected Total is required');
+                if (!subsidiary) throw new Error('Subsidiary is required');
+                if (!expectedCloseParam) throw new Error('Expected Close Date is required');
+                opportunityRecord.setValue({ fieldId: 'entity', value: company });
+                opportunityRecord.setValue({ fieldId: 'entitystatus', value: status });
+                opportunityRecord.setValue({ fieldId: 'probability', value: parseFloat(probability) });
+                opportunityRecord.setValue({ fieldId: 'projectedtotal', value: parseFloat(projectedTotal) });
+                opportunityRecord.setValue({ fieldId: 'subsidiary', value: subsidiary });
+                const expectedCloseDate = formatDate(expectedCloseParam);
+                if (expectedCloseDate) {
+                    opportunityRecord.setValue({ fieldId: 'expectedclosedate', value: expectedCloseDate });
+                }
+                let items = [];
+                try {
+                    if (request.parameters.items) {
+                        items = JSON.parse(request.parameters.items);
+                    }
+                } catch (parseErr) {
+                    log.error("Error parsing items JSON", parseErr);
+                    items = [];
+                }
+                items.forEach(line => {
+                    if (!line.id) return;
+                    const itemId = line.id;
+                    const qtyVal = parseFloat(line.qty) || 1;
+                    const rateVal = parseFloat(line.rate) || 0;
+                    const amtVal = (line.amount !== undefined && line.amount !== null && line.amount !== '')
+                        ? parseFloat(line.amount)
+                        : parseFloat((qtyVal * rateVal).toFixed(2));
+                    const descVal = line.desc || '';
+                    const classVal = line.classId || '';
+                    const departmentVal = line.departmentId || '';
+                    opportunityRecord.selectNewLine({ sublistId: 'item' });
+                    opportunityRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'item', value: itemId });
+                    opportunityRecord.setCurrentSublistValue({sublistId: 'item', fieldId: 'class',value:classVal || ''});
+                    opportunityRecord.setCurrentSublistValue({sublistId: 'item',fieldId: 'department',value:departmentVal || ''});
+                    opportunityRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'quantity', value: qtyVal });
+                    opportunityRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'rate', value: rateVal });
+                    opportunityRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'amount', value: amtVal });
+                    opportunityRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'description', value: descVal });
+                    try {
+                        opportunityRecord.commitLine({ sublistId: 'item' });
+                    } catch (commitErr) {
+                        log.error("Error committing line " + itemId + ", continuing with next line", commitErr);
+                    }
+                });
+                let salesTeam = [];
+                try {
+                    if (request.parameters.salesTeam) {
+                        salesTeam = JSON.parse(request.parameters.salesTeam);
+                    }
+                } catch (e) {
+                    log.error("Invalid salesTeam JSON", e);
+                    salesTeam = [];
+                }
+                if (salesTeam.length) {
+                    const total = salesTeam.reduce((sum, m) => sum + (parseFloat(m.contribution) || 0), 0);
+                    if (Math.abs(total - 100) > 0.01) {
+                        throw new Error("Sales team contributions must total 100. Current total: " + total);
+                    }
+                }
+                const existingSales = opportunityRecord.getLineCount({ sublistId: 'salesteam' }) || 0;
+                for (let i = existingSales - 1; i >= 0; i--) {
+                    opportunityRecord.removeLine({ sublistId: 'salesteam', line: i });
+                }
+                salesTeam.forEach(m => {
+                    if (!m.employeeId) return;
+                    opportunityRecord.selectNewLine({ sublistId: 'salesteam' });
+                    opportunityRecord.setCurrentSublistValue({
+                        sublistId: 'salesteam',
+                        fieldId: 'employee',
+                        value: Number(m.employeeId)
+                    });
+                    if (m.roleId) {
+                        opportunityRecord.setCurrentSublistValue({
+                            sublistId: 'salesteam',
+                            fieldId: 'salesrole',
+                            value: Number(m.roleId)
+                        });
+                    }
+                    opportunityRecord.setCurrentSublistValue({
+                        sublistId: 'salesteam',
+                        fieldId: 'contribution',
+                        value: Number(m.contribution) || 0
+                    });
+                    opportunityRecord.setCurrentSublistValue({
+                        sublistId: 'salesteam',
+                        fieldId: 'isprimary',
+                        value: m.isPrimary ? true : false
+                    });
+                    opportunityRecord.commitLine({ sublistId: 'salesteam' });
+                });
+            } catch (e) {
+                log.error("Error in setRequiredOpportunityFields", e);
+                throw e;
+            }
+            log.debug("All request parameters", request.parameters);
+        }
+
+        function formatDate(dateInput) {
+            try {
+                if (!dateInput) return null;
+                if (dateInput instanceof Date) {
+                    return isNaN(dateInput.getTime()) ? null : dateInput;
+                }
+                let parsedDate = null;
+                if (typeof dateInput === 'string') {
+                    const iso = dateInput.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+                    if (iso) {
+                        const y = parseInt(iso[1], 10);
+                        const m = parseInt(iso[2], 10) - 1;
+                        const d = parseInt(iso[3], 10);
+                        parsedDate = new Date(y, m, d);
+                    } else {
+                        parsedDate = new Date(dateInput);
+                    }
+                } else {
+                    parsedDate = new Date(dateInput);
+                }
+                if (parsedDate && !isNaN(parsedDate.getTime())) {
+                    return parsedDate;
+                }
+                return null;
+            } catch (e) {
+                log.error('Error formatting date', e);
+                return null;
+            }
+        }
+
+        function setOptionalOpportunityFields(opportunityRecord, request) {
+            try {
+                if (request.parameters.title) {
+                    opportunityRecord.setValue({ fieldId: 'title', value: request.parameters.title });
+                }
+                if (request.parameters.forecastType) {
+                    opportunityRecord.setValue({ fieldId: 'forecasttype', value: request.parameters.forecastType });
+                }
+                if (request.parameters.department) {
+                    opportunityRecord.setValue({ fieldId: 'department', value: request.parameters.department });
+                }
+                if (request.parameters.location) {
+                    opportunityRecord.setValue({ fieldId: 'location', value: request.parameters.location });
+                }
+                if (request.parameters.details) {
+                    opportunityRecord.setValue({ fieldId: 'memo', value: request.parameters.details });
+                }
+                if (request.parameters.class) {
+                    opportunityRecord.setValue({ fieldId: 'class', value: request.parameters.class });
+                }
+                if (request.parameters.salesType) {
+                opportunityRecord.setValue({ fieldId: 'cseg_jj_sales_type', value: request.parameters.salesType });
+                }
+            } catch (e) {
+                log.error("Error in setOptionalOpportunityFields", e);
+            }
+        }
+
+        function updateOpportunityRecord(request, record, oppId) {
+            try {
+                let oppRecord = record.load({
+                    type: record.Type.OPPORTUNITY,
+                    id: parseInt(oppId, 10),
+                    isDynamic: true
+                });
+                log.debug("Opportunity ", oppRecord)
+                const originalCompany = oppRecord.getValue({ fieldId: 'entity' });
+                setHeaderFieldsForUpdate(oppRecord, request);
+                setOptionalOpportunityFields(oppRecord, request);
+                let items = [];
+                try {
+                    if (request.parameters.items) {
+                        items = JSON.parse(request.parameters.items);
+                    }
+                } catch (parseErr) {
+                    log.error("Error parsing items JSON", parseErr);
+                    items = [];
+                }
+                try {
+                    const existingCount = oppRecord.getLineCount({ sublistId: 'item' }) || 0;
+                    for (let i = existingCount - 1; i >= 0; i--) {
+                        try { oppRecord.removeLine({ sublistId: 'item', line: i }); } catch (remErr) { /* ignore */ }
+                    }
+                } catch (clearErr) {
+                    log.debug('Could not clear existing item lines before update (continuing)', clearErr);
+                }
+                items.forEach(line => {
+                    if (!line.id) return;
+                    const itemId = line.id;
+                    const qtyVal = parseFloat(line.qty) || 1;
+                    const rateVal = parseFloat(line.rate) || 0;
+                    const amtVal = (line.amount !== undefined && line.amount !== null && line.amount !== '')
+                        ? parseFloat(line.amount)
+                        : parseFloat((qtyVal * rateVal).toFixed(2));
+                    const descVal = line.desc || '';
+                    const classVal = line.classId || '';
+                    const departmentVal = line.departmentId || '';
+                    try {
+                        oppRecord.selectNewLine({ sublistId: 'item' });
+                        oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'item', value: parseInt(itemId, 10) });
+                        oppRecord.setCurrentSublistValue({sublistId: 'item', fieldId: 'class', value:classVal || ''});
+                        oppRecord.setCurrentSublistValue({sublistId: 'item',fieldId: 'department',value:departmentVal || ''});
+                        oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'quantity', value: qtyVal });
+                        oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'rate', value: rateVal });
+                        oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'amount', value: amtVal });
+                        oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'description', value: descVal });
+                        oppRecord.commitLine({ sublistId: 'item' });
+                        log.debug('Re-added item line (update)', { item: itemId, qty: qtyVal, rate: rateVal, amount: amtVal });
+                    } catch (addErr) {
+                        log.error('Error adding item line during update', addErr);
+                    }
+                });
+                let salesTeamCount = oppRecord.getLineCount({ sublistId: 'salesteam' });
+                log.debug('Existing sales team line count before update', salesTeamCount);
+                ensureCompanyOnRecord(oppRecord, request, originalCompany);
+                updateSalesTeamLines(oppRecord, request);
+                const savedId = oppRecord.save();
+                return {
+                    success: true,
+                    opportunityId: savedId,
+                    message: "Opportunity updated successfully"
+                };
+            } catch (e) {
+                log.error('Error updating opportunity record', e);
+                throw e;
+            }
+        }
+
+        function setHeaderFieldsForUpdate(opportunityRecord, request) {
+            try {
+                const company = request.parameters.company;
+                const status = request.parameters.status;
+                const probability = request.parameters.probability;
+                const projectedTotal = request.parameters.projectedTotal;
+                const subsidiary = request.parameters.subsidiary;
+                const expectedCloseParam = request.parameters.expectedClose;
+                if (company !== undefined && company !== null && String(company).trim() !== '') {
+                    opportunityRecord.setValue({ fieldId: 'entity', value: company });
+                }
+                if (status !== undefined && status !== null && String(status).trim() !== '') {
+                    opportunityRecord.setValue({ fieldId: 'entitystatus', value: status });
+                }
+                if (probability !== undefined && probability !== null && String(probability).trim() !== '') {
+                    opportunityRecord.setValue({ fieldId: 'probability', value: parseFloat(probability) });
+                }
+                if (projectedTotal !== undefined && projectedTotal !== null && String(projectedTotal).trim() !== '') {
+                    opportunityRecord.setValue({ fieldId: 'projectedtotal', value: parseFloat(projectedTotal) });
+                }
+                if (subsidiary !== undefined && subsidiary !== null && String(subsidiary).trim() !== '') {
+                    opportunityRecord.setValue({ fieldId: 'subsidiary', value: subsidiary });
+                }
+                if (expectedCloseParam !== undefined && expectedCloseParam !== null && String(expectedCloseParam).trim() !== '') {
+                    const expectedCloseDate = formatDate(expectedCloseParam);
+                    if (expectedCloseDate) {
+                        opportunityRecord.setValue({ fieldId: 'expectedclosedate', value: expectedCloseDate });
+                    }
+                }
+            } catch (e) {
+                log.error('Error in setHeaderFieldsForUpdate', e);
+            }
+        }
+
+        function setOptionalOpportunityFields(opportunityRecord, request) {
+            try {
+                if (request.parameters.title) {
+                    opportunityRecord.setValue({ fieldId: 'title', value: request.parameters.title });
+                }
+                if (request.parameters.forecastType) {
+                    opportunityRecord.setValue({ fieldId: 'forecasttype', value: request.parameters.forecastType });
+                }
+                if (request.parameters.department) {
+                    opportunityRecord.setValue({ fieldId: 'department', value: request.parameters.department });
+                }
+                if (request.parameters.location) {
+                    opportunityRecord.setValue({ fieldId: 'location', value: request.parameters.location });
+                }
+                if (request.parameters.details) {
+                    opportunityRecord.setValue({ fieldId: 'memo', value: request.parameters.details });
+                }
+                if (request.parameters.class) {
+                    opportunityRecord.setValue({ fieldId: 'class', value: request.parameters.class });
+                }
+                if (request.parameters.salesType) {
+                opportunityRecord.setValue({ fieldId: 'cseg_jj_sales_type', value: request.parameters.salesType });
+                }
+            } catch (e) {
+                log.error("Error in setOptionalOpportunityFields", e);
+            }
+        }
+
+        function updateSalesTeamLines(oppRecord, request) {
+            try {
+                let salesTeam = [];
+                log.debug(`opportunity recordID ${oppRecord.id} & request ${request}`);
+                log.debug('request.parameters', request.parameters)
+                log.debug('request.parameters.salesTeam', request.parameters.salesTeam)
+                if (request.parameters && request.parameters.salesTeam) {
+                    try {
+                        salesTeam = JSON.parse(request.parameters.salesTeam);
+                    } catch (err) {
+                        log.error("Error parsing salesTeam params", err);
+                    }
+                }
+                if (!Array.isArray(salesTeam) || salesTeam.length === 0) {
+                    log.debug('No sales team data provided, skipping update');
+                    return;
+                }
+                const totalContribution = salesTeam.reduce((sum, m) => sum + (parseFloat(m.contribution) || 0), 0);
+                if (Math.abs(totalContribution - 100) > 0.01) {
+                    throw new Error('Sales team contributions must total 100. Current total: ' + totalContribution);
+                }
+                const existingCount = oppRecord.getLineCount({ sublistId: 'salesteam' }) || 0;
+                for (let i = existingCount - 1; i >= 0; i--) {
+                    try {
+                        oppRecord.removeLine({ sublistId: 'salesteam', line: i });
+                    } catch (remErr) {
+                    }
+                }
+                salesTeam.forEach(line => {
+                    if (!line || !line.employeeId) return;
+                    const empId = Number(line.employeeId) || null;
+                    const roleId = line.roleId ? Number(line.roleId) : null;
+                    const contribVal = Number(line.contribution) || 0;
+                    const isPrimaryVal = ['T', '1', true].includes(line.isPrimary);
+                    try {
+                        oppRecord.selectNewLine({ sublistId: 'salesteam' });
+                        oppRecord.setCurrentSublistValue({ sublistId: 'salesteam', fieldId: 'employee', value: empId });
+                        if (roleId) {
+                            oppRecord.setCurrentSublistValue({ sublistId: 'salesteam', fieldId: 'salesrole', value: roleId });
+                        }
+                        oppRecord.setCurrentSublistValue({ sublistId: 'salesteam', fieldId: 'contribution', value: contribVal });
+                        try {
+                            oppRecord.setCurrentSublistValue({ sublistId: 'salesteam', fieldId: 'isprimary', value: isPrimaryVal });
+                        } catch (isPrimaryErr) {
+                            try { oppRecord.setCurrentSublistValue({ sublistId: 'salesteam', fieldId: 'isprimary', value: isPrimaryVal === 'T' }); } catch (inner) { log.debug('isprimary set failed', inner); }
+                        }
+                        oppRecord.commitLine({ sublistId: 'salesteam' });
+                    } catch (err) {
+                        log.error('Error committing sales team line (update)', err);
+                    }
+                });
+                log.debug('Sales team update complete', { count: salesTeam.length });
+            } catch (e) {
+                log.error('Error updating sales team lines', e);
+                throw e;
+            }
+        }
+
+        function ensureCompanyOnRecord(oppRecord, request, originalCompany) {
+            try {
+                const companyOnRecord = oppRecord.getValue({ fieldId: 'entity' });
+                if (companyOnRecord) return;
+                const paramValOrArray = (k) => request.parameters[k] === undefined ? null : request.parameters[k];
+                const toSingle = (v) => (v === null || v === undefined) ? null : (Array.isArray(v) ? v[0] : v);
+                const candidateKeys = [
+                    'company', 'entity', 'customer', 'customerId', 'entityid',
+                    'custentity_company', 'company[]', 'entity[]'
+                ];
+                let companyParam = null;
+                for (let k = 0; k < candidateKeys.length; k++) {
+                    const raw = paramValOrArray(candidateKeys[k]);
+                    const single = toSingle(raw);
+                    if (single !== null && single !== undefined && String(single).trim() !== '') {
+                        companyParam = single;
+                        break;
+                    }
+                }
+                if (companyParam && String(companyParam).trim() !== '') {
+                    oppRecord.setValue({ fieldId: 'entity', value: companyParam });
+                } else if (originalCompany) {
+                    oppRecord.setValue({ fieldId: 'entity', value: originalCompany });
+                } else {
+                    throw new Error('Company is required');
+                }
+            } catch (e) {
+                log.error('Error in ensureCompanyOnRecord', e);
+            }
+        }
+
+        function getActiveCompanies(search) {
+            const companies = [];
+            try {
+                const entityTypes = [
+                    { type: search.Type.CUSTOMER, label: 'customer' },
+                    { type: search.Type.LEAD, label: 'lead' },
+                    { type: search.Type.PROSPECT, label: 'prospect' }
+                ];
+                entityTypes.forEach(function (entityType) {
+                    try {
+                        const searchObj = search.create({
+                            type: entityType.type,
+                            filters: [['isinactive', 'is', 'F']],
+                            columns: ['internalid', 'entityid']
+                        });
+                        searchObj.run().each(function (result) {
+                            companies.push({ id: result.getValue('internalid'), name: result.getValue('entityid'), type: entityType.label });
+                            return true;
+                        });
+                    } catch (innerErr) {
+                        log.error('Error searching ' + entityType.label, innerErr);
+                    }
+                });
+            } catch (e) {
+                log.error('Error in getActiveCompanies', e);
+            }
+            return companies;
+
+        }
+
+        function getOpportunityStatuses() {
+            return opportunityStatuses;
+        }
+
+        function getOpportunityForms() {
+            return opportunityForms;
+        }
+
+        function getActiveItems(search) {
+            const items = [];
+            try {
+                const itemTypes = [
+                    { type: search.Type.INVENTORY_ITEM, label: 'Inventory' },
+                    { type: search.Type.SERVICE_ITEM, label: 'Service' },
+                    { type: search.Type.NON_INVENTORY_ITEM, label: 'Non-Inventory' },
+                    { type: search.Type.ASSEMBLY_ITEM, label: 'Assembly' }
+                ];
+                itemTypes.forEach(function (itemType) {
+                    try {
+                        const searchObj = search.create({
+                            type: itemType.type,
+                            filters: [
+                                ['subsidiary', 'anyof', subsidiaryId],
+                                'AND',
+                                ['isinactive', 'is', 'F']
+                            ],
+                            columns: ['internalid', 'itemid', 'baseprice'] // fetch ID, Name, Rate
+                        });
+                        searchObj.run().each(function (result) {
+                            items.push({
+                                id: result.getValue('internalid'),
+                                name: result.getValue('itemid'),
+                                rate: parseFloat(result.getValue('baseprice')) || 0,
+                                type: itemType.label
+                            });
+                            return true;
+                        });
+                    } catch (innerErr) {
+                        log.error('Error searching ' + itemType.label, innerErr);
+                    }
+                });
+            } catch (e) {
+                log.error('Error in getActiveItems', e);
+            }
+            return items;
+        }
+
+
+        function getActiveEmployees(search) {
+            const results = [];
+            try {
+                const empSearch = search.create({
+                    type: search.Type.EMPLOYEE,
+                    filters: [['isinactive', 'is', 'F']],
+                    columns: ['internalid', 'firstname', 'lastname', 'entityid']
+                });
+                empSearch.run().each(function (res) {
+                    const id = res.getValue('internalid');
+                    const fname = res.getValue({ name: 'firstname' }) || '';
+                    const lname = res.getValue({ name: 'lastname' }) || '';
+                    const display = ((fname + ' ' + lname).trim()) || res.getValue({ name: 'entityid' }) || '';
+                    results.push({ id: id, name: display });
+                    return true;
+                });
+            } catch (e) {
+                log.debug('getActiveEmployees failed', e);
+            }
+            return results;
+        }
+
+        function getActiveSalesRoles(search) {
+            const results = [];
+            try {
+                try {
+                    const roleSearch = search.create({
+                        type: 'salesrole',
+                        filters: [['isinactive', 'is', 'F']],
+                        columns: ['internalid', 'name']
+                    });
+                    roleSearch.run().each(function (r) { results.push({ id: r.getValue('internalid'), name: r.getValue('name') }); return true; });
+                } catch (err) {
+                    try {
+                        const roleSearch2 = search.create({
+                            type: 'customrecord_salesrole',
+                            filters: [['isinactive', 'is', 'F']],
+                            columns: ['internalid', 'name']
+                        });
+                        roleSearch2.run().each(function (r2) { results.push({ id: r2.getValue('internalid'), name: r2.getValue('name') }); return true; });
+                    } catch (inner) {
+                        log.debug('getActiveSalesRoles: no salesrole record type found', inner);
+                    }
+                }
+            } catch (e) {
+                log.debug('getActiveSalesRoles failed', e);
+            }
+            return results;
+        }
+
+        function getForecastTypes() {
+            return forecastTypes;
+        }
+
+        function getActiveDepartments(search) {
+            const departments = [];
+            try {
+                const searchObj = search.create({
+                    type: search.Type.DEPARTMENT,
+                    filters: [
+                        ['isinactive', 'is', 'F']
+                    ],
+                    columns: ['internalid', 'name']
+                });
+                searchObj.run().each(function (result) {
+                    departments.push({ id: result.getValue('internalid'), name: result.getValue('name') });
+                    return true;
+                });
+            } catch (e) {
+                log.error('Error in getActiveDepartments', e);
+            }
+            return departments;
+        }
+
+        function getActiveClasses(search) {
+            const classes = [];
+            try {
+                const searchObj = search.create({
+                    type: search.Type.CLASSIFICATION,
+                    filters: [
+                        ['isinactive', 'is', 'F']
+                    ],
+                    columns: ['internalid', 'name']
+                });
+                searchObj.run().each(function (result) {
+                    classes.push({ id: result.getValue('internalid'), name: result.getValue('name') });
+                    return true;
+                });
+            } catch (e) {
+                log.error('Error in getActiveClasses', e);
+            }
+            return classes;
+        }
+
+        function getActiveLocations(search) {
+            const locations = [];
+            try {
+                const searchObj = search.create({
+                    type: search.Type.LOCATION,
+                    filters: [
+                        ['isinactive', 'is', 'F']
+                    ],
+                    columns: ['internalid', 'name']
+                });
+                searchObj.run().each(function (result) {
+                    locations.push({ id: result.getValue('internalid'), name: result.getValue('name') });
+                    return true;
+                });
+            } catch (e) {
+                log.error('Error in getActiveLocations', e);
+            }
+            return locations;
+        }
+
+        function getDepartmentsBySubsidiary(search, subsidiaryId) {
+            const departments = [];
+            try {
+                const searchObj = search.create({
+                    type: search.Type.DEPARTMENT,
+                    filters: [
+                        ['subsidiary', 'anyof', subsidiaryId],
+                        'AND',
+                        ['isinactive', 'is', 'F']
+                    ],
+                    columns: ['internalid', 'name']
+                });
+                searchObj.run().each(result => {
+                    departments.push({
+                        id: result.getValue('internalid'),
+                        name: result.getValue('name')
+                    });
+                    return true;
+                });
+            } catch (e) {
+                log.error('Error in getDepartmentsBySubsidiary', e);
+            }
+            return departments;
+        }
+
+        function getClassesBySubsidiary(search, subsidiaryId) {
+            const classes = [];
+            try {
+                const searchObj = search.create({
+                    type: search.Type.CLASSIFICATION,
+                    filters: [
+                        ['subsidiary', 'anyof', subsidiaryId],
+                        'AND',
+                        ['isinactive', 'is', 'F']
+                    ],
+                    columns: ['internalid', 'name']
+                });
+                searchObj.run().each(result => {
+                    classes.push({
+                        id: result.getValue('internalid'),
+                        name: result.getValue('name')
+                    });
+                    return true;
+                });
+            } catch (e) {
+                log.error('Error in getClassesBySubsidiary', e);
+            }
+            return classes;
+        }
+
+        function getLocationsBySubsidiary(search, subsidiaryId) {
+            const locations = [];
+            try {
+                const searchObj = search.create({
+                    type: search.Type.LOCATION,
+                    filters: [
+                        ['subsidiary', 'anyof', subsidiaryId],
+                        'AND',
+                        ['isinactive', 'is', 'F']
+                    ],
+                    columns: ['internalid', 'name']
+                });
+                searchObj.run().each(result => {
+                    locations.push({
+                        id: result.getValue('internalid'),
+                        name: result.getValue('name')
+                    });
+                    return true;
+                });
+            } catch (e) {
+                log.error('Error in getLocationsBySubsidiary', e);
+            }
+            return locations;
+        }
+
+        function getItemsBySubsidiary(search, subsidiaryId) {
+            const items = [];
+            try {
+                const itemTypes = [
+                    { type: search.Type.INVENTORY_ITEM, label: 'Inventory' },
+                    { type: search.Type.SERVICE_ITEM, label: 'Service' },
+                    { type: search.Type.NON_INVENTORY_ITEM, label: 'Non-Inventory' },
+                    { type: search.Type.ASSEMBLY_ITEM, label: 'Assembly' }
+                ];
+                itemTypes.forEach(itemType => {
+                    const searchObj = search.create({
+                        type: itemType.type,
+                        filters: [
+                            ['subsidiary', 'anyof', subsidiaryId],
+                            'AND',
+                            ['isinactive', 'is', 'F']
+                        ],
+                        columns: ['internalid', 'itemid', 'baseprice']
+                    });
+                    searchObj.run().each(result => {
+                        items.push({
+                            id: result.getValue('internalid'),
+                            name: result.getValue('itemid'),
+                            rate: parseFloat(result.getValue('baseprice')) || 0,
+                            type: itemType.label
+                        });
+                        return true;
+                    });
+                });
+            } catch (e) {
+                log.error('Error in getItemsBySubsidiary', e);
+            }
+            return items;
+        }
+
+
+        function getActiveSalesTypes() {
+            return salesTypes;
+        }
+
+        function getSubsidiaryForCustomer(search, customerId) {
+            let resultObj = {
+                hasSubsidiary: false,
+                subsidiaryId: null,
+                subsidiaryName: null,
+                subsidiaryActive: false
+            };
+            if (!customerId) {
+                return resultObj;
+            }
+            try {
+                const entityRecordTypes = [search.Type.CUSTOMER, search.Type.PROSPECT];
+                for (let recordType of entityRecordTypes) {
+                    try {
+                        const entitySearch = search.create({
+                            type: recordType,
+                            filters: [['internalid', 'is', customerId]],
+                            columns: ['subsidiary']
+                        });
+                        const entityRow = entitySearch.run().getRange({ start: 0, end: 1 })[0];
+                        if (!entityRow) continue;
+                        const subsidiaryId = entityRow.getValue('subsidiary');
+                        if (!subsidiaryId) break;
+                        const subSearch = search.create({
+                            type: search.Type.SUBSIDIARY,
+                            filters: [
+                                ['internalid', 'is', subsidiaryId],
+                                'AND',
+                                ['isinactive', 'is', 'F']
+                            ],
+                            columns: ['name', 'isinactive']
+                        });
+                        const subRow = subSearch.run().getRange({ start: 0, end: 1 })[0];
+                        if (!subRow) break;
+                        resultObj = {
+                            hasSubsidiary: true,
+                            subsidiaryId: subsidiaryId,
+                            subsidiaryName: subRow.getValue('name') || subRow.getText('name'),
+                            subsidiaryActive: true
+                        };
+                        break;
+                    } catch (innerErr) {
+                        log.debug(`getSubsidiaryForCustomer: search failed for type ${recordType}`, innerErr);
+                    }
+                }
+            } catch (e) {
+                log.error('Error in getSubsidiaryForCustomer', e);
+            }
+            return resultObj;
+        }
 
         /**
          * Defines the Suitelet script trigger point.
@@ -1533,6 +3060,10 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 }
 
                 else if (request.method === 'POST') {
+                    response.setHeader({
+                        name: 'Content-Type',
+                        value: 'application/json'
+                    });
                     let action = request.parameters.action || null;
                     let req = null;
 
@@ -1543,12 +3074,12 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                         req = request.parameters;
                     }
                     else if (request.body.action === 'kanbanBoard') {
-                        log.debug("Kanban Board Request Body", request.body);
                         let reqBody = JSON.parse(request.body);
-                        // req = reqBody;
                         res = fetchKanbanData(reqBody.startDate, reqBody.endDate);
-                        // log.debug("Parsed Kanban Board Request Body", reqBody);
-                        // req =request.parameters;
+
+                    }
+                    else if (action === 'updateOpportunity') {
+                        req = request.parameters;
                     }
                     else {
                         try {
@@ -1581,6 +3112,28 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                         case 'session':
                             res = USER_AUTH.isValidSession(req);
                             break;
+                        case 'opportunityform':
+                            res = getOpportunityFormData(req);
+                            break;
+                        case 'opportunitydropdowns':
+                            res = getOpportunityDropdowns();
+                            break;
+                        case 'getSubsidiary':
+                            res = getSubsidiaryForCustomer(search, req.customerId);
+                            break;
+                        case 'getSubsidiaryDependents':
+                            res = getSubsidiaryDependents(search, req.subsidiaryId);
+                            break;
+                        case 'loadOpportunity':
+                            log.debug("POST ACTION", req.action);
+                            log.debug("REQ ID RECEIVED", req.id);
+                            return loadOpportunityForEdit(req.id, response, record);
+                        case 'createOpportunity':
+                            res = createOpportunityRecord(request, record);
+                            break;
+                        case 'updateOpportunity':
+                            res = updateOpportunityRecord(request, record, req.opportunityId);
+                            break;
                         case 'getCustomerDetails':
                             res = USER_AUTH.getCustomerDetails(req);
                             break;
@@ -1602,7 +3155,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                         case 'fetchReportData':
                             res = getReportData(req)
                             break;
-                        // Kanban board integration
                         case 'fetchRecords':
                             res = fetchKanbanData(req.startDate, req.endDate);
                             break;
@@ -1617,7 +3169,27 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             break;
 
                         case 'getKanbanEstimateDetails':
-                            res = getKanbanEstimateDetails(req.estimateId);
+                            const resData = getKanbanEstimateDetails(req.estimateId);
+                            resData.data.header.jobDetails = model.jobDetails(req.estimateId);
+                            resData.data.header.partnerDetails = model.partnerDetails(req.estimateId);
+                            resData.data.header.classDetails = model.classDetails(req.estimateId);
+                            resData.data.header.departmentDetails = model.departmentDetails(req.estimateId);
+                            resData.data.header.locationDetails = model.locationDetails(req.estimateId);
+                            resData.data.header.itemList = model.itemList(req.estimateId);
+                            resData.data.header.salesRepList = model.salesRepList();
+                            resData.data.header.classList = model.classList(req.estimateId);
+                            resData.data.header.departmentList = model.departmentList(req.estimateId);
+
+                            res = resData;
+                            break;
+
+
+
+                        case 'getKanbanOpportunityDetails':
+                            res = getKanbanOpportunityDetails(req.opportunityId);
+                            break;
+                        case 'getKanbanSalesOrderDetails':
+                            res = getKanbanSalesOrderDetails(req.salesOrderId);
                             break;
 
                         case 'checkSalesManager':
@@ -1626,10 +3198,11 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             res = { success: true, isSalesManager: managerStatus };
                             break;
 
+
                         case 'fetchEstimates':
                             res = {
                                 success: true,
-                                estimatesList: getEstimatesList(req.userId)
+                                estimatesList: getEstimatesList(req.userId, req.customerId, req.status)
                             };
                             break;
 
@@ -1644,6 +3217,24 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             break;
                         case 'createepic':
                             res = createEpicWithDropdowns(req);
+                            break;
+
+                        case 'approveso':
+                            res = approveSo(req);
+                            break;
+
+                        case 'getQuoteStatuses':
+                            const statuses = getQuoteStatuses(record); // your helper function
+                            res = { success: true, statuses: statuses };
+                            break;
+
+                        case 'getCustomerDetailsByEmail':
+                            if (!req.email) {
+                                res = { success: false, message: "Email parameter missing" };
+                            } else {
+                                const customers = getCustomersByEmail(req.email);
+                                res = { success: true, customers: customers };
+                            }
                             break;
 
                         default:

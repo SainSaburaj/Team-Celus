@@ -6,125 +6,256 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Estimate Details</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet" />
     <style>
-        body { font-family: "Montserrat", sans-serif; }
+        body {
+            font-family: "Montserrat", sans-serif;
+        }
+
         .tab-content { display: none; }
         .tab-active { display: block; }
+
+        select:disabled { 
+            color: black !important; 
+            opacity: 1 !important;
+        }
+        input:disabled { 
+            color: black !important; 
+            opacity: 1 !important;
+            background-color: inherit !important;
+        }
+        input[type="checkbox"]:disabled {
+            opacity: 1 !important;
+            width: 15px;
+            height: 15px;
+        }
     </style>
 </head>
 
-<body class="bg-gray-100 font-montserrat p-8">
+<body class="bg-gray-100 font-montserrat px-3 py-10">
 
-    <div class="space-y-6 w-full">
-
-        <!-- Header Card -->
-        <div class="bg-gradient-to-r from-[#eece4f] to-[#f5dd5c] text-gray-900 rounded-xl p-6">
-            <div class="flex justify-between items-center">
-                <h3 class="text-xl font-semibold mb-4">Estimate #201</h3>
-                <span class="bg-yellow-200 text-gray-900 px-3 py-1 rounded-full font-semibold shadow">Pending</span>
-            </div>
-            <h1 class="text-3xl font-bold">Website Redesign Project</h1>
-        </div>
-
-        <!-- Primary Information -->
-        <div class="bg-[#fffef8] rounded-xl p-6 border border-gray-300 w-full">
-            <h2 class="text-xl font-semibold mb-4 text-gray-900 border-b pb-2">Primary Information</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
-                <p><span class="font-medium text-gray-900 font-semibold">Customer Name:</span> ABC Corp</p>
-                <p><span class="font-medium text-gray-900 font-semibold">Email:</span> abc@example.com</p>
-                <p><span class="font-medium text-gray-900 font-semibold">Phone:</span> +1 123-456-7890</p>
-                <p><span class="font-medium text-gray-900 font-semibold">Estimate Date:</span> 01-Dec-2025</p>
-                <p><span class="font-medium text-gray-900 font-semibold">Valid Until:</span> 31-Dec-2025</p>
-                <p><span class="font-medium text-gray-900 font-semibold">Project Name:</span> Website Redesign</p>
-            </div>
-        </div>
-
-        <!-- Sales Information -->
-        <div class="bg-[#fffef8] rounded-xl p-6 border border-gray-300 w-full">
-            <h2 class="text-xl font-semibold mb-4 text-gray-900 border-b pb-2">Sales Information</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
-                <p><span class="font-medium text-gray-900 font-semibold">Sales Rep:</span> Emma Davies</p>
-                <p><span class="font-medium text-gray-900 font-semibold">Sales Manager:</span> John Smith</p>
-                <p><span class="font-medium text-gray-900 font-semibold">Total Amount:</span> $12,500</p>
-                <p><span class="font-medium text-gray-900 font-semibold">Currency:</span> USD</p>
-                <p><span class="font-medium text-gray-900 font-semibold">Status:</span> Pending</p>
-                <p><span class="font-medium text-gray-900 font-semibold">Region:</span> North America</p>
-            </div>
-        </div>
-
-        <!-- Classification -->
-        <div class="bg-[#fffef8] rounded-xl p-6 border border-gray-300 w-full">
-            <h2 class="text-xl font-semibold mb-4 text-gray-900 border-b pb-2">Classification</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
-                <p><span class="font-medium text-gray-900 font-semibold">Department:</span> Marketing</p>
-                <p><span class="font-medium text-gray-900 font-semibold">Project Type:</span> Website Redesign</p>
-                <p><span class="font-medium text-gray-900 font-semibold">Priority:</span> High</p>
-                <p><span class="font-medium text-gray-900 font-semibold">Location:</span> New York</p>
-            </div>
-        </div>
-
-        <!-- Line Level Tabs -->
-        <div class="bg-[#fffef8] rounded-xl p-6 border border-gray-300 w-full">            
-            <!-- Tabs -->
-            <div class="flex space-x-4 mb-4 border-b border-yellow-200">
-                <button class="tab-btn py-2 px-4 text-gray-900 font-semibold border-b-2 border-yellow-800" data-tab="items">Items</button>
-                <button class="tab-btn py-2 px-4 text-gray-900 font-semibold border-b-2 border-transparent" data-tab="billing">Billing</button>
-                <button class="tab-btn py-2 px-4 text-gray-900 font-semibold border-b-2 border-transparent" data-tab="accounting">Accounting</button>
-                <button class="tab-btn py-2 px-4 text-gray-900 font-semibold border-b-2 border-transparent" data-tab="sales-team">Sales Team</button>
-            </div>
-
-            <!-- Tab Contents -->
-
-            <!-- Items Tab -->
-            <div id="items" class="tab-content tab-active">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
-                    <p><span class="font-medium text-gray-900 font-semibold">Item:</span> Design Mockups</p>
-                    <p><span class="font-medium text-gray-900 font-semibold">Description:</span> Homepage + Inner Pages</p>
-                    <p><span class="font-medium text-gray-900 font-semibold">Quantity:</span> 10</p>
-                    <p><span class="font-medium text-gray-900 font-semibold">Rate:</span> $500</p>
-                    <p><span class="font-medium text-gray-900 font-semibold">Amount:</span> $5,000</p>
-
-                    <p><span class="font-medium text-gray-900 font-semibold">Item:</span> Development</p>
-                    <p><span class="font-medium text-gray-900 font-semibold">Description:</span> Frontend + Backend</p>
-                    <p><span class="font-medium text-gray-900 font-semibold">Quantity:</span> 15</p>
-                    <p><span class="font-medium text-gray-900 font-semibold">Rate:</span> $500</p>
-                    <p><span class="font-medium text-gray-900 font-semibold">Amount:</span> $7,500</p>
+    <div id="mainContent" class="w-full px-1 md:px-4 lg:px-8 xl:px-12 2xl:px-16 mx-auto">
+        <div class="relative flex flex-col min-w-0 break-words w-full mb-10 shadow-2xl bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl">
+            
+            <div class="border-t border-x border-[#0a514a] px-6 py-3 rounded-t-xl text-white shadow-md">
+                <div class="flex items-center justify-between">
+                    <a href="https://www.jobinandjismi.com" target="_blank" rel="noopener noreferrer">
+                        <img src="https://www.jobinandjismi.com/images/secondary-logo.svg" class="w-32 sm:w-32 md:w-40 lg:w-48 xl:w-56 drop-shadow-lg" alt="Jobin And Jismi Logo"/>
+                    </a>
+                    <div>
+                        <button type="button" id="closeButton" class=" mt-4 mr-0 ml-auto block border border-[#0c6c73] text-[#0c6c73] text-sm px-3 py-1 rounded-md shadow active:bg-gray-200">Edit</button>
+                        <div class="flex items-center justify-between mt-5">
+                            <span id="est-statusref" class="bg-[#0a514a] text-white px-2 py-1 text-sm text-center mr-4 rounded-sm font-semibold shadow capitalize mx-auto block w-fit"></span>
+                            <h1 class="text-3xl font-bold text-[#0a514a]" id="est-custname"></h1>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Billing Tab -->
-            <div id="billing" class="tab-content">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
-                    <p><span class="font-medium text-gray-900 font-semibold">Billing Address:</span> 123 Main Street, New York, NY</p>
-                    <p><span class="font-medium text-gray-900 font-semibold">Payment Terms:</span> Net 30</p>
-                    <p><span class="font-medium text-gray-900 font-semibold">Tax:</span> $1,000</p>
-                    <p><span class="font-medium text-gray-900 font-semibold">Grand Total:</span> $13,500</p>
-                </div>
-            </div>
+            <div class="flex-auto px-5 lg:px-12 py-10 border border-[#0a514a] rounded-b-xl">
+                <form>
+                <!-- Primary Information Section -->
+                    <section class="rounded-xl border border-[#0a514a] mb-8">
+                        <h6 class="rounded-tr-xl rounded-tl-xl text-white text-lg font-bold uppercase tracking-wider bg-[#0a514a] p-3 px-6">Primary Information</h6>
+                        
+                        <div class="flex flex-wrap border-[#abd334] shadow-md rounded-bl-xl rounded-br-xl pb-8">
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-md font-semibold mt-8">Quote #<span class="est-number"></span></label>
+                            </div>
+                            
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Date</label>
+                                <input type="date" id="est-date" class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full" disabled/>
+                            </div>
 
-            <!-- Accounting Tab -->
-            <div id="accounting" class="tab-content">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
-                    <p><span class="font-medium text-gray-900 font-semibold">Account:</span> 4000 - Sales</p>
-                    <p><span class="font-medium text-gray-900 font-semibold">Department:</span> Marketing</p>
-                    <p><span class="font-medium text-gray-900 font-semibold">Class:</span> Website Project</p>
-                    <p><span class="font-medium text-gray-900 font-semibold">Location:</span> New York</p>
-                </div>
-            </div>
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Company</label>
+                                <input type="text" id="est-name" class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full" disabled/>
+                            </div>
 
-            <!-- Sales Team Tab -->
-            <div id="sales-team" class="tab-content">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
-                    <p><span class="font-medium text-gray-900 font-semibold">Sales Rep:</span> Emma Davies</p>
-                    <p><span class="font-medium text-gray-900 font-semibold">Sales Manager:</span> John Smith</p>
-                    <p><span class="font-medium text-gray-900 font-semibold">Team Notes:</span> Contact for approvals</p>
-                </div>
-            </div>
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Job</label>
+                                <select id="est-job-id" class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full" disabled>
+                                    <option selected hidden>Select Job</option>
+                                </select>
+                            </div>
+                            
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Status</label>
+                                <select id="est-status" class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full" disabled>
+                                    <option selected hidden>Select Status</option>
+                                </select>
+                            </div>
 
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Title</label>
+                                <input type="text" id="est-title" class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full" disabled/>
+                            </div>
+                            
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Probability</label>
+                                <input type="text" id="est-prob" class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full" disabled/>
+                            </div>
+
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Expires</label>
+                                <input type="date" id="est-expires" class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full" disabled/>
+                            </div>
+
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Expected Close</label>
+                                <input type="date" id="est-expclose" class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full" disabled/>
+                            </div>
+                            
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Memo</label>
+                                <textarea id="est-memo" class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full" rows="1" disabled></textarea>
+                            </div>
+
+                        </div>
+                    </section>
+                    
+                    <section class="rounded-xl border border-[#0a514a] mb-8">
+                        <h6 class="rounded-tr-xl rounded-tl-xl text-white text-lg font-bold uppercase tracking-wider bg-[#0a514a] p-3 px-6">Sales Information</h6>
+
+                        <div class="flex flex-wrap border-[#abd334] shadow-md rounded-bl-xl rounded-br-xl pb-8">
+                            <!-- Sales Rep -->
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Sales Rep</label>
+                                <label id="sales-rep" class=""></label>
+                            </div>
+                            
+                            <!-- Opportunity -->
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Opportunity</label>
+                                <label id="opportunity" class=""></label>
+                            </div>
+                            
+                            <!-- Forecast Type -->
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Forecast Type</label>
+                                <select id="forecast-type" class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full" disabled>
+                                    <option selected hidden>Select Forecast Type</option>
+                                </select>
+                            </div>
+                            
+                            
+                            <!-- Lead Source -->
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Lead Source</label>
+                                <select id="lead-source" class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full" disabled>
+                                    <option selected hidden>Select Lead Source</option>
+                                </select>
+                            </div>
+
+                            <!-- Partner -->
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Partner</label>
+                                <select id="partner" class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full" disabled>
+                                    <option selected hidden>Select Partner</option>
+                                </select>
+                            </div>
+
+                        </div>
+                    </section>
+
+
+                    <!-- Classification Section -->
+                    <section class="rounded-xl border border-[#0a514a] mb-8">
+                        <h6 class="rounded-tr-xl rounded-tl-xl text-white text-lg font-bold uppercase tracking-wider bg-[#0a514a] p-3 px-6">Classification</h6>
+                        <div class="flex flex-wrap border-[#abd334] shadow-md rounded-bl-xl rounded-br-xl pb-8">
+                            
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Subsidiary</label>
+                                <label id="subsidiary" class=""></label>
+                            </div>
+
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Class</label>
+                                <select id="est-class" class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full" disabled>
+                                    <option selected hidden>Select Class</option>
+                                </select>
+                            </div>
+
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Department</label>
+                                <select id="est-department" class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full" disabled>
+                                    <option selected hidden>Select Department</option>
+                                </select>
+                            </div>
+
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Location</label>
+                                <select id="est-location" class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full" disabled>
+                                    <option selected hidden>Select Location</option>
+                                </select>
+                            </div>
+
+                        </div>
+                    </section>
+
+                    <!-- Line Items Section with Tabs -->
+                    <section class="rounded-xl border border-[#0a514a]">
+                        <h6 class="rounded-tr-xl rounded-tl-xl text-white text-lg font-bold uppercase tracking-wider bg-[#0a514a] p-3 px-6">Line Level Details</h6>
+                        <div class="border-[#abd334] shadow-md rounded-bl-xl rounded-br-xl p-6">
+                            
+                            <!-- Tabs -->
+                            <div class="flex space-x-4 mb-4 border-b border-[#0a514a]">
+                                <button type="button" class="tab-btn py-2 px-4 text-gray-700 font-semibold border-b-2 border-[#0a514a]" data-tab="items">
+                                    Items
+                                </button>
+                                <button type="button" class="tab-btn py-2 px-4 text-gray-700 font-semibold border-b-2 border-transparent" data-tab="sales-team">
+                                    Sales Team
+                                </button>
+                            </div>
+
+
+                            <!-- Items Tab -->
+                            <div id="items" class="tab-content tab-active">
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full border border-[#95a2a0] rounded-lg">
+                                        <thead class="bg-gradient-to-r from-[#0a514a] to-[#0c6c73] text-white">
+                                            <tr>
+                                                <th class="px-4 py-3 text-left text-sm font-semibold">Item</th>
+                                                <th class="px-4 py-3 text-left text-sm font-semibold">Quantity</th>
+                                                <th class="px-4 py-3 text-left text-sm font-semibold">Units</th>
+                                                <th class="px-4 py-3 text-left text-sm font-semibold">Description</th>
+                                                <th class="px-4 py-3 text-left text-sm font-semibold">Rate</th>
+                                                <th class="px-4 py-3 text-left text-sm font-semibold ">Amount</th>
+                                                <th class="px-4 py-3 text-left text-sm font-semibold">Class</th>
+                                                <th class="px-4 py-3 text-left text-sm font-semibold text-right">Department</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="itemsTableBody" class="bg-white">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Sales team Tab -->
+                            <div id="sales-team" class="tab-content">
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full border border-[#95a2a0] rounded-lg">
+                                        <thead class="bg-gradient-to-r from-[#0a514a] to-[#0c6c73] text-white">
+                                            <tr>
+                                                <th class="px-4 py-3 text-left text-sm font-semibold">Employee</th>
+                                                <th class="px-4 py-3 text-left text-sm font-semibold">Sales Role</th>
+                                                <th class="px-4 py-3 text-left text-sm font-semibold">Primary</th>
+                                                <th class="px-4 py-3 text-left text-sm font-semibold text-right">Contribution %</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="salesTeamTableBody" class="bg-white">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </form>
+            </div>
         </div>
-
     </div>
+    
 
     <script>
         const tabs = document.querySelectorAll('.tab-btn');
@@ -132,46 +263,531 @@
 
         tabs.forEach(tab => {
             tab.addEventListener('click', () => {
-                tabs.forEach(t => t.classList.remove('border-yellow-800'));
-                tabs.forEach(t => t.classList.add('border-transparent'));
 
+                // Reset all tab styles
+                tabs.forEach(t => {
+                    t.classList.remove('border-[#0a514a]');
+                    t.classList.add('border-transparent');
+                });
+
+                // Hide all content
                 tabContents.forEach(c => c.classList.remove('tab-active'));
 
-                tab.classList.add('border-yellow-800');
-                const selected = document.getElementById(tab.dataset.tab);
-                selected.classList.add('tab-active');
+                // Activate clicked tab
+                tab.classList.remove('border-transparent');
+                tab.classList.add('border-[#0a514a]'); // highlight active tab
+
+                // Show selected content
+                const selectedTab = document.getElementById(tab.dataset.tab);
+                selectedTab.classList.add('tab-active');
             });
         });
 
+
+        function formatDateForInput(nsDate) {
+            if (!nsDate) return "";
+            const parts = nsDate.split("/"); // ["12","2","2025"]
+            if (parts.length !== 3) return "";
+            const month = parts[0].padStart(2, "0"); // "12"
+            const day = parts[1].padStart(2, "0");   // "02"
+            const year = parts[2];                   // "2025"
+            return `${year}-${month}-${day}`;        // "2025-12-02"
+        }
+
+
         const BASE_URL = 'https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM';
 
+        // Read URL params
         const url = new URL(window.location.href);
-        const estimateId = url.searchParams.get("estimateId");
+        const pageType = url.searchParams.get("type");
+        // type = estimate | opportunity | salesorder
+
+        let recordId = '';
+        if (pageType === "estimate") recordId = url.searchParams.get("estimateId");
+        else if (pageType === "opportunity") recordId = url.searchParams.get("opportunityId");
+        else if (pageType === "salesorder") recordId = url.searchParams.get("salesOrderId");
+
+        // Decide Suitelet action
+        let action = "";
+        if (pageType === "estimate") action = "getKanbanEstimateDetails";
+        else if (pageType === "opportunity") action = "getKanbanOpportunityDetails";
+        else if (pageType === "salesorder") action = "getKanbanSalesOrderDetails";
+
+        // Build fetch body
+        let fetchBody = { action };
+        if (pageType === "estimate") fetchBody.estimateId = recordId;
+        else if (pageType === "opportunity") fetchBody.opportunityId = recordId;
+        else if (pageType === "salesorder") fetchBody.salesOrderId = recordId;
 
         fetch(BASE_URL, {
             method: "POST",
-            body: JSON.stringify({
-                action: "getKanbanEstimateDetails",
-                estimateId: estimateId
-            })
+            body: JSON.stringify(fetchBody)
         })
-
         .then(res => res.json())
         .then(data => {
-            // Fill in Summary section
-            document.getElementById("tranid").innerText = data.tranid;
-            document.getElementById("customer").innerText = data.customer;
-            document.getElementById("amount").innerText = data.total;
-            document.getElementById("date").innerText = data.date;
 
-            // Fill Items table
-            populateItems(data.items);
+            console.log("➡️ Fetched Data:", data);
 
-            // Fill Billing / Accounting / Sales Team
-            fillBilling(data.billing);
-            fillAccounting(data.accounting);
-            fillSalesTeam(data.salesTeam);
-        });
+            if (!data.success) {
+                console.error("Failed to load details");
+                return;
+            }
+
+            
+            // --- FIXED STRUCTURE ---
+            const { header, items, salesTeam, repList } = data.data;
+            console.log("Estimate Header:", header);
+            console.log("Estimate Items:", items);
+            console.log("Sales Team:", salesTeam);
+            console.log("repList:", repList);
+
+
+            // Main header fields
+            document.querySelectorAll(".est-number").forEach(el => el.innerText = header.tranid || "");
+            document.getElementById("est-custname").innerText = header.entity || "";
+            document.getElementById("est-statusref").innerText = header.statusRef || "";
+
+            function populateHeaderFields(header) {
+                document.getElementById("est-name").value = header.entity || "";
+                document.getElementById("est-date").value = formatDateForInput(header.trandate) || "";
+                document.getElementById("est-title").value = header.title || "";
+                document.getElementById("est-prob").value = header.probability ? `${header.probability}%` : "";
+                document.getElementById("est-expires").value = formatDateForInput(header.expirationDate) || "";
+                document.getElementById("est-expclose").value = formatDateForInput(header.expectedCloseDate) || "";
+                document.getElementById("est-memo").value = header.memo || "";
+
+                document.getElementById("sales-rep").innerText = header.salesRep || "";
+                document.getElementById("opportunity").innerText = header.opportunity || "";
+                
+                document.getElementById("subsidiary").innerText = header.subsidiary || "";
+
+            }
+
+            function populateJobDropdown(jobs = [], selectedJobId = "") {
+                const select = document.getElementById("est-job-id");
+                select.innerHTML = "";
+
+                const blank = document.createElement("option");
+                blank.value = "";
+                select.appendChild(blank);
+
+                jobs.forEach(job => {
+                    const opt = document.createElement("option");
+                    opt.value = job.id;
+                    opt.textContent = job.name;
+
+                    if (String(job.id) === String(selectedJobId)) {
+                        opt.selected = true;
+                    }
+
+                    select.appendChild(opt);
+                });
+            }
+
+            function populateStatusDropdown(selectedStatus = "") {
+                const statuses = [
+                    "Closed Lost",
+                    "Qualified Prospect",
+                    "In Discussion",
+                    "Identified Decision Makers",
+                    "Proposal",
+                    "In Negotiation",
+                    "Purchasing"
+                ];
+
+                const select = document.getElementById("est-status");
+                select.innerHTML = "";
+
+                statuses.forEach(status => {
+                    const option = document.createElement("option");
+                    option.value = status;
+                    option.textContent = status;
+
+                    // Select the value from NetSuite
+                    if (selectedStatus.trim().toLowerCase() === status.trim().toLowerCase()) {
+                        option.selected = true;
+                    }
+
+                    select.appendChild(option);
+                });
+            }
+
+            function populateLeadSourceDropdown(selectedLeadSource = "") {
+                const leadSources = [
+                    "Other",
+                    "Partner Referral",
+                    "Trade Show",
+                    "Web"
+                ];
+
+                const select = document.getElementById("lead-source");
+                select.innerHTML = "";
+
+                leadSources.forEach(source => {
+                    const option = document.createElement("option");
+                    option.value = source;
+                    option.textContent = source;
+
+                    if (selectedLeadSource.trim().toLowerCase() === source.trim().toLowerCase()) {
+                        option.selected = true;
+                    }
+
+                    // log only the items in this function
+                    
+                    select.appendChild(option);
+                });
+            }
+
+            function populateForecastTypeDropdown(selectedForecast = "") {
+                const forecastTypes = [
+                    "Omitted",
+                    "Worst Case",
+                    "Most Likely",
+                    "Upside"
+                ];
+
+                const select = document.getElementById("forecast-type");
+                select.innerHTML = "";
+
+                forecastTypes.forEach(type => {
+                    const option = document.createElement("option");
+                    option.value = type;
+                    option.textContent = type;
+
+                    // Select value coming from NetSuite
+                    if (selectedForecast.trim().toLowerCase() === type.trim().toLowerCase()) {
+                        option.selected = true;
+                    }
+
+                    select.appendChild(option);
+                });
+            }
+
+            function populatePartnerDropdown(partners = [], selectedPartnerId = "") {
+                const select = document.getElementById("partner");
+                select.innerHTML = "";
+
+                // Blank option
+                const blank = document.createElement("option");
+                blank.value = "";
+                select.appendChild(blank);
+
+                partners.forEach(partner => {
+                    const opt = document.createElement("option");
+                    opt.value = partner.id;
+                    opt.textContent = partner.name;
+
+                    if (String(partner.id) === String(selectedPartnerId)) {
+                        opt.selected = true;
+                    }
+
+                    select.appendChild(opt);
+                });
+            }
+
+            function populateClassDropdown(classData = {}) {
+                const select = document.getElementById("est-class");
+                select.innerHTML = "";
+
+                const blank = document.createElement("option");
+                blank.value = "";
+                select.appendChild(blank);
+
+                if (!classData.classes) return;
+
+                classData.classes.forEach(c => {
+                    const opt = document.createElement("option");
+                    opt.value = c.id;
+                    opt.textContent = c.name;
+
+                    if (String(c.id) === String(classData.selectedClassId)) {
+                        opt.selected = true;
+                    }
+
+                    select.appendChild(opt);
+                });
+            }
+
+            function populateDepartmentDropdown(departmentData = {}) {
+                const select = document.getElementById("est-department");
+                select.innerHTML = "";
+
+                const blank = document.createElement("option");
+                blank.value = "";
+                select.appendChild(blank);
+
+                if (!departmentData.departments) return;
+
+                departmentData.departments.forEach(dep => {
+                    const opt = document.createElement("option");
+                    opt.value = dep.id;
+                    opt.textContent = dep.name;
+
+                    if (String(dep.id) === String(departmentData.selectedDepartmentId)) {
+                        opt.selected = true;
+                    }
+
+                    select.appendChild(opt);
+                });
+            }
+
+            function populateLocationDropdown(locationData = {}) {
+                const select = document.getElementById("est-location");
+                select.innerHTML = "";
+
+                const blank = document.createElement("option");
+                blank.value = "";
+                select.appendChild(blank);
+
+                if (!locationData.locations) return;
+
+                locationData.locations.forEach(loc => {
+                    const opt = document.createElement("option");
+                    opt.value = loc.id;
+                    opt.textContent = loc.name;
+
+                    if (String(loc.id) === String(locationData.selectedLocationId)) {
+                        opt.selected = true;
+                    }
+
+                    select.appendChild(opt);
+                });
+            }
+
+            populateHeaderFields(header);
+            populateJobDropdown(header.jobDetails?.jobs || [], header.jobDetails?.selectedJobId || "");
+            populateStatusDropdown(header.status || "");
+            populateLeadSourceDropdown(header.leadSource  || "");
+            populateForecastTypeDropdown(header.forecastType || "");
+            populatePartnerDropdown(header.partnerDetails?.partners || [], header.partnerDetails?.selectedPartnerId || "");
+            populateClassDropdown(header.classDetails);
+            populateDepartmentDropdown(header.departmentDetails);
+            populateLocationDropdown(header.locationDetails);
+
+            // -------------------- DROPDOWN BUILDER --------------------
+            function createItemDropdown(itemList = [], selectedItemId = "") {
+                const select = document.createElement("select");
+                select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm";
+                select.disabled = true;
+
+                itemList.forEach(item => {
+                    const opt = document.createElement("option");
+                    opt.value = item.id;
+                    opt.textContent = item.name;
+
+                    // Pre-select the current item
+                    if (String(item.id) === String(selectedItemId)) {
+                        opt.selected = true;
+                    }
+
+                    select.appendChild(opt);
+                });
+
+                return select;
+            }
+
+            // -------------------- LINE ITEM TABLE RENDERING --------------------
+            const tbody = document.getElementById("itemsTableBody");
+            tbody.innerHTML = "";
+
+            if (!items || items.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td class="text-sm px-4 py-2 text-gray-500 text-center" colspan="8">
+                            No items found
+                        </td>
+                    </tr>
+                `;
+            } 
+            else {
+                items.forEach(row => {
+                    console.log("➡️ Row Data:", row);
+
+                    const tr = document.createElement("tr");
+
+                    tr.innerHTML = `
+                    <td class="itemCell text-sm border-b border-[#95a2a0] px-4 py-2"></td>
+
+                    <td class="text-sm border-b border-[#95a2a0] px-4 py-2">
+                        <input 
+                            type="text" 
+                            value="${row.quantity || ''}" 
+                            disabled 
+                            class="w-full bg-gray-100 border border-[#95a2a0] rounded px-2 py-1 text-sm"
+                        />
+                    </td>
+
+                    <td class="text-sm border-b border-[#95a2a0] px-4 py-2">
+                        <input 
+                            type="text" 
+                            value="${row.units || ''}" 
+                            disabled 
+                            class="w-full bg-gray-100 border border-[#95a2a0] rounded px-2 py-1 text-sm"
+                        />
+                    </td>
+
+                    <td class="text-sm border-b border-[#95a2a0] px-4 py-2">
+                        <input 
+                            type="text" 
+                            value="${row.description || ''}" 
+                            disabled 
+                            class="w-full bg-gray-100 border border-[#95a2a0] rounded px-2 py-1 text-sm"
+                        />
+                    </td>
+
+                    <td class="text-sm border-b border-[#95a2a0] px-4 py-2">
+                        <input 
+                            type="text" 
+                            value="${row.rate != null ? row.rate.toFixed(2) : ''}" 
+                            disabled 
+                            class="w-full bg-gray-100 border border-[#95a2a0] rounded px-2 py-1 text-sm"
+                        />
+                    </td>
+
+                    <td class="text-sm border-b border-[#95a2a0] px-4 py-2">
+                        <input 
+                            type="text" 
+                            value="${row.amount != null ? row.amount.toFixed(2) : ''}" 
+                            disabled 
+                            class="w-full bg-gray-100 border border-[#95a2a0] rounded px-2 py-1 text-sm"
+                        />
+                    </td>
+                    <td class="classCell text-sm border-b border-[#95a2a0] px-4 py-2"></td>
+                    <td class="deptCell text-sm border-b border-[#95a2a0] px-4 py-2 text-right"></td>
+                    `;
+
+                    // Insert item dropdown into first <td>
+                    const firstTd = tr.querySelector(".itemCell");
+                    const itemDropdown = createItemDropdown(header.itemList.items, row.itemId);
+                    firstTd.appendChild(itemDropdown);
+
+                    // Insert Class dropdown
+                    const classTd = tr.querySelector(".classCell");
+                    const classDropdown = createClassDropdown(header.classDetails?.classes || [], row.classId || "");
+                    classTd.appendChild(classDropdown);
+
+                    // Insert Department dropdown
+                    const deptTd = tr.querySelector(".deptCell");
+                    const deptDropdown = createDepartmentDropdown(header.departmentDetails?.departments || [], row.departmentId || "");
+                    deptTd.appendChild(deptDropdown);
+
+                    tbody.appendChild(tr);
+                });
+            }
+
+
+            function createSalesRepDropdown(repList = [], selectedEmployeeId = "") {
+                const select = document.createElement("select");
+                select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm";
+
+                console.log("➡️ Creating REP dropdown with:", repList, "Selected:", selectedEmployeeId);
+
+                select.disabled = true;
+
+                repList.forEach(rep => {
+                    const opt = document.createElement("option");
+                    opt.value = rep.id;
+                    opt.textContent = rep.name;
+
+                    // Set the value already saved in NetSuite
+                    if (String(rep.id) === String(selectedEmployeeId)) {
+                        opt.selected = true;
+                    }
+
+                    select.appendChild(opt);
+                });
+
+                return select;
+            }
+
+
+            const salesBody = document.getElementById("salesTeamTableBody");
+            salesBody.innerHTML = "";
+
+            if (!salesTeam || salesTeam.length === 0) {
+                salesBody.innerHTML = `
+                    <tr>
+                        <td class="text-sm px-4 py-2 text-gray-500 text-center" colspan="4">
+                            No sales team found
+                        </td>
+                    </tr>
+                `;
+            } 
+            else {
+
+                salesTeam.forEach(row => {
+                    const tr = document.createElement("tr");
+
+                    tr.innerHTML = `
+                        <td class="text-sm border-b border-[#95a2a0] px-4 py-2"></td>
+
+                        <td class="text-sm border-b border-[#95a2a0] px-4 py-2">
+                            <input class="w-full bg-gray-100 border border-[#95a2a0] rounded px-2 py-1 text-sm" 
+                                value="${row.salesRole || ''}" 
+                                disabled>
+                        </td>
+
+                        <td class="text-sm border-b border-[#95a2a0] px-4 py-2">
+                            ${row.primary ? "Yes" : "No"}
+                        </td>
+
+                        <td class="text-sm border-b border-[#95a2a0] px-4 py-2 text-right">
+                            <input type="number" 
+                                class="contributionInput w-full bg-gray-100 border border-[#95a2a0] rounded px-2 py-1 text-sm"
+                                disabled 
+                                value="${row.contribution.toFixed(1)}">
+                        </td>
+                    `;
+
+                    // Insert employee dropdown into first column
+                    const firstTd = tr.children[0];
+
+                    const repDropdown = createSalesRepDropdown(
+                        repList,          // All active employees
+                        row.employeeId    // Current NetSuite saved value
+                    );
+
+                    firstTd.appendChild(repDropdown);
+                    salesBody.appendChild(tr);
+                });
+            }
+
+            function createClassDropdown(classList = [], selectedClassId = "") {
+                const select = document.createElement("select");
+                select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm";
+
+                classList.forEach(cls => {
+                    const opt = document.createElement("option");
+                    opt.value = cls.id;
+                    opt.textContent = cls.name;
+                    if (String(cls.id) === String(selectedClassId)) opt.selected = true;
+                    select.appendChild(opt);
+                });
+
+                return select;
+            }
+
+            function createDepartmentDropdown(deptList = [], selectedDeptId = "") {
+                const select = document.createElement("select");
+                select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm";
+
+                deptList.forEach(dep => {
+                    const opt = document.createElement("option");
+                    opt.value = dep.id;
+                    opt.textContent = dep.name;
+                    if (String(dep.id) === String(selectedDeptId)) opt.selected = true;
+                    select.appendChild(opt);
+                });
+
+                return select;
+            }
+
+
+
+
+
+        })
+        .catch(err => console.error(err));
 
     </script>
 

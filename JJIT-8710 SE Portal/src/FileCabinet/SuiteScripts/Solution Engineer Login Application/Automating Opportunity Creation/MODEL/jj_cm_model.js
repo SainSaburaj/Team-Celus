@@ -15,11 +15,13 @@
 * REVISION HISTORY
 * Version 1.0.0 : 21-February-2024 : Created the initial build by JJ0149
 **************************************************************************************************************************************/
-define(['N/search', 'N/query'],
+define(['N/search', 'N/query', 'N/record'],
     /**
  * @param{search} search
+ * @param{query} query
+ * @param{record} record
  */
-    (search, query) => {
+    (search, query, record) => {
         function replaceSpecialCharacters(str) {
             try {
                 return str.replace(/[><\-&\[\]\(\)]/g, ' ');
@@ -683,7 +685,7 @@ define(['N/search', 'N/query'],
                             "AND",
                             ["mainline", "is", "T"],
                             "AND",
-                            [["opportunity.custbody_jj_opp_creation_se","anyof",id],"OR",["custbody_jj_opp_creation_se","anyof",id]]
+                            [["opportunity.custbody_jj_opp_creation_se", "anyof", id], "OR", ["custbody_jj_opp_creation_se", "anyof", id]]
                         ],
                         columns: [
                             search.createColumn({
@@ -804,7 +806,7 @@ define(['N/search', 'N/query'],
                         return true;
                     });
                     return list;
-                } 
+                }
                 catch (e) {
                     log.error('Error in getEmployees', e);
                     return [];
@@ -838,7 +840,7 @@ define(['N/search', 'N/query'],
                         return true;
                     });
                     return customers;
-                } 
+                }
                 catch (e) {
                     log.error('Error in getAllCustomers', e);
                     return [];
@@ -864,7 +866,7 @@ define(['N/search', 'N/query'],
                         return true;
                     });
                     return values;
-                } 
+                }
                 catch (e) {
                     log.error('Error in getStatusValues', e);
                     return [];
@@ -890,7 +892,7 @@ define(['N/search', 'N/query'],
                         return true;
                     });
                     return values;
-                } 
+                }
                 catch (e) {
                     log.error('Error in getPriorityValues', e);
                     return [];
@@ -916,12 +918,497 @@ define(['N/search', 'N/query'],
                         return true;
                     });
                     return values;
-                } 
+                }
                 catch (e) {
                     log.error('Error in getIssueValues', e);
                     return [];
                 }
+            },
+
+            /**
+             * Get job list + current job assigned to the estimate
+             * @param {string|number} estimateId 
+             * @returns {Object} { jobs:[], selectedJobId:"", selectedJobName:"" }
+             */
+            jobDetails(estimateId) {
+                const resultData = {
+                    jobs: [],
+                    selectedJobId: "",
+                    selectedJobName: ""
+                };
+
+                try {
+                    if (!estimateId) return resultData;
+
+                    // Load the estimate to get customer
+                    const estRecord = record.load({
+                        type: record.Type.ESTIMATE,
+                        id: estimateId
+                    });
+
+                    const customerId = estRecord.getValue("entity") || "";
+                    const selectedJobId = estRecord.getValue("job") || "";
+                    resultData.selectedJobId = selectedJobId;
+
+                    // Search for jobs linked to this customer
+                    const jobSearch = search.create({
+                        type: "job",
+                        filters: [
+                            ["isinactive", "is", "F"],
+                            "AND",
+                            ["customer", "anyof", customerId]
+                        ],
+                        columns: ["internalid", "altname"] // entityid is the job name
+                    });
+
+                    jobSearch.run().each(r => {
+                        const jobId = r.getValue("internalid");
+                        let jobName = r.getValue("altname");
+
+                        // Ensure jobName is a string (sometimes may be returned as number)
+                        if (jobName !== null && jobName !== undefined) {
+                            jobName = String(jobName);
+                        } else {
+                            jobName = '';
+                        }
+
+                        resultData.jobs.push({
+                            id: jobId,   // value of <option>
+                            name: jobName // text of <option>
+                        });
+                        return true;
+                    });
+
+                    // Get selected job name
+                    if (selectedJobId) {
+                        const lookup = search.lookupFields({
+                            type: "job",
+                            id: selectedJobId,
+                            columns: ["altname", "entityid"]
+                        });
+
+                        const selectedName = lookup?.altname || "";
+                        resultData.selectedJobName = String(selectedName);
+                    }
+
+                } catch (e) {
+                    log.error("jobDetails Error", e);
+                }
+
+                return resultData;
+            },
+
+            partnerDetails(estimateId) {
+                const resultData = {
+                    partners: [],
+                    selectedPartnerId: "",
+                    selectedPartnerName: ""
+                };
+
+                try {
+                    if (!estimateId) return resultData;
+
+                    // Load Estimate to read selected partner
+                    const estRecord = record.load({
+                        type: record.Type.ESTIMATE,
+                        id: estimateId
+                    });
+
+                    const selectedPartnerId = estRecord.getValue("partner") || "";
+                    resultData.selectedPartnerId = selectedPartnerId;
+
+                    // Search all active Partners
+                    const partnerSearch = search.create({
+                        type: "partner",
+                        filters: [["isinactive", "is", "F"]],
+                        columns: ["internalid", "companyname"]
+                    });
+
+                    partnerSearch.run().each(r => {
+                        resultData.partners.push({
+                            id: r.getValue("internalid"),
+                            name: String(r.getValue("companyname") || "")
+                        });
+                        return true;
+                    });
+
+                    // Fetch selected partner name
+                    if (selectedPartnerId) {
+                        const lookup = search.lookupFields({
+                            type: "partner",
+                            id: selectedPartnerId,
+                            columns: ["companyname"]
+                        });
+
+                        resultData.selectedPartnerName = lookup?.companyname || "";
+                    }
+
+                } 
+                catch (err) {
+                    log.error("partnerDetails Error", err);
+                }
+
+                return resultData;
+            },
+
+            classDetails(estimateId) {
+                const resultData = {
+                    classes: [],
+                    selectedClassId: "",
+                    selectedClassName: ""
+                };
+
+                try {
+                    if (!estimateId) return resultData;
+
+                    // Load estimate to get subsidiary + class
+                    const estRecord = record.load({
+                        type: record.Type.ESTIMATE,
+                        id: estimateId
+                    });
+
+                    const subsidiaryId = estRecord.getValue("subsidiary") || "";
+                    const selectedClassId = estRecord.getValue("class") || "";
+
+                    resultData.selectedClassId = selectedClassId;
+
+                    // Search for all classes under this subsidiary
+                    const classSearch = search.create({
+                        type: "classification",
+                        filters: [
+                            ["isinactive", "is", "F"],
+                            "AND",
+                            ["subsidiary", "anyof", subsidiaryId]
+                        ],
+                        columns: ["internalid", "name"]
+                    });
+
+                    classSearch.run().each(r => {
+                        resultData.classes.push({
+                            id: r.getValue("internalid"),
+                            name: r.getValue("name")
+                        });
+                        return true;
+                    });
+
+                    // Lookup selected class name
+                    if (selectedClassId) {
+                        const lookup = search.lookupFields({
+                            type: "classification",
+                            id: selectedClassId,
+                            columns: ["name"]
+                        });
+
+                        resultData.selectedClassName = lookup?.name || "";
+                    }
+
+                } 
+                catch (e) {
+                    log.error("classDetails Error", e);
+                }
+
+                return resultData;
+            },
+
+            departmentDetails(estimateId) {
+                const resultData = {
+                    departments: [],
+                    selectedDepartmentId: "",
+                    selectedDepartmentName: ""
+                };
+
+                try {
+                    if (!estimateId) return resultData;
+
+                    // Load estimate to get subsidiary + department
+                    const estRecord = record.load({
+                        type: record.Type.ESTIMATE,
+                        id: estimateId
+                    });
+
+                    const subsidiaryId = estRecord.getValue("subsidiary") || "";
+                    const selectedDepartmentId = estRecord.getValue("department") || "";
+
+                    resultData.selectedDepartmentId = selectedDepartmentId;
+
+                    // Search all departments linked to the subsidiary
+                    const depSearch = search.create({
+                        type: "department",
+                        filters: [
+                            ["isinactive", "is", "F"],
+                            "AND",
+                            ["subsidiary", "anyof", subsidiaryId]
+                        ],
+                        columns: ["internalid", "name"]
+                    });
+
+                    depSearch.run().each(r => {
+                        resultData.departments.push({
+                            id: r.getValue("internalid"),
+                            name: r.getValue("name")
+                        });
+                        return true;
+                    });
+
+                    // Lookup selected department name
+                    if (selectedDepartmentId) {
+                        const lookup = search.lookupFields({
+                            type: "department",
+                            id: selectedDepartmentId,
+                            columns: ["name"]
+                        });
+
+                        resultData.selectedDepartmentName = lookup?.name || "";
+                    }
+
+                } catch (e) {
+                    log.error("departmentDetails Error", e);
+                }
+
+                return resultData;
+            },
+
+            locationDetails(estimateId) {
+                const resultData = {
+                    locations: [],
+                    selectedLocationId: "",
+                    selectedLocationName: ""
+                };
+
+                try {
+                    if (!estimateId) return resultData;
+
+                    // Load record to get subsidiary + location
+                    const estRecord = record.load({
+                        type: record.Type.ESTIMATE,
+                        id: estimateId
+                    });
+
+                    const subsidiaryId = estRecord.getValue("subsidiary") || "";
+                    const selectedLocationId = estRecord.getValue("location") || "";
+
+                    resultData.selectedLocationId = selectedLocationId;
+
+                    // Search all locations linked to this subsidiary
+                    const locSearch = search.create({
+                        type: "location",
+                        filters: [
+                            ["isinactive", "is", "F"],
+                            "AND",
+                            ["subsidiary", "anyof", subsidiaryId]
+                        ],
+                        columns: ["internalid", "name"]
+                    });
+
+                    locSearch.run().each(r => {
+                        resultData.locations.push({
+                            id: r.getValue("internalid"),
+                            name: r.getValue("name")
+                        });
+                        return true;
+                    });
+
+                    // Lookup selected location name
+                    if (selectedLocationId) {
+                        const lookup = search.lookupFields({
+                            type: "location",
+                            id: selectedLocationId,
+                            columns: ["name"]
+                        });
+
+                        resultData.selectedLocationName = lookup?.name || "";
+                    }
+
+                } catch (error) {
+                    log.error("locationDetails Error", error);
+                }
+
+                return resultData;
+            },
+
+            itemList(estimateId) {
+                const result = { items: [] };
+
+                try {
+                    // Validate input
+                    if (!estimateId) {
+                        log.error("itemList", "No estimateId provided");
+                        return result;       
+                    }
+
+                    // Load estimate to get subsidiary
+                    const estRecord = record.load({
+                        type: record.Type.ESTIMATE,
+                        id: estimateId
+                    });
+
+                    const subsidiaryId = estRecord.getValue("subsidiary");
+
+                    if (!subsidiaryId) {
+                        log.error("itemList", `No subsidiary found for estimate ${estimateId}`);
+                        return result;
+                    }
+
+                    // Item Search
+                    const itemSearch = search.create({
+                        type: search.Type.ITEM,
+                        filters: [
+                            ["isinactive", "is", "F"], "AND",
+                            ["subsidiary", "anyof", subsidiaryId]
+                        ],
+                        columns: [
+                            search.createColumn({ name: "internalid" }),
+                            search.createColumn({ name: "itemid" })
+                        ]
+                    });
+
+                    itemSearch.run().each(resultRow => {
+                        result.items.push({
+                            id: resultRow.getValue("internalid"),
+                            name: resultRow.getValue("itemid")
+                        });
+                        return true; // continue iteration
+                    });
+
+                } catch (e) {
+                    log.error("itemList error", JSON.stringify(e));
+                }
+
+                return result;
+            },
+
+            salesRepList() {
+                const result = { reps: [] };
+
+                try {
+                    const repSearch = search.create({
+                        type: search.Type.EMPLOYEE,
+                        filters: [
+                            ["isinactive", "is", "F"]
+                        ],
+                        columns: [
+                            search.createColumn({ name: "internalid" }),
+                            search.createColumn({ name: "firstname" }),
+                            search.createColumn({ name: "lastname" })
+                        ]
+                    });
+
+                    repSearch.run().each(r => {
+                        result.reps.push({
+                            id: r.getValue("internalid"),
+                            name: `${r.getValue("firstname")} ${r.getValue("lastname")}`.trim()
+                        });
+                        return true;
+                    });
+
+                    log.debug("ALL EMPLOYEES result", JSON.stringify(result));
+
+                } catch (e) {
+                    log.error("salesRepList error", JSON.stringify(e));
+                }
+
+                return result;
+            },
+
+            classList(estimateId) {
+                const result = { classes: [] };
+
+                try {
+                    if (!estimateId) {
+                        log.error("classList", "No estimateId provided");
+                        return result;
+                    }
+
+                    const estRecord = record.load({
+                        type: record.Type.ESTIMATE,
+                        id: estimateId
+                    });
+
+                    const subsidiaryId = estRecord.getValue("subsidiary");
+
+                    if (!subsidiaryId) {
+                        log.error("classList", `No subsidiary found for estimate ${estimateId}`);
+                        return result;
+                    }
+
+                    // Classification Search (filtered by subsidiary)
+                    const clsSearch = search.create({
+                        type: "classification",
+                        filters: [
+                            ["isinactive", "is", "F"], "AND",
+                            ["subsidiary", "anyof", subsidiaryId]
+                        ],
+                        columns: [
+                            search.createColumn({ name: "internalid" }),
+                            search.createColumn({ name: "name" })
+                        ]
+                    });
+
+                    clsSearch.run().each(row => {
+                        result.classes.push({
+                            id: row.getValue("internalid"),
+                            name: row.getValue("name")
+                        });
+                        return true;
+                    });
+
+                } catch (e) {
+                    log.error("classList error", e);
+                }
+
+                return result;
+            },
+
+
+            departmentList(estimateId) {
+                const result = { departments: [] };
+
+                try {
+                    if (!estimateId) {
+                        log.error("departmentList", "No estimateId provided");
+                        return result;
+                    }
+
+                    const estRecord = record.load({
+                        type: record.Type.ESTIMATE,
+                        id: estimateId
+                    });
+
+                    const subsidiaryId = estRecord.getValue("subsidiary");
+
+                    if (!subsidiaryId) {
+                        log.error("departmentList", `No subsidiary found for estimate ${estimateId}`);
+                        return result;
+                    }
+
+                    // Department search (filtered by subsidiary)
+                    const depSearch = search.create({
+                        type: "department",
+                        filters: [
+                            ["isinactive", "is", "F"], "AND",
+                            ["subsidiary", "anyof", subsidiaryId]
+                        ],
+                        columns: [
+                            search.createColumn({ name: "internalid" }),
+                            search.createColumn({ name: "name" })
+                        ]
+                    });
+
+                    depSearch.run().each(row => {
+                        result.departments.push({
+                            id: row.getValue("internalid"),
+                            name: row.getValue("name")
+                        });
+                        return true;
+                    });
+
+                } catch (e) {
+                    log.error("departmentList error", e);
+                }
+
+                return result;
             }
+
         }
 
     });
