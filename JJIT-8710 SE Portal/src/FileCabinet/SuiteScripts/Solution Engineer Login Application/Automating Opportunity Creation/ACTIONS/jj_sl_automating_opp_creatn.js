@@ -114,6 +114,11 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 return rta.join("");
             }
         };
+
+        /**
+        * Opportunity status dropdown options
+        * @type {Array<Object>}
+        */
         const opportunityStatuses = [
             { id: '17', name: 'Qualified Prospect' },
             { id: '8', name: 'In Discussion' },
@@ -148,10 +153,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             { id: '3', name: 'Upsell' }
         ];
 
-        /**
-         * Opportunity forms dropdown options
-         * @type {Array<Object>}
-         */
         const opportunityForms = [
         ];
 
@@ -624,50 +625,51 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 }
             }
         };
+
         /**
-         * Get customers by email, returning an object with id:name pairs
-         *
-         * @param {string} email - The email address to filter by
-         * @returns {Object} customersObj - Object with {id: name}
+        * Get customers by email from custom record
+        * @param {string} email - Email address to search
+        * @returns {Object} customersObj - Map of customerId: customerName
          */
         function getCustomersByEmail(email) {
             const customersObj = {};
 
-            const customrecordSearch = search.create({
-                type: "customrecord_jj_order_request_credential",
-                filters: [
-                    ["custrecord_jj_request_email", "is", email]
-                ],
-                columns: [
-                    search.createColumn({
+            try {
+                const customrecordSearch = search.create({
+                    type: "customrecord_jj_order_request_credential",
+                    filters: [["custrecord_jj_request_email", "is", email]],
+                    columns: [
+                        search.createColumn({
+                            name: "custrecord_jj_opp_creation_customer",
+                            join: "CUSTRECORD_JJ_OPP_CREATION_CREDENTIAL",
+                            label: "Customer"
+                        })
+                    ]
+                });
+
+                customrecordSearch.run().each(result => {
+                    const fieldConfig = {
                         name: "custrecord_jj_opp_creation_customer",
-                        join: "CUSTRECORD_JJ_OPP_CREATION_CREDENTIAL",
-                        label: "Customer"
-                    })
-                ]
-            });
+                        join: "CUSTRECORD_JJ_OPP_CREATION_CREDENTIAL"
+                    };
 
-            customrecordSearch.run().each(function (result) {
-                const customerId = result.getValue({
-                    name: "custrecord_jj_opp_creation_customer",
-                    join: "CUSTRECORD_JJ_OPP_CREATION_CREDENTIAL"
+                    const customerId = result.getValue(fieldConfig);
+                    const customerName = result.getText(fieldConfig);
+
+                    if (customerId) {
+                        customersObj[String(customerId)] = customerName || `Customer ${customerId}`;
+                    }
+                    return true;
                 });
 
-                const customerName = result.getText({
-                    name: "custrecord_jj_opp_creation_customer",
-                    join: "CUSTRECORD_JJ_OPP_CREATION_CREDENTIAL"
-                });
+                log.debug("Customer id-name object", customersObj);
+            } catch (error) {
+                log.error("Error in getCustomersByEmail", error);
+            }
 
-                if (customerId) {
-                    customersObj[String(customerId)] = customerName || `Customer ${customerId}`;
-                }
-
-                return true; // continue iteration
-            });
-
-            log.debug("customer id-name object", customersObj);
             return customersObj;
         }
+
 
 
         /**
@@ -1465,7 +1467,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             });
 
             // Iterate through results to fetch distinct statuses
-        estimateSearch.run().each(function(result) {
+            estimateSearch.run().each(function (result) {
                 const status = result.getValue({ name: 'entitystatus' });
                 if (status && !statusMap[status]) {
                     const statusText = result.getText({ name: 'entitystatus' });
@@ -1484,38 +1486,30 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
         function getEstimatesList(email, selectedCustomerId, selectedStatusId) {
             const estimateArray = [];
 
-            // Get employee internal ID from email
-            const searchInternalId = getEmployeeIdByEmail(email);
-            log.debug("employee internalid", searchInternalId);
-
-            // Get all customers linked to this email
-            const customerInternalObj = getCustomersByEmail(email);
-            let customerInternalIds = Object.keys(customerInternalObj);
-
-            let statusId = selectedStatusId || "10";
-
-            // If a specific customer filter was selected in the frontend, override
-            if (selectedCustomerId) {
-                customerInternalIds = [selectedCustomerId];
-            }
-
             try {
+                const searchInternalId = getEmployeeIdByEmail(email);
+                log.debug("employee internalid", searchInternalId);
+
+                const customerInternalObj = getCustomersByEmail(email);
+                let customerInternalIds = Object.keys(customerInternalObj);
+
+                let statusId = selectedStatusId || "10";
+                if (selectedCustomerId) {
+                    customerInternalIds = [selectedCustomerId];
+                }
+
                 const stringSearchInternalId = String(searchInternalId);
                 log.debug("String internalid", stringSearchInternalId);
 
-                // Build filters dynamically
                 const filters = [
                     ['mainline', 'is', 'T'],
                     'AND',
                     ['salesteammember', 'anyof', stringSearchInternalId]
                 ];
 
-                // Add customer filter if IDs exist
                 if (customerInternalIds.length > 0) {
                     filters.push('AND', ['customersubof', 'anyof', customerInternalIds]);
                 }
-
-                // Add status filter if provided
                 if (statusId) {
                     filters.push('AND', ['entitystatus', 'anyof', statusId]);
                 }
@@ -1543,12 +1537,15 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     });
                     return true;
                 });
-            } catch (error) {
-                log.error('Error in getEstimatesList', JSON.stringify(error));
+
+            }
+            catch (error) {
+                log.error('Error in getEstimatesList', error);
             }
 
             return estimateArray;
         }
+
 
 
         /**
@@ -1800,24 +1797,121 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 const items = [];
                 const itemCount = estimateRecord.getLineCount("item");
 
-                for (let i = 0; i < itemCount; i++) {
-                    items.push({
-                        lineKey: estimateRecord.getSublistValue({ sublistId: "item", fieldId: "lineuniquekey", line: i }),
-                        itemId: estimateRecord.getSublistValue({ sublistId: "item", fieldId: "item", line: i }),
-                        item: estimateRecord.getSublistText({ sublistId: "item", fieldId: "item", line: i }),
-                        quantity: estimateRecord.getSublistValue({ sublistId: "item", fieldId: "quantity", line: i }),
-                        units: estimateRecord.getSublistText({ sublistId: "item", fieldId: "units", line: i }),
-                        description: estimateRecord.getSublistValue({ sublistId: "item", fieldId: "description", line: i }),
-                        priceLevel: estimateRecord.getSublistText({ sublistId: "item", fieldId: "price", line: i }),
-                        rate: estimateRecord.getSublistValue({ sublistId: "item", fieldId: "rate", line: i }),
-                        amount: estimateRecord.getSublistValue({ sublistId: "item", fieldId: "amount", line: i }),
+                log.debug("ITEM COUNT", itemCount);
 
-                        classId: estimateRecord.getSublistValue({ sublistId: "item", fieldId: "class", line: i }),
-                        class: estimateRecord.getSublistText({ sublistId: "item", fieldId: "class", line: i }),
-                        departmentId: estimateRecord.getSublistValue({ sublistId: "item", fieldId: "department", line: i }),
-                        department: estimateRecord.getSublistText({ sublistId: "item", fieldId: "department", line: i })
+                for (let i = 0; i < itemCount; i++) {
+
+                    log.debug("Processing Line", i);
+
+                    // Item internal ID
+                    const itemId = estimateRecord.getSublistValue({
+                        sublistId: "item",
+                        fieldId: "item",
+                        line: i
                     });
+
+                    log.debug("Line Item ID", itemId);
+
+                    // 🔍 Fetch Class & Department from item record (works for ANY item type)
+                    let itemClassId = "";
+                    let itemClassText = "";
+                    let itemDeptId = "";
+                    let itemDeptText = "";
+
+                    try {
+                        if (itemId) {
+                            log.debug("LookupFields on item", itemId);
+
+                            const itemFields = search.lookupFields({
+                                type: "item",    // ⭐ Universal item type
+                                id: itemId,
+                                columns: ["class", "department"]
+                            });
+
+                            itemClassId = itemFields.class?.[0]?.value || "";
+                            itemClassText = itemFields.class?.[0]?.text || "";
+
+                            itemDeptId = itemFields.department?.[0]?.value || "";
+                            itemDeptText = itemFields.department?.[0]?.text || "";
+
+                            log.debug("Fetched Item Class/Dept", {
+                                itemId,
+                                itemClassId,
+                                itemClassText,
+                                itemDeptId,
+                                itemDeptText
+                            });
+                        }
+                    }
+                    catch (err) {
+                        log.error("Item Lookup Failed", {
+                            line: i,
+                            itemId,
+                            error: err
+                        });
+                    }
+
+                    // ------------------------
+                    // line data
+                    // ------------------------
+                    const lineData = {
+                        lineKey: estimateRecord.getSublistValue({
+                            sublistId: "item",
+                            fieldId: "lineuniquekey",
+                            line: i
+                        }),
+                        itemId,
+                        item: estimateRecord.getSublistText({
+                            sublistId: "item",
+                            fieldId: "item",
+                            line: i
+                        }),
+                        quantity: estimateRecord.getSublistValue({
+                            sublistId: "item",
+                            fieldId: "quantity",
+                            line: i
+                        }),
+                        units: estimateRecord.getSublistText({
+                            sublistId: "item",
+                            fieldId: "units",
+                            line: i
+                        }),
+                        description: estimateRecord.getSublistValue({
+                            sublistId: "item",
+                            fieldId: "description",
+                            line: i
+                        }),
+                        priceLevel: estimateRecord.getSublistText({
+                            sublistId: "item",
+                            fieldId: "price",
+                            line: i
+                        }),
+                        rate: estimateRecord.getSublistValue({
+                            sublistId: "item",
+                            fieldId: "rate",
+                            line: i
+                        }),
+                        amount: estimateRecord.getSublistValue({
+                            sublistId: "item",
+                            fieldId: "amount",
+                            line: i
+                        }),
+
+                        // 🔥 Class & Department from Item Lookup
+                        classId: itemClassId,
+                        class: itemClassText,
+                        departmentId: itemDeptId,
+                        department: itemDeptText
+                    };
+
+                    log.debug("Final Line Object", lineData);
+
+                    items.push(lineData);
                 }
+
+                log.debug("FINAL ITEMS ARRAY", items);
+
+
 
                 // ------------------------
                 // SALES TEAM
@@ -2053,7 +2147,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 const salesTeamLineCount = salesOrderRecord.getLineCount({ sublistId: 'salesteam' });
                 for (let i = 0; i < salesTeamLineCount; i++) {
                     const lineData = {
-                        employee: salesOrderRecord.getSublistText({ sublistId: 'salesteam', fieldId: 'employee',line: i }),
+                        employee: salesOrderRecord.getSublistText({ sublistId: 'salesteam', fieldId: 'employee', line: i }),
                         salesrole: salesOrderRecord.getSublistText({ sublistId: 'salesteam', fieldId: 'salesrole', line: i }),
                         primary: salesOrderRecord.getSublistText({ sublistId: 'salesteam', fieldId: 'isprimary', line: i }),
                         contribution: salesOrderRecord.getSublistValue({ sublistId: 'salesteam', fieldId: 'contribution', line: i })
@@ -2078,7 +2172,9 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 return { success: false, message: "Failed to load sales order details." };
             }
         }
+        
 
+        
         function getOpportunityFormData(requestData) {
             try {
                 const opportunityFormData = model.getOpportunityFormData(requestData);
@@ -2088,7 +2184,11 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 return { success: false, message: "Failed to load opportunity form data." };
             }
         }
-
+        /**
+             * Handles dropdown data request
+             * @param {Object} response - The response object
+             * @param {Object} search - The N/search module
+             */
         function getOpportunityDropdowns() {
             try {
                 const companies = getActiveCompanies(search);
@@ -2123,6 +2223,14 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             }
         }
 
+            /**
+     * Retrieves dependent records for a given subsidiary.
+     *
+     * @param {Object} search - The N/search module reference.
+     * @param {number|string} subsidiaryId - Internal ID of the subsidiary.
+     * @returns {Object} An object containing departments, locations, classes, and items,
+     * or an error object on failure.
+     */
         function getSubsidiaryDependents(search, subsidiaryId) {
             try {
                 return {
@@ -2137,6 +2245,14 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             }
         }
 
+            /**
+     * Loads an Opportunity record and returns all header, line, and sales team data.
+     *
+     * @param {number|string} opportunityId - Internal ID of the Opportunity to load.
+     * @param {Object} response - Suitelet response object used to write JSON output.
+     * @param {Object} record - N/record module reference.
+     * @returns {void} Writes JSON directly to the response object.
+     */
         function loadOpportunityForEdit(opportunityId, response, record) {
             try {
                 if (!opportunityId) {
@@ -2246,6 +2362,12 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             }
         }
 
+      /**
+        * Formats a Date object into YYYY-MM-DD for input fields.
+        *
+        * @param {Date} dateObj - The date to format.
+        * @returns {string} Formatted date string or empty string on error.
+        */
         function formatDateForInput(dateObj) {
             try {
                 if (!dateObj) return '';
@@ -2257,6 +2379,13 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             }
         }
 
+
+        /**
+         * Creates and populates an opportunity record
+         * @param {Object} request - The request object containing form parameters
+         * @param {Object} record - The N/record module
+         * @returns {Object} The created opportunity record
+         */
         function createOpportunityRecord(request, record) {
             try {
                 const opp = record.create({
@@ -2277,6 +2406,11 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             }
         }
 
+        /**
+         * Sets required/core fields on opportunity record
+         * @param {Object} opportunityRecord - The opportunity record
+         * @param {Object} request - The request object containing form parameters
+        */
         function setRequiredOpportunityFields(opportunityRecord, request) {
             try {
                 const company = request.parameters.company ? String(request.parameters.company).trim() : '';
@@ -2322,8 +2456,8 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     const departmentVal = line.departmentId || '';
                     opportunityRecord.selectNewLine({ sublistId: 'item' });
                     opportunityRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'item', value: itemId });
-                    opportunityRecord.setCurrentSublistValue({sublistId: 'item', fieldId: 'class',value:classVal || ''});
-                    opportunityRecord.setCurrentSublistValue({sublistId: 'item',fieldId: 'department',value:departmentVal || ''});
+                    opportunityRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'class', value: classVal || '' });
+                    opportunityRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'department', value: departmentVal || '' });
                     opportunityRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'quantity', value: qtyVal });
                     opportunityRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'rate', value: rateVal });
                     opportunityRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'amount', value: amtVal });
@@ -2386,7 +2520,12 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             }
             log.debug("All request parameters", request.parameters);
         }
-
+  
+        /**
+       * Formats date input to a valid Date object
+       * @param {string|Date|number} dateInput - The input date in letious formats
+       * @returns {Date|null} Formatted Date object or null if invalid
+       */
         function formatDate(dateInput) {
             try {
                 if (!dateInput) return null;
@@ -2417,6 +2556,11 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             }
         }
 
+        /**
+     * Sets optional fields on opportunity record
+     * @param {Object} opportunityRecord - The opportunity record
+     * @param {Object} request - The request object containing form parameters
+    */
         function setOptionalOpportunityFields(opportunityRecord, request) {
             try {
                 if (request.parameters.title) {
@@ -2438,13 +2582,20 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     opportunityRecord.setValue({ fieldId: 'class', value: request.parameters.class });
                 }
                 if (request.parameters.salesType) {
-                opportunityRecord.setValue({ fieldId: 'cseg_jj_sales_type', value: request.parameters.salesType });
+                    opportunityRecord.setValue({ fieldId: 'cseg_jj_sales_type', value: request.parameters.salesType });
                 }
             } catch (e) {
                 log.error("Error in setOptionalOpportunityFields", e);
             }
         }
 
+        /**
+       * Update an existing opportunity record: replace header values and rebuild item lines
+       * @param {Object} request - Suitelet request
+       * @param {Object} record - N/record module
+       * @param {string|number} oppId - internal id of the opportunity to update
+       * @returns {number} saved opportunity id
+      */
         function updateOpportunityRecord(request, record, oppId) {
             try {
                 let oppRecord = record.load({
@@ -2487,8 +2638,8 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     try {
                         oppRecord.selectNewLine({ sublistId: 'item' });
                         oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'item', value: parseInt(itemId, 10) });
-                        oppRecord.setCurrentSublistValue({sublistId: 'item', fieldId: 'class', value:classVal || ''});
-                        oppRecord.setCurrentSublistValue({sublistId: 'item',fieldId: 'department',value:departmentVal || ''});
+                        oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'class', value: classVal || '' });
+                        oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'department', value: departmentVal || '' });
                         oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'quantity', value: qtyVal });
                         oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'rate', value: rateVal });
                         oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'amount', value: amtVal });
@@ -2515,6 +2666,12 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             }
         }
 
+          /**
+       * Set header fields on an existing record during update without performing create-only validation
+       * This avoids throwing errors if fields are missing and doesn't touch line items.
+       * @param {Object} opportunityRecord
+       * @param {Object} request
+       */
         function setHeaderFieldsForUpdate(opportunityRecord, request) {
             try {
                 const company = request.parameters.company;
@@ -2549,6 +2706,13 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             }
         }
 
+        /**
+        * Sets optional header fields on an Opportunity record based on request parameters.
+        *
+        * @param {Object} opportunityRecord - The loaded Opportunity record instance.
+        * @param {Object} request - The Suitelet request object containing parameters.
+        * @returns {void}
+        */
         function setOptionalOpportunityFields(opportunityRecord, request) {
             try {
                 if (request.parameters.title) {
@@ -2570,13 +2734,23 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     opportunityRecord.setValue({ fieldId: 'class', value: request.parameters.class });
                 }
                 if (request.parameters.salesType) {
-                opportunityRecord.setValue({ fieldId: 'cseg_jj_sales_type', value: request.parameters.salesType });
+                    opportunityRecord.setValue({ fieldId: 'cseg_jj_sales_type', value: request.parameters.salesType });
                 }
             } catch (e) {
                 log.error("Error in setOptionalOpportunityFields", e);
             }
         }
 
+        /**
+        * Updates the Sales Team sublist on an Opportunity record.
+        *
+        * Parses the sales team JSON from the request, validates contribution totals,
+        * clears existing sales team lines, and inserts the new ones.
+        *
+        * @param {Object} oppRecord - The loaded Opportunity record instance.
+        * @param {Object} request - The Suitelet request object containing parameters.
+        * @returns {void} Throws an error if contribution totals are invalid or update fails.
+        */
         function updateSalesTeamLines(oppRecord, request) {
             try {
                 let salesTeam = [];
@@ -2635,6 +2809,16 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             }
         }
 
+        /**
+        * Ensures the Opportunity record has a company (entity) set.
+        * Attempts to read the company from request parameters using multiple possible keys.
+        * Falls back to the original company if provided. Logs errors but does not throw.
+        *
+        * @param {Object} oppRecord - The loaded Opportunity record instance.
+        * @param {Object} request - The Suitelet request object containing parameters.
+        * @param {number|string|null} originalCompany - The original company ID to fall back to.
+        * @returns {void}
+        */
         function ensureCompanyOnRecord(oppRecord, request, originalCompany) {
             try {
                 const companyOnRecord = oppRecord.getValue({ fieldId: 'entity' });
@@ -2666,6 +2850,11 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             }
         }
 
+          /**
+       * Retrieves active customers, leads, and prospects
+       * @param {Object} search - The N/search module
+       * @returns {Array<Object>} Array of company objects with id, name, and type properties
+       */
         function getActiveCompanies(search) {
             const companies = [];
             try {
@@ -2696,14 +2885,27 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
 
         }
 
+           /**
+       * Returns static list of opportunity statuses
+       * @returns {Array<Object>} Array of status objects with id and name
+       */
         function getOpportunityStatuses() {
             return opportunityStatuses;
         }
 
+          /**
+       * Returns available opportunity forms
+       * @returns {Array<Object>} Array of form objects with id and name
+       */
         function getOpportunityForms() {
             return opportunityForms;
         }
 
+          /**
+       * Fetches all active items from NetSuite with their rates.
+       * @param {Object} search - NetSuite search module reference.
+       * @returns {Array<{id: string, name: string, rate: number, type: string}>} Active items.
+       */
         function getActiveItems(search) {
             const items = [];
             try {
@@ -2744,6 +2946,11 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
         }
 
 
+          /**
+       * Retrieves active employees for populating sales team dropdowns
+       * @param {Object} search - N/search module
+       * @returns {Array<Object>} employees
+       */
         function getActiveEmployees(search) {
             const results = [];
             try {
@@ -2766,6 +2973,11 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             return results;
         }
 
+          /**
+       * Retrieves available sales roles for sales team lines
+       * Tries common record types and falls back gracefully if not present.
+       * @param {Object} search
+       */
         function getActiveSalesRoles(search) {
             const results = [];
             try {
@@ -2794,10 +3006,19 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             return results;
         }
 
+          /**
+       * Returns static list of forecast types
+       * @returns {Array<Object>} Array of forecast type objects with id and name
+       */
         function getForecastTypes() {
             return forecastTypes;
         }
 
+           /**
+       * Retrieves all active departments
+       * @param {Object} search - The N/search module
+       * @returns {Array<Object>} Array of department objects with id and name
+       */
         function getActiveDepartments(search) {
             const departments = [];
             try {
@@ -2818,6 +3039,11 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             return departments;
         }
 
+          /**
+       * Retrieves all active classifications
+       * @param {Object} search - The N/search module
+       * @returns {Array<Object>} Array of classification objects with id and name
+       */
         function getActiveClasses(search) {
             const classes = [];
             try {
@@ -2838,6 +3064,11 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             return classes;
         }
 
+           /**
+       * Retrieves all active locations
+       * @param {Object} search - The N/search module
+       * @returns {Array<Object>} Array of location objects with id and name
+       */
         function getActiveLocations(search) {
             const locations = [];
             try {
@@ -2858,6 +3089,12 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             return locations;
         }
 
+        /**
+        * Retrieves active departments for a given subsidiary.
+        * @param {Object} search - The N/search module reference.
+        * @param {number|string} subsidiaryId - Internal ID of the subsidiary.
+        * @returns {Array<{id: string, name: string}>} List of department objects.
+        */
         function getDepartmentsBySubsidiary(search, subsidiaryId) {
             const departments = [];
             try {
@@ -2883,6 +3120,12 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             return departments;
         }
 
+        /**
+        * Retrieves active classes for a given subsidiary.
+        * @param {Object} search - The N/search module reference.
+        * @param {number|string} subsidiaryId - Internal ID of the subsidiary.
+        * @returns {Array<{id: string, name: string}>} List of class objects.
+        */
         function getClassesBySubsidiary(search, subsidiaryId) {
             const classes = [];
             try {
@@ -2908,6 +3151,12 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             return classes;
         }
 
+        /**
+        * Retrieves active locations for a given subsidiary.
+        * @param {Object} search - The N/search module reference.
+        * @param {number|string} subsidiaryId - Internal ID of the subsidiary.
+        * @returns {Array<{id: string, name: string}>} List of location objects.
+        */
         function getLocationsBySubsidiary(search, subsidiaryId) {
             const locations = [];
             try {
@@ -2933,6 +3182,12 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             return locations;
         }
 
+        /**
+        * Retrieves active items for a given subsidiary across multiple item types.
+        * @param {Object} search - The N/search module reference.
+        * @param {number|string} subsidiaryId - Internal ID of the subsidiary.
+        * @returns {Array<{id: string, name: string, rate: number, type: string}>} List of item objects.
+        */
         function getItemsBySubsidiary(search, subsidiaryId) {
             const items = [];
             try {
@@ -2969,10 +3224,20 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
         }
 
 
+           /**
+       * Returns static list of sales types
+       * @returns {Array<Object>} Array of sales type objects with id and name
+       */
         function getActiveSalesTypes() {
             return salesTypes;
         }
 
+           /**
+       * Retrieves subsidiary information for a specific customer (only if active)
+       * @param {Object} search - The N/search module
+       * @param {number|string} customerId - The customer's internal ID
+       * @returns {Object} Object containing subsidiaryId, subsidiaryName, and isActive flag
+       */
         function getSubsidiaryForCustomer(search, customerId) {
             let resultObj = {
                 hasSubsidiary: false,

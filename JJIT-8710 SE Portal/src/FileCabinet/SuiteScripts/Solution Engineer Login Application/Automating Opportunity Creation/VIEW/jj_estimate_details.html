@@ -358,9 +358,7 @@
 
                 document.getElementById("sales-rep").innerText = header.salesRep || "";
                 document.getElementById("opportunity").innerText = header.opportunity || "";
-                
                 document.getElementById("subsidiary").innerText = header.subsidiary || "";
-
             }
 
             function populateJobDropdown(jobs = [], selectedJobId = "") {
@@ -376,9 +374,7 @@
                     opt.value = job.id;
                     opt.textContent = job.name;
 
-                    if (String(job.id) === String(selectedJobId)) {
-                        opt.selected = true;
-                    }
+                    if (String(job.id) === String(selectedJobId)) opt.selected = true;
 
                     select.appendChild(opt);
                 });
@@ -399,67 +395,41 @@
                 select.innerHTML = "";
 
                 statuses.forEach(status => {
-                    const option = document.createElement("option");
-                    option.value = status;
-                    option.textContent = status;
+                    const opt = document.createElement("option");
+                    opt.value = status;
+                    opt.textContent = status;
 
-                    // Select the value from NetSuite
-                    if (selectedStatus.trim().toLowerCase() === status.trim().toLowerCase()) {
-                        option.selected = true;
-                    }
+                    if (selectedStatus.trim().toLowerCase() === status.trim().toLowerCase()) opt.selected = true;
 
-                    select.appendChild(option);
+                    select.appendChild(opt);
                 });
             }
 
             function populateLeadSourceDropdown(selectedLeadSource = "") {
-                const leadSources = [
-                    "Other",
-                    "Partner Referral",
-                    "Trade Show",
-                    "Web"
-                ];
-
+                const leadSources = ["Other", "Partner Referral", "Trade Show", "Web"];
                 const select = document.getElementById("lead-source");
                 select.innerHTML = "";
 
                 leadSources.forEach(source => {
-                    const option = document.createElement("option");
-                    option.value = source;
-                    option.textContent = source;
-
-                    if (selectedLeadSource.trim().toLowerCase() === source.trim().toLowerCase()) {
-                        option.selected = true;
-                    }
-
-                    // log only the items in this function
-                    
-                    select.appendChild(option);
+                    const opt = document.createElement("option");
+                    opt.value = source;
+                    opt.textContent = source;
+                    if (selectedLeadSource.trim().toLowerCase() === source.trim().toLowerCase()) opt.selected = true;
+                    select.appendChild(opt);
                 });
             }
 
             function populateForecastTypeDropdown(selectedForecast = "") {
-                const forecastTypes = [
-                    "Omitted",
-                    "Worst Case",
-                    "Most Likely",
-                    "Upside"
-                ];
-
+                const forecastTypes = ["Omitted", "Worst Case", "Most Likely", "Upside"];
                 const select = document.getElementById("forecast-type");
                 select.innerHTML = "";
 
                 forecastTypes.forEach(type => {
-                    const option = document.createElement("option");
-                    option.value = type;
-                    option.textContent = type;
-
-                    // Select value coming from NetSuite
-                    if (selectedForecast.trim().toLowerCase() === type.trim().toLowerCase()) {
-                        option.selected = true;
-                    }
-
-                    select.appendChild(option);
+                    const opt = document.createElement("option");
+                    opt.value = type;
+                    opt.textContent = type;
+                    if (selectedForecast.trim().toLowerCase() === type.trim().toLowerCase()) opt.selected = true;
+                    select.appendChild(opt);
                 });
             }
 
@@ -467,7 +437,6 @@
                 const select = document.getElementById("partner");
                 select.innerHTML = "";
 
-                // Blank option
                 const blank = document.createElement("option");
                 blank.value = "";
                 select.appendChild(blank);
@@ -476,11 +445,7 @@
                     const opt = document.createElement("option");
                     opt.value = partner.id;
                     opt.textContent = partner.name;
-
-                    if (String(partner.id) === String(selectedPartnerId)) {
-                        opt.selected = true;
-                    }
-
+                    if (String(partner.id) === String(selectedPartnerId)) opt.selected = true;
                     select.appendChild(opt);
                 });
             }
@@ -491,19 +456,14 @@
 
                 const blank = document.createElement("option");
                 blank.value = "";
+                if (!classData.selectedClassId) blank.selected = true;
                 select.appendChild(blank);
 
-                if (!classData.classes) return;
-
-                classData.classes.forEach(c => {
+                classData.classes?.forEach(c => {
                     const opt = document.createElement("option");
                     opt.value = c.id;
                     opt.textContent = c.name;
-
-                    if (String(c.id) === String(classData.selectedClassId)) {
-                        opt.selected = true;
-                    }
-
+                    if (String(c.id) === String(classData.selectedClassId)) opt.selected = true;
                     select.appendChild(opt);
                 });
             }
@@ -514,19 +474,14 @@
 
                 const blank = document.createElement("option");
                 blank.value = "";
+                if (!departmentData.selectedDepartmentId) blank.selected = true;
                 select.appendChild(blank);
 
-                if (!departmentData.departments) return;
-
-                departmentData.departments.forEach(dep => {
+                departmentData.departments?.forEach(dep => {
                     const opt = document.createElement("option");
                     opt.value = dep.id;
                     opt.textContent = dep.name;
-
-                    if (String(dep.id) === String(departmentData.selectedDepartmentId)) {
-                        opt.selected = true;
-                    }
-
+                    if (String(dep.id) === String(departmentData.selectedDepartmentId)) opt.selected = true;
                     select.appendChild(opt);
                 });
             }
@@ -537,224 +492,49 @@
 
                 const blank = document.createElement("option");
                 blank.value = "";
+                if (!locationData.selectedLocationId) blank.selected = true;
                 select.appendChild(blank);
 
-                if (!locationData.locations) return;
-
-                locationData.locations.forEach(loc => {
+                locationData.locations?.forEach(loc => {
                     const opt = document.createElement("option");
                     opt.value = loc.id;
                     opt.textContent = loc.name;
-
-                    if (String(loc.id) === String(locationData.selectedLocationId)) {
-                        opt.selected = true;
-                    }
-
+                    if (String(loc.id) === String(locationData.selectedLocationId)) opt.selected = true;
                     select.appendChild(opt);
                 });
             }
 
-            populateHeaderFields(header);
-            populateJobDropdown(header.jobDetails?.jobs || [], header.jobDetails?.selectedJobId || "");
-            populateStatusDropdown(header.status || "");
-            populateLeadSourceDropdown(header.leadSource  || "");
-            populateForecastTypeDropdown(header.forecastType || "");
-            populatePartnerDropdown(header.partnerDetails?.partners || [], header.partnerDetails?.selectedPartnerId || "");
-            populateClassDropdown(header.classDetails);
-            populateDepartmentDropdown(header.departmentDetails);
-            populateLocationDropdown(header.locationDetails);
-
-            // -------------------- DROPDOWN BUILDER --------------------
+            // -------------------- LINE ITEM DROPDOWNS --------------------
             function createItemDropdown(itemList = [], selectedItemId = "") {
                 const select = document.createElement("select");
                 select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm";
                 select.disabled = true;
 
+                const blank = document.createElement("option");
+                blank.value = "";
+                if (!selectedItemId) blank.selected = true;
+                select.appendChild(blank);
+
                 itemList.forEach(item => {
                     const opt = document.createElement("option");
                     opt.value = item.id;
                     opt.textContent = item.name;
-
-                    // Pre-select the current item
-                    if (String(item.id) === String(selectedItemId)) {
-                        opt.selected = true;
-                    }
-
+                    if (String(item.id) === String(selectedItemId)) opt.selected = true;
                     select.appendChild(opt);
                 });
 
                 return select;
-            }
-
-            // -------------------- LINE ITEM TABLE RENDERING --------------------
-            const tbody = document.getElementById("itemsTableBody");
-            tbody.innerHTML = "";
-
-            if (!items || items.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td class="text-sm px-4 py-2 text-gray-500 text-center" colspan="8">
-                            No items found
-                        </td>
-                    </tr>
-                `;
-            } 
-            else {
-                items.forEach(row => {
-                    console.log("➡️ Row Data:", row);
-
-                    const tr = document.createElement("tr");
-
-                    tr.innerHTML = `
-                    <td class="itemCell text-sm border-b border-[#95a2a0] px-4 py-2"></td>
-
-                    <td class="text-sm border-b border-[#95a2a0] px-4 py-2">
-                        <input 
-                            type="text" 
-                            value="${row.quantity || ''}" 
-                            disabled 
-                            class="w-full bg-gray-100 border border-[#95a2a0] rounded px-2 py-1 text-sm"
-                        />
-                    </td>
-
-                    <td class="text-sm border-b border-[#95a2a0] px-4 py-2">
-                        <input 
-                            type="text" 
-                            value="${row.units || ''}" 
-                            disabled 
-                            class="w-full bg-gray-100 border border-[#95a2a0] rounded px-2 py-1 text-sm"
-                        />
-                    </td>
-
-                    <td class="text-sm border-b border-[#95a2a0] px-4 py-2">
-                        <input 
-                            type="text" 
-                            value="${row.description || ''}" 
-                            disabled 
-                            class="w-full bg-gray-100 border border-[#95a2a0] rounded px-2 py-1 text-sm"
-                        />
-                    </td>
-
-                    <td class="text-sm border-b border-[#95a2a0] px-4 py-2">
-                        <input 
-                            type="text" 
-                            value="${row.rate != null ? row.rate.toFixed(2) : ''}" 
-                            disabled 
-                            class="w-full bg-gray-100 border border-[#95a2a0] rounded px-2 py-1 text-sm"
-                        />
-                    </td>
-
-                    <td class="text-sm border-b border-[#95a2a0] px-4 py-2">
-                        <input 
-                            type="text" 
-                            value="${row.amount != null ? row.amount.toFixed(2) : ''}" 
-                            disabled 
-                            class="w-full bg-gray-100 border border-[#95a2a0] rounded px-2 py-1 text-sm"
-                        />
-                    </td>
-                    <td class="classCell text-sm border-b border-[#95a2a0] px-4 py-2"></td>
-                    <td class="deptCell text-sm border-b border-[#95a2a0] px-4 py-2 text-right"></td>
-                    `;
-
-                    // Insert item dropdown into first <td>
-                    const firstTd = tr.querySelector(".itemCell");
-                    const itemDropdown = createItemDropdown(header.itemList.items, row.itemId);
-                    firstTd.appendChild(itemDropdown);
-
-                    // Insert Class dropdown
-                    const classTd = tr.querySelector(".classCell");
-                    const classDropdown = createClassDropdown(header.classDetails?.classes || [], row.classId || "");
-                    classTd.appendChild(classDropdown);
-
-                    // Insert Department dropdown
-                    const deptTd = tr.querySelector(".deptCell");
-                    const deptDropdown = createDepartmentDropdown(header.departmentDetails?.departments || [], row.departmentId || "");
-                    deptTd.appendChild(deptDropdown);
-
-                    tbody.appendChild(tr);
-                });
-            }
-
-
-            function createSalesRepDropdown(repList = [], selectedEmployeeId = "") {
-                const select = document.createElement("select");
-                select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm";
-
-                console.log("➡️ Creating REP dropdown with:", repList, "Selected:", selectedEmployeeId);
-
-                select.disabled = true;
-
-                repList.forEach(rep => {
-                    const opt = document.createElement("option");
-                    opt.value = rep.id;
-                    opt.textContent = rep.name;
-
-                    // Set the value already saved in NetSuite
-                    if (String(rep.id) === String(selectedEmployeeId)) {
-                        opt.selected = true;
-                    }
-
-                    select.appendChild(opt);
-                });
-
-                return select;
-            }
-
-
-            const salesBody = document.getElementById("salesTeamTableBody");
-            salesBody.innerHTML = "";
-
-            if (!salesTeam || salesTeam.length === 0) {
-                salesBody.innerHTML = `
-                    <tr>
-                        <td class="text-sm px-4 py-2 text-gray-500 text-center" colspan="4">
-                            No sales team found
-                        </td>
-                    </tr>
-                `;
-            } 
-            else {
-
-                salesTeam.forEach(row => {
-                    const tr = document.createElement("tr");
-
-                    tr.innerHTML = `
-                        <td class="text-sm border-b border-[#95a2a0] px-4 py-2"></td>
-
-                        <td class="text-sm border-b border-[#95a2a0] px-4 py-2">
-                            <input class="w-full bg-gray-100 border border-[#95a2a0] rounded px-2 py-1 text-sm" 
-                                value="${row.salesRole || ''}" 
-                                disabled>
-                        </td>
-
-                        <td class="text-sm border-b border-[#95a2a0] px-4 py-2">
-                            ${row.primary ? "Yes" : "No"}
-                        </td>
-
-                        <td class="text-sm border-b border-[#95a2a0] px-4 py-2 text-right">
-                            <input type="number" 
-                                class="contributionInput w-full bg-gray-100 border border-[#95a2a0] rounded px-2 py-1 text-sm"
-                                disabled 
-                                value="${row.contribution.toFixed(1)}">
-                        </td>
-                    `;
-
-                    // Insert employee dropdown into first column
-                    const firstTd = tr.children[0];
-
-                    const repDropdown = createSalesRepDropdown(
-                        repList,          // All active employees
-                        row.employeeId    // Current NetSuite saved value
-                    );
-
-                    firstTd.appendChild(repDropdown);
-                    salesBody.appendChild(tr);
-                });
             }
 
             function createClassDropdown(classList = [], selectedClassId = "") {
                 const select = document.createElement("select");
                 select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm";
+                select.disabled = true;
+
+                const blank = document.createElement("option");
+                blank.value = "";
+                if (!selectedClassId) blank.selected = true;
+                select.appendChild(blank);
 
                 classList.forEach(cls => {
                     const opt = document.createElement("option");
@@ -770,6 +550,12 @@
             function createDepartmentDropdown(deptList = [], selectedDeptId = "") {
                 const select = document.createElement("select");
                 select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm";
+                select.disabled = true;
+
+                const blank = document.createElement("option");
+                blank.value = "";
+                if (!selectedDeptId) blank.selected = true;
+                select.appendChild(blank);
 
                 deptList.forEach(dep => {
                     const opt = document.createElement("option");
@@ -782,10 +568,89 @@
                 return select;
             }
 
+            function createSalesRepDropdown(repList = [], selectedEmployeeId = "") {
+                const select = document.createElement("select");
+                select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm";
+                select.disabled = true;
 
+                const blank = document.createElement("option");
+                blank.value = "";
+                if (!selectedEmployeeId) blank.selected = true;
+                select.appendChild(blank);
 
+                repList.forEach(rep => {
+                    const opt = document.createElement("option");
+                    opt.value = rep.id;
+                    opt.textContent = rep.name;
+                    if (String(rep.id) === String(selectedEmployeeId)) opt.selected = true;
+                    select.appendChild(opt);
+                });
 
+                return select;
+            }
 
+            populateHeaderFields(header);
+            populateJobDropdown(header.jobDetails?.jobs || [], header.jobDetails?.selectedJobId || "");
+            populateStatusDropdown(header.status || "");
+            populateLeadSourceDropdown(header.leadSource || "");
+            populateForecastTypeDropdown(header.forecastType || "");
+            populatePartnerDropdown(header.partnerDetails?.partners || [], header.partnerDetails?.selectedPartnerId || "");
+            populateClassDropdown(header.classDetails);
+            populateDepartmentDropdown(header.departmentDetails);
+            populateLocationDropdown(header.locationDetails);
+
+            // -------------------- RENDER ITEMS --------------------
+            const tbody = document.getElementById("itemsTableBody");
+            tbody.innerHTML = "";
+
+            if (!items || items.length === 0) {
+                tbody.innerHTML = `<tr><td class="text-sm px-3 py-2 text-gray-500 text-center" colspan="8">No items found</td></tr>`;
+            }
+            else {
+                items.forEach(row => {
+                    const tr = document.createElement("tr");
+
+                    tr.innerHTML = `
+                        <td class="itemCell px-3 py-2 text-sm"></td>
+                        <td class="px-3 py-2 text-sm"><input type="text" value="${row.quantity || ''}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
+                        <td class="px-3 py-2 text-sm"><input type="text" value="${row.units || ''}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
+                        <td class="px-3 py-2 text-sm"><input type="text" value="${row.description || ''}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
+                        <td class="px-3 py-2 text-sm"><input type="text" value="${row.rate != null ? row.rate.toFixed(2) : ''}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
+                        <td class="px-3 py-2 text-sm"><input type="text" value="${row.amount != null ? row.amount.toFixed(2) : ''}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
+                        <td class="classCell px-3 py-2 text-sm"></td>
+                        <td class="deptCell px-3 py-2 text-sm"></td>
+                    `;
+
+                    // Insert dropdowns
+                    tr.querySelector(".itemCell").appendChild(createItemDropdown(header.itemList?.items || [], row.itemId));
+                    tr.querySelector(".classCell").appendChild(createClassDropdown(header.classDetails?.classes || [], row.classId));
+                    tr.querySelector(".deptCell").appendChild(createDepartmentDropdown(header.departmentDetails?.departments || [], row.departmentId));
+
+                    tbody.appendChild(tr);
+                });
+            }
+
+            // -------------------- RENDER SALES TEAM --------------------
+            const salesBody = document.getElementById("salesTeamTableBody");
+            salesBody.innerHTML = "";
+
+            if (!salesTeam || salesTeam.length === 0) {
+                salesBody.innerHTML = `<tr><td colspan="4" class="text-sm px-3 py-2 text-gray-500 text-center">No sales team found</td></tr>`;
+            }
+            else {
+                salesTeam.forEach(row => {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td class="px-3 py-2 text-sm"></td>
+                        <td class="px-3 py-2 text-sm"><input value="${row.salesRole || ''}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
+                        <td class="px-3 py-2 text-sm">${row.primary ? "Yes" : "No"}</td>
+                        <td class="px-3 py-2 text-sm"><input type="number" value="${row.contribution.toFixed(1)}" disabled class="contributionInput w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
+                    `;
+
+                    tr.children[0].appendChild(createSalesRepDropdown(repList, row.employeeId));
+                    salesBody.appendChild(tr);
+                });
+            }
         })
         .catch(err => console.error(err));
 

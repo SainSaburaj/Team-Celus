@@ -1314,37 +1314,56 @@ define(['N/search', 'N/query', 'N/record'],
                 const result = { classes: [] };
 
                 try {
-                    if (!estimateId) {
-                        log.error("classList", "No estimateId provided");
-                        return result;
-                    }
+                    if (!estimateId) return result;
 
                     const estRecord = record.load({
                         type: record.Type.ESTIMATE,
                         id: estimateId
                     });
 
-                    const subsidiaryId = estRecord.getValue("subsidiary");
+                    const itemCount = estRecord.getLineCount({ sublistId: "item" });
+                    const itemIds = new Set();
 
-                    if (!subsidiaryId) {
-                        log.error("classList", `No subsidiary found for estimate ${estimateId}`);
-                        return result;
+                    // Collect item internal IDs from estimate lines
+                    for (let i = 0; i < itemCount; i++) {
+                        const itemId = estRecord.getSublistValue({
+                            sublistId: "item",
+                            fieldId: "item",
+                            line: i
+                        });
+                        if (itemId) itemIds.add(itemId);
                     }
 
-                    // Classification Search (filtered by subsidiary)
-                    const clsSearch = search.create({
-                        type: "classification",
+                    if (itemIds.size === 0) return result;
+
+                    const classIds = new Set();
+
+                    // Fetch class for each item
+                    search.create({
+                        type: "item",
                         filters: [
-                            ["isinactive", "is", "F"], "AND",
-                            ["subsidiary", "anyof", subsidiaryId]
+                            ["internalid", "anyof", Array.from(itemIds)]
                         ],
                         columns: [
                             search.createColumn({ name: "internalid" }),
-                            search.createColumn({ name: "name" })
+                            search.createColumn({ name: "class" })
                         ]
+                    }).run().each(row => {
+                        const classId = row.getValue("class");
+                        if (classId) classIds.add(classId);
+                        return true;
                     });
 
-                    clsSearch.run().each(row => {
+                    if (classIds.size === 0) return result;
+
+                    // Fetch class names for the collected classIds
+                    search.create({
+                        type: "classification",
+                        filters: [
+                            ["internalid", "anyof", Array.from(classIds)]
+                        ],
+                        columns: ["internalid", "name"]
+                    }).run().each(row => {
                         result.classes.push({
                             id: row.getValue("internalid"),
                             name: row.getValue("name")
@@ -1359,42 +1378,60 @@ define(['N/search', 'N/query', 'N/record'],
                 return result;
             },
 
-
             departmentList(estimateId) {
                 const result = { departments: [] };
 
                 try {
-                    if (!estimateId) {
-                        log.error("departmentList", "No estimateId provided");
-                        return result;
-                    }
+                    if (!estimateId) return result;
 
                     const estRecord = record.load({
                         type: record.Type.ESTIMATE,
                         id: estimateId
                     });
 
-                    const subsidiaryId = estRecord.getValue("subsidiary");
+                    const itemCount = estRecord.getLineCount({ sublistId: "item" });
+                    const itemIds = new Set();
 
-                    if (!subsidiaryId) {
-                        log.error("departmentList", `No subsidiary found for estimate ${estimateId}`);
-                        return result;
+                    // Collect item IDs from estimate lines
+                    for (let i = 0; i < itemCount; i++) {
+                        const itemId = estRecord.getSublistValue({
+                            sublistId: "item",
+                            fieldId: "item",
+                            line: i
+                        });
+                        if (itemId) itemIds.add(itemId);
                     }
 
-                    // Department search (filtered by subsidiary)
-                    const depSearch = search.create({
-                        type: "department",
+                    if (itemIds.size === 0) return result;
+
+                    const deptIds = new Set();
+
+                    // Search department values for items
+                    search.create({
+                        type: "item",
                         filters: [
-                            ["isinactive", "is", "F"], "AND",
-                            ["subsidiary", "anyof", subsidiaryId]
+                            ["internalid", "anyof", Array.from(itemIds)]
                         ],
                         columns: [
                             search.createColumn({ name: "internalid" }),
-                            search.createColumn({ name: "name" })
+                            search.createColumn({ name: "department" })
                         ]
+                    }).run().each(row => {
+                        const deptId = row.getValue("department");
+                        if (deptId) deptIds.add(deptId);
+                        return true;
                     });
 
-                    depSearch.run().each(row => {
+                    if (deptIds.size === 0) return result;
+
+                    // Fetch department names
+                    search.create({
+                        type: "department",
+                        filters: [
+                            ["internalid", "anyof", Array.from(deptIds)]
+                        ],
+                        columns: ["internalid", "name"]
+                    }).run().each(row => {
                         result.departments.push({
                             id: row.getValue("internalid"),
                             name: row.getValue("name")
@@ -1408,6 +1445,9 @@ define(['N/search', 'N/query', 'N/record'],
 
                 return result;
             }
+
+
+
 
         }
 
