@@ -1301,8 +1301,6 @@ define(['N/search', 'N/query', 'N/record'],
                         return true;
                     });
 
-                    log.debug("ALL EMPLOYEES result", JSON.stringify(result));
-
                 } catch (e) {
                     log.error("salesRepList error", JSON.stringify(e));
                 }
@@ -1444,10 +1442,116 @@ define(['N/search', 'N/query', 'N/record'],
                 }
 
                 return result;
+            },
+
+            unitList(estimateId) {
+                const result = { units: {} }; // itemId → [abbreviation]
+
+                try {
+                    if (!estimateId) return result;
+
+                    const estRecord = record.load({
+                        type: record.Type.ESTIMATE,
+                        id: estimateId
+                    });
+
+                    const itemCount = estRecord.getLineCount({ sublistId: "item" });
+                    const itemIds = new Set();
+
+                    // Collect item IDs from estimate
+                    for (let i = 0; i < itemCount; i++) {
+                        const itemId = estRecord.getSublistValue({
+                            sublistId: "item",
+                            fieldId: "item",
+                            line: i
+                        });
+                        if (itemId) itemIds.add(itemId);
+                    }
+
+                    if (itemIds.size === 0) return result;
+
+                    const unitTypeMap = {}; // itemId → unitTypeId
+
+                    // STEP 1: Get each item's unitstype
+                    search.create({
+                        type: "item",
+                        filters: [
+                            ["internalid", "anyof", Array.from(itemIds)]
+                        ],
+                        columns: [
+                            search.createColumn({ name: "internalid" }),
+                            search.createColumn({ name: "unitstype" })
+                        ]
+                    }).run().each(row => {
+                        const itemId = row.getValue("internalid");
+                        const unitTypeId = row.getValue("unitstype");
+                        if (unitTypeId) unitTypeMap[itemId] = unitTypeId;
+                        return true;
+                    });
+
+                    // STEP 2: For each unit type, get its subunits (only abbreviation)
+                    for (const [itemId, unitTypeId] of Object.entries(unitTypeMap)) {
+                        const abbreviations = [];
+
+                        search.create({
+                            type: "unitstype",
+                            filters: [
+                                ["internalid", "anyof", unitTypeId],
+                                "AND",
+                                ["isinactive", "is", "F"]
+                            ],
+                            columns: [
+                                search.createColumn({ name: "abbreviation" })
+                            ]
+                        }).run().each(row => {
+                            const abbr = row.getValue({ name: "abbreviation" });
+                            if (abbr) abbreviations.push(abbr);
+                            return true;
+                        });
+
+                        result.units[itemId] = abbreviations;
+                    }
+
+                } catch (e) {
+                    log.error("unitList error", e);
+                }
+
+                return result;
+            },
+
+            salesRoleList() {
+                const result = { salesRoles: [] };
+
+                try {
+                    // Search all active Sales Roles
+                    search.create({
+                        type: "salesrole",
+                        filters: [
+                            ["isinactive", "is", "F"]
+                        ],
+                        columns: [
+                            search.createColumn({ name: "internalid" }),
+                            search.createColumn({ name: "name" })
+                        ]
+                    })
+                    .run()
+                    .each(role => {
+                        result.salesRoles.push({
+                            id: role.getValue({ name: "internalid" }),
+                            name: role.getValue({ name: "name" })
+                        });
+                        return true;
+                    });
+
+                    log.debug("salesRoleList", `Loaded ${result.salesRoles.length} sales roles`);
+                    log.debug("salesRoleList", JSON.stringify(result.salesRoles));
+
+                } catch (e) {
+                    log.error("salesRoleList error", e);
+                }
+
+                return result;
             }
-
-
-
 
         }
 

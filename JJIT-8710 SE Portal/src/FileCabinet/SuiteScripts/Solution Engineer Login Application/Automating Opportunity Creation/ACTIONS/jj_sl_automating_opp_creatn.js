@@ -282,9 +282,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             login(requestBody) {
                 const email = requestBody.email;
                 const credentialRecordId = model.getCredential(email, false);
-                log.debug("credentialRecordId", credentialRecordId)
-                log.debug("is sales manager", checkIfSalesManager(credentialRecordId));
-
                 let response;
                 if (credentialRecordId) {
                     const decryptedPassword = this.decryptPassword(requestBody);
@@ -299,9 +296,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                         if (nscrypto.checkPasswordField(options)) {
                             const token = this.getRandomString(32);
                             let key = 'tdgakweufjgjh'
-                            log.debug("token", token)
                             const encryptedToken = XORCipher.encode(key, token);
-                            log.debug("encryptedToken", encryptedToken)
                             this.storeSessionToken(token, credentialRecordId);
                             response = {
                                 success: true,
@@ -736,7 +731,8 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 log.debug("isSalesManager", isSalesManager);
                 return isSalesManager;
 
-            } catch (err) {
+            }
+            catch (err) {
                 log.error("Error in checkIfSalesManager", err);
                 return false;
             }
@@ -1745,7 +1741,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
         }
 
 
-        function getKanbanEstimateDetails(estimateId) {
+        function getKanbanEstimateDetails(estimateId, userEmail) {
             try {
                 if (!estimateId) {
                     return { success: false, message: "No Estimate ID provided." };
@@ -1788,7 +1784,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     class: estimateRecord.getText("class"),
                     location: estimateRecord.getText("location"),
 
-                    jobDetails: {},
+                    jobDetails: {}
                 };
 
                 // ------------------------
@@ -1797,33 +1793,22 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 const items = [];
                 const itemCount = estimateRecord.getLineCount("item");
 
-                log.debug("ITEM COUNT", itemCount);
-
                 for (let i = 0; i < itemCount; i++) {
 
-                    log.debug("Processing Line", i);
-
-                    // Item internal ID
                     const itemId = estimateRecord.getSublistValue({
                         sublistId: "item",
                         fieldId: "item",
                         line: i
                     });
 
-                    log.debug("Line Item ID", itemId);
-
-                    // 🔍 Fetch Class & Department from item record (works for ANY item type)
-                    let itemClassId = "";
-                    let itemClassText = "";
-                    let itemDeptId = "";
-                    let itemDeptText = "";
+                    // Lookup item class & department
+                    let itemClassId = "", itemClassText = "";
+                    let itemDeptId = "", itemDeptText = "";
 
                     try {
                         if (itemId) {
-                            log.debug("LookupFields on item", itemId);
-
                             const itemFields = search.lookupFields({
-                                type: "item",    // ⭐ Universal item type
+                                type: "item",
                                 id: itemId,
                                 columns: ["class", "department"]
                             });
@@ -1833,85 +1818,32 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
 
                             itemDeptId = itemFields.department?.[0]?.value || "";
                             itemDeptText = itemFields.department?.[0]?.text || "";
-
-                            log.debug("Fetched Item Class/Dept", {
-                                itemId,
-                                itemClassId,
-                                itemClassText,
-                                itemDeptId,
-                                itemDeptText
-                            });
                         }
-                    }
-                    catch (err) {
-                        log.error("Item Lookup Failed", {
-                            line: i,
-                            itemId,
-                            error: err
-                        });
+                    } catch (err) {
+                        log.error("Item Lookup Failed", { line: i, itemId, error: err });
                     }
 
-                    // ------------------------
-                    // line data
-                    // ------------------------
-                    const lineData = {
+                    items.push({
                         lineKey: estimateRecord.getSublistValue({
                             sublistId: "item",
                             fieldId: "lineuniquekey",
                             line: i
                         }),
                         itemId,
-                        item: estimateRecord.getSublistText({
-                            sublistId: "item",
-                            fieldId: "item",
-                            line: i
-                        }),
-                        quantity: estimateRecord.getSublistValue({
-                            sublistId: "item",
-                            fieldId: "quantity",
-                            line: i
-                        }),
-                        units: estimateRecord.getSublistText({
-                            sublistId: "item",
-                            fieldId: "units",
-                            line: i
-                        }),
-                        description: estimateRecord.getSublistValue({
-                            sublistId: "item",
-                            fieldId: "description",
-                            line: i
-                        }),
-                        priceLevel: estimateRecord.getSublistText({
-                            sublistId: "item",
-                            fieldId: "price",
-                            line: i
-                        }),
-                        rate: estimateRecord.getSublistValue({
-                            sublistId: "item",
-                            fieldId: "rate",
-                            line: i
-                        }),
-                        amount: estimateRecord.getSublistValue({
-                            sublistId: "item",
-                            fieldId: "amount",
-                            line: i
-                        }),
+                        item: estimateRecord.getSublistText({ sublistId: "item", fieldId: "item", line: i }),
+                        quantity: estimateRecord.getSublistValue({ sublistId: "item", fieldId: "quantity", line: i }),
+                        units: estimateRecord.getSublistText({ sublistId: "item", fieldId: "units", line: i }),
+                        description: estimateRecord.getSublistValue({ sublistId: "item", fieldId: "description", line: i }),
+                        priceLevel: estimateRecord.getSublistText({ sublistId: "item", fieldId: "price", line: i }),
+                        rate: estimateRecord.getSublistValue({ sublistId: "item", fieldId: "rate", line: i }),
+                        amount: estimateRecord.getSublistValue({ sublistId: "item", fieldId: "amount", line: i }),
 
-                        // 🔥 Class & Department from Item Lookup
                         classId: itemClassId,
                         class: itemClassText,
                         departmentId: itemDeptId,
                         department: itemDeptText
-                    };
-
-                    log.debug("Final Line Object", lineData);
-
-                    items.push(lineData);
+                    });
                 }
-
-                log.debug("FINAL ITEMS ARRAY", items);
-
-
 
                 // ------------------------
                 // SALES TEAM
@@ -1924,6 +1856,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                         employee: estimateRecord.getSublistText({ sublistId: "salesteam", fieldId: "employee", line: i }),
                         employeeId: estimateRecord.getSublistValue({ sublistId: "salesteam", fieldId: "employee", line: i }),
                         salesRole: estimateRecord.getSublistText({ sublistId: "salesteam", fieldId: "salesrole", line: i }),
+                        salesRoleId: estimateRecord.getSublistValue({ sublistId: "salesteam", fieldId: "salesrole", line: i }),   // ⭐ Added
                         primary: estimateRecord.getSublistValue({ sublistId: "salesteam", fieldId: "isprimary", line: i }) ? "Yes" : "No",
                         contribution: estimateRecord.getSublistValue({ sublistId: "salesteam", fieldId: "contribution", line: i }) || 0
                     });
@@ -1936,12 +1869,23 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 const repList = repListResult.reps || [];
 
                 // ------------------------
-                // CLASS & DEPARTMENT LIST (with subsidiary filter)
+                // UNIT, CLASS, DEPT LISTS
                 // ------------------------
+                const unitResult = model.unitList(estimateId);
+
                 header.classList = model.classList(estimateId);
                 header.departmentList = model.departmentList(estimateId);
+                header.unitDetails = unitResult.units || [];
 
-                log.debug("Estimate Details", { header, items, salesTeam, repList });
+                // ------------------------
+                // SALES ROLE LIST ⭐
+                // ------------------------
+                header.salesRoles = model.salesRoleList().salesRoles || [];
+
+                // ------------------------
+                // CHECK SALES MANAGER
+                // ------------------------
+                const isSalesManager = checkIfSalesManager(userEmail);
 
                 return {
                     success: true,
@@ -1949,7 +1893,8 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                         header,
                         items,
                         salesTeam,
-                        repList
+                        repList,
+                        isSalesManager
                     }
                 };
 
@@ -1958,9 +1903,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 return { success: false, message: "Failed to load estimate details." };
             }
         }
-
-
-
 
 
         function getKanbanOpportunityDetails(opportunityId) {
@@ -2085,6 +2027,136 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             }
         }
 
+        /**
+ * Populate Classification and Items fields with dropdown options
+ */
+        function setEditMode(isEdit) {
+            const fields = document.querySelectorAll("input, select, textarea");
+            fields.forEach(f => {
+                f.disabled = !isEdit;
+                // For classification and item fields, convert to dropdowns in edit mode
+                if (isEdit && f.id === "so-subsidiary") {
+                    f.replaceWith(createDropdown("subsidiaries", f.value));
+                }
+                if (isEdit && f.id === "so-class") {
+                    f.replaceWith(createDropdown("classes", f.value));
+                }
+                if (isEdit && f.id === "so-location") {
+                    f.replaceWith(createDropdown("locations", f.value));
+                }
+                if (isEdit && f.id === "so-department") {
+                    f.replaceWith(createDropdown("departments", f.value));
+                }
+                if (isEdit && f.id === "so-item") {
+                    f.replaceWith(createItemDropdown(f.value));
+                }
+            });
+
+            // Toggle visibility of edit buttons
+            document.getElementById("editButton").classList.toggle("hidden", isEdit);
+            document.getElementById("editActions").classList.toggle("hidden", !isEdit);
+        }
+
+        /**
+         * Utility to create a dropdown
+         * 
+         * @param {string} type - The type of dropdown (e.g., subsidiaries, classes, locations, departments)
+         * @param {string} selectedValue - The pre-selected value in edit mode
+         * @returns {HTMLSelectElement} - The dropdown element
+         */
+        function createDropdown(type, selectedValue) {
+            const dropdown = document.createElement("select");
+            dropdown.classList.add("border", "border-[#95a2a0]", "px-4", "py-3", "rounded-lg", "text-sm", "shadow-sm", "w-full");
+            dropdown.id = `so-${type}`; // Set the ID to match the field in the form
+
+            // Get the options for this dropdown
+            const options = getDropdownOptions(type);
+
+            // Create a default empty option
+            const defaultOption = document.createElement("option");
+            defaultOption.value = "";
+            defaultOption.textContent = `Select ${type.charAt(0).toUpperCase() + type.slice(1)}`;
+            dropdown.appendChild(defaultOption);
+
+            // Populate options dynamically
+            options.forEach(option => {
+                const opt = document.createElement("option");
+                opt.value = option.id;
+                opt.textContent = option.name;
+
+                // Mark the selected option
+                if (option.id === selectedValue) {
+                    opt.selected = true;
+                }
+
+                dropdown.appendChild(opt);
+            });
+
+            return dropdown;
+        }
+
+        /**
+         * Utility to create Item dropdown
+         * 
+         * @param {string} selectedValue - The pre-selected item ID
+         * @returns {HTMLSelectElement} - The item dropdown element
+         */
+        function createItemDropdown(selectedValue) {
+            const dropdown = document.createElement("select");
+            dropdown.classList.add("border", "border-[#95a2a0]", "px-4", "py-3", "rounded-lg", "text-sm", "shadow-sm", "w-full");
+            dropdown.id = "so-item"; // Set the ID to match the field in the form
+
+            // Fetch item options (you may need to adjust this to match your NetSuite setup)
+            const items = getDropdownOptions("item");
+
+            // Create a default empty option
+            const defaultOption = document.createElement("option");
+            defaultOption.value = "";
+            defaultOption.textContent = "Select Item";
+            dropdown.appendChild(defaultOption);
+
+            // Populate options dynamically
+            items.forEach(item => {
+                const opt = document.createElement("option");
+                opt.value = item.id;
+                opt.textContent = item.name;
+
+                // Mark the selected option
+                if (item.id === selectedValue) {
+                    opt.selected = true;
+                }
+
+                dropdown.appendChild(opt);
+            });
+
+            return dropdown;
+        }
+
+        /**
+         * Fetch dropdown options from NetSuite
+         */
+        function getDropdownOptions(type) {
+            const results = [];
+            const searchObj = search.create({
+                type: type,
+                filters: [],
+                columns: ['internalid', 'name']
+            });
+
+            searchObj.run().each(function (result) {
+                results.push({
+                    id: result.getValue('internalid'),
+                    name: result.getValue('name')
+                });
+                return true;
+            });
+
+            return results;
+        }
+
+        /**
+         * Function to fetch Sales Order details and populate data (unchanged)
+         */
         function getKanbanSalesOrderDetails(salesOrderId) {
             try {
                 if (!salesOrderId) {
@@ -2098,11 +2170,11 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 });
 
                 const data = {
-                    tranid: salesOrderRecord.getValue('tranid'),                    // Quote #
-                    trandate: salesOrderRecord.getText('trandate'),                // Date
-                    entity: salesOrderRecord.getText('entity'),                    // Customer
+                    tranid: salesOrderRecord.getValue('tranid'),
+                    trandate: salesOrderRecord.getText('trandate'),
+                    entity: salesOrderRecord.getText('entity'),
                     enddate: salesOrderRecord.getText('enddate'),
-                    memo: salesOrderRecord.getValue('memo'),                       // Memo
+                    memo: salesOrderRecord.getValue('memo'),
                     status: salesOrderRecord.getText('status'),
                     po: salesOrderRecord.getValue('otherrefnum'),
                     job: salesOrderRecord.getText('job'),
@@ -2113,68 +2185,58 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     saleseffectivedate: salesOrderRecord.getText('saleseffectivedate'),
                     leadsource: salesOrderRecord.getText('leadsource'),
 
-                    subsidiary: salesOrderRecord.getText('subsidiary'),
-                    class: salesOrderRecord.getText('class'),
-                    location: salesOrderRecord.getText('location'),
-                    department: salesOrderRecord.getText('department'),
+                    // Use getText to return the name (instead of internal id) for subsidiaries, classes, locations, departments
+                    subsidiary: salesOrderRecord.getText('subsidiary'), // Subsidiary name instead of internalid
+                    class: salesOrderRecord.getText('class'), // Class name instead of internalid
+                    location: salesOrderRecord.getText('location'), // Location name instead of internalid
+                    department: salesOrderRecord.getText('department'), // Department name instead of internalid
 
                     items: [],
                     salesteam: [],
-
+                    dropdowns: {
+                        subsidiaries: getDropdownOptions('subsidiary'),
+                        classes: getDropdownOptions('classification'),
+                        locations: getDropdownOptions('location'),
+                        departments: getDropdownOptions('department')
+                    }
                 };
+
+                // Line items
                 const itemLineCount = salesOrderRecord.getLineCount({ sublistId: 'item' });
                 for (let i = 0; i < itemLineCount; i++) {
                     const lineData = {
                         item: salesOrderRecord.getSublistText({ sublistId: 'item', fieldId: 'item', line: i }),
-                        quantitycommitted: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'quantitycommitted', line: i }),
-                        location: salesOrderRecord.getSublistText({ sublistId: 'item', fieldId: 'location', line: i }),
-                        requestedquantity: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'quantityrequestedtofulfill', line: i }),
-                        quantitypicked: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'quantitypicked', line: i }),
-                        quantitypacked: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'quantitypacked', line: i }),
-                        quantityfulfilled: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'quantityfulfilled', line: i }),
-                        quantitybilled: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'quantitybilled', line: i }),
-                        quantitybackordered: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'quantitybackordered', line: i }),
                         quantity: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'quantity', line: i }),
-                        units: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'units', line: i }),
-                        pricelevel: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'price', line: i }),
+                        units: salesOrderRecord.getSublistText({ sublistId: 'item', fieldId: 'units', line: i }),
                         rate: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'rate', line: i }),
                         amount: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'amount', line: i }),
-
+                        location: salesOrderRecord.getSublistText({ sublistId: 'item', fieldId: 'location', line: i })
                     };
-
                     data.items.push(lineData);
                 }
+
+                // Sales team
                 const salesTeamLineCount = salesOrderRecord.getLineCount({ sublistId: 'salesteam' });
                 for (let i = 0; i < salesTeamLineCount; i++) {
                     const lineData = {
                         employee: salesOrderRecord.getSublistText({ sublistId: 'salesteam', fieldId: 'employee', line: i }),
                         salesrole: salesOrderRecord.getSublistText({ sublistId: 'salesteam', fieldId: 'salesrole', line: i }),
-                        primary: salesOrderRecord.getSublistText({ sublistId: 'salesteam', fieldId: 'isprimary', line: i }),
+                        primary: salesOrderRecord.getSublistValue({ sublistId: 'salesteam', fieldId: 'isprimary', line: i }),
                         contribution: salesOrderRecord.getSublistValue({ sublistId: 'salesteam', fieldId: 'contribution', line: i })
-                    }
+                    };
                     data.salesteam.push(lineData);
                 }
-                log.debug("sales team sublist", data.salesteam);
 
+                return { success: true, data: data };
 
-                log.debug("item sublist", data.items);
-
-                log.debug("Sales order details", data);
-
-                return {
-                    success: true,
-                    data: data
-                };
-
-            }
-            catch (e) {
+            } catch (e) {
                 log.error("Error @ getKanbanSalesOrderDetails", e);
                 return { success: false, message: "Failed to load sales order details." };
             }
         }
-        
 
-        
+
+
         function getOpportunityFormData(requestData) {
             try {
                 const opportunityFormData = model.getOpportunityFormData(requestData);
@@ -2223,14 +2285,14 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             }
         }
 
-            /**
-     * Retrieves dependent records for a given subsidiary.
-     *
-     * @param {Object} search - The N/search module reference.
-     * @param {number|string} subsidiaryId - Internal ID of the subsidiary.
-     * @returns {Object} An object containing departments, locations, classes, and items,
-     * or an error object on failure.
-     */
+        /**
+ * Retrieves dependent records for a given subsidiary.
+ *
+ * @param {Object} search - The N/search module reference.
+ * @param {number|string} subsidiaryId - Internal ID of the subsidiary.
+ * @returns {Object} An object containing departments, locations, classes, and items,
+ * or an error object on failure.
+ */
         function getSubsidiaryDependents(search, subsidiaryId) {
             try {
                 return {
@@ -2245,14 +2307,14 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             }
         }
 
-            /**
-     * Loads an Opportunity record and returns all header, line, and sales team data.
-     *
-     * @param {number|string} opportunityId - Internal ID of the Opportunity to load.
-     * @param {Object} response - Suitelet response object used to write JSON output.
-     * @param {Object} record - N/record module reference.
-     * @returns {void} Writes JSON directly to the response object.
-     */
+        /**
+ * Loads an Opportunity record and returns all header, line, and sales team data.
+ *
+ * @param {number|string} opportunityId - Internal ID of the Opportunity to load.
+ * @param {Object} response - Suitelet response object used to write JSON output.
+ * @param {Object} record - N/record module reference.
+ * @returns {void} Writes JSON directly to the response object.
+ */
         function loadOpportunityForEdit(opportunityId, response, record) {
             try {
                 if (!opportunityId) {
@@ -2362,12 +2424,12 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             }
         }
 
-      /**
-        * Formats a Date object into YYYY-MM-DD for input fields.
-        *
-        * @param {Date} dateObj - The date to format.
-        * @returns {string} Formatted date string or empty string on error.
-        */
+        /**
+          * Formats a Date object into YYYY-MM-DD for input fields.
+          *
+          * @param {Date} dateObj - The date to format.
+          * @returns {string} Formatted date string or empty string on error.
+          */
         function formatDateForInput(dateObj) {
             try {
                 if (!dateObj) return '';
@@ -2520,7 +2582,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             }
             log.debug("All request parameters", request.parameters);
         }
-  
+
         /**
        * Formats date input to a valid Date object
        * @param {string|Date|number} dateInput - The input date in letious formats
@@ -2666,12 +2728,12 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             }
         }
 
-          /**
-       * Set header fields on an existing record during update without performing create-only validation
-       * This avoids throwing errors if fields are missing and doesn't touch line items.
-       * @param {Object} opportunityRecord
-       * @param {Object} request
-       */
+        /**
+     * Set header fields on an existing record during update without performing create-only validation
+     * This avoids throwing errors if fields are missing and doesn't touch line items.
+     * @param {Object} opportunityRecord
+     * @param {Object} request
+     */
         function setHeaderFieldsForUpdate(opportunityRecord, request) {
             try {
                 const company = request.parameters.company;
@@ -2850,11 +2912,11 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             }
         }
 
-          /**
-       * Retrieves active customers, leads, and prospects
-       * @param {Object} search - The N/search module
-       * @returns {Array<Object>} Array of company objects with id, name, and type properties
-       */
+        /**
+     * Retrieves active customers, leads, and prospects
+     * @param {Object} search - The N/search module
+     * @returns {Array<Object>} Array of company objects with id, name, and type properties
+     */
         function getActiveCompanies(search) {
             const companies = [];
             try {
@@ -2885,27 +2947,27 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
 
         }
 
-           /**
-       * Returns static list of opportunity statuses
-       * @returns {Array<Object>} Array of status objects with id and name
-       */
+        /**
+    * Returns static list of opportunity statuses
+    * @returns {Array<Object>} Array of status objects with id and name
+    */
         function getOpportunityStatuses() {
             return opportunityStatuses;
         }
 
-          /**
-       * Returns available opportunity forms
-       * @returns {Array<Object>} Array of form objects with id and name
-       */
+        /**
+     * Returns available opportunity forms
+     * @returns {Array<Object>} Array of form objects with id and name
+     */
         function getOpportunityForms() {
             return opportunityForms;
         }
 
-          /**
-       * Fetches all active items from NetSuite with their rates.
-       * @param {Object} search - NetSuite search module reference.
-       * @returns {Array<{id: string, name: string, rate: number, type: string}>} Active items.
-       */
+        /**
+     * Fetches all active items from NetSuite with their rates.
+     * @param {Object} search - NetSuite search module reference.
+     * @returns {Array<{id: string, name: string, rate: number, type: string}>} Active items.
+     */
         function getActiveItems(search) {
             const items = [];
             try {
@@ -2946,11 +3008,11 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
         }
 
 
-          /**
-       * Retrieves active employees for populating sales team dropdowns
-       * @param {Object} search - N/search module
-       * @returns {Array<Object>} employees
-       */
+        /**
+     * Retrieves active employees for populating sales team dropdowns
+     * @param {Object} search - N/search module
+     * @returns {Array<Object>} employees
+     */
         function getActiveEmployees(search) {
             const results = [];
             try {
@@ -2973,11 +3035,11 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             return results;
         }
 
-          /**
-       * Retrieves available sales roles for sales team lines
-       * Tries common record types and falls back gracefully if not present.
-       * @param {Object} search
-       */
+        /**
+     * Retrieves available sales roles for sales team lines
+     * Tries common record types and falls back gracefully if not present.
+     * @param {Object} search
+     */
         function getActiveSalesRoles(search) {
             const results = [];
             try {
@@ -3006,19 +3068,19 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             return results;
         }
 
-          /**
-       * Returns static list of forecast types
-       * @returns {Array<Object>} Array of forecast type objects with id and name
-       */
+        /**
+     * Returns static list of forecast types
+     * @returns {Array<Object>} Array of forecast type objects with id and name
+     */
         function getForecastTypes() {
             return forecastTypes;
         }
 
-           /**
-       * Retrieves all active departments
-       * @param {Object} search - The N/search module
-       * @returns {Array<Object>} Array of department objects with id and name
-       */
+        /**
+    * Retrieves all active departments
+    * @param {Object} search - The N/search module
+    * @returns {Array<Object>} Array of department objects with id and name
+    */
         function getActiveDepartments(search) {
             const departments = [];
             try {
@@ -3039,11 +3101,11 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             return departments;
         }
 
-          /**
-       * Retrieves all active classifications
-       * @param {Object} search - The N/search module
-       * @returns {Array<Object>} Array of classification objects with id and name
-       */
+        /**
+     * Retrieves all active classifications
+     * @param {Object} search - The N/search module
+     * @returns {Array<Object>} Array of classification objects with id and name
+     */
         function getActiveClasses(search) {
             const classes = [];
             try {
@@ -3064,11 +3126,11 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             return classes;
         }
 
-           /**
-       * Retrieves all active locations
-       * @param {Object} search - The N/search module
-       * @returns {Array<Object>} Array of location objects with id and name
-       */
+        /**
+    * Retrieves all active locations
+    * @param {Object} search - The N/search module
+    * @returns {Array<Object>} Array of location objects with id and name
+    */
         function getActiveLocations(search) {
             const locations = [];
             try {
@@ -3224,20 +3286,20 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
         }
 
 
-           /**
-       * Returns static list of sales types
-       * @returns {Array<Object>} Array of sales type objects with id and name
-       */
+        /**
+    * Returns static list of sales types
+    * @returns {Array<Object>} Array of sales type objects with id and name
+    */
         function getActiveSalesTypes() {
             return salesTypes;
         }
 
-           /**
-       * Retrieves subsidiary information for a specific customer (only if active)
-       * @param {Object} search - The N/search module
-       * @param {number|string} customerId - The customer's internal ID
-       * @returns {Object} Object containing subsidiaryId, subsidiaryName, and isActive flag
-       */
+        /**
+    * Retrieves subsidiary information for a specific customer (only if active)
+    * @param {Object} search - The N/search module
+    * @param {number|string} customerId - The customer's internal ID
+    * @returns {Object} Object containing subsidiaryId, subsidiaryName, and isActive flag
+    */
         function getSubsidiaryForCustomer(search, customerId) {
             let resultObj = {
                 hasSubsidiary: false,
@@ -3298,18 +3360,17 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
          */
         const onRequest = (scriptContext) => {
             const { request, response } = scriptContext;
+            const params = request.parameters;
             try {
                 if (request.method === 'GET') {
-                    const params = request.parameters;
                     try {
-                        const params = request.parameters;
                         log.debug("params userid", params.userId)
-
 
                         const fileId = getPageFilePath(params.action);
                         try {
                             const pageContents = file.load({ id: fileId }).getContents();
-                            response.write(pageContents || "OOPS.... SOMETHING WENT WRONG!");
+                            const finalContent = pageContents.replace("{{USER_ID}}", params.userId || "");
+                            response.write(finalContent || "OOPS.... SOMETHING WENT WRONG!");
                         }
                         catch (fileError) {
                             log.error("Error loading file", fileError);
@@ -3329,8 +3390,9 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                         name: 'Content-Type',
                         value: 'application/json'
                     });
-                    let action = request.parameters.action || null;
+
                     let req = null;
+                    let action = request.parameters.action || null;
 
                     if (action === 'upload') {
                         req = request.files;
@@ -3338,7 +3400,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     else if (action === 'updateLead') {
                         req = request.parameters;
                     }
-                    else if (request.body.action === 'kanbanBoard') {
+                    else if (JSON.parse(request.body).action === 'kanbanBoard') {
                         let reqBody = JSON.parse(request.body);
                         res = fetchKanbanData(reqBody.startDate, reqBody.endDate);
 
@@ -3355,6 +3417,8 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             req = {};
                         }
                     }
+
+                    req.userId = req.userId || params.userId || null;
 
                     if (!action && req && req.action) {
                         action = req.action;
@@ -3434,21 +3498,21 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             break;
 
                         case 'getKanbanEstimateDetails':
-                            const resData = getKanbanEstimateDetails(req.estimateId);
-                            resData.data.header.jobDetails = model.jobDetails(req.estimateId);
-                            resData.data.header.partnerDetails = model.partnerDetails(req.estimateId);
-                            resData.data.header.classDetails = model.classDetails(req.estimateId);
-                            resData.data.header.departmentDetails = model.departmentDetails(req.estimateId);
-                            resData.data.header.locationDetails = model.locationDetails(req.estimateId);
-                            resData.data.header.itemList = model.itemList(req.estimateId);
-                            resData.data.header.salesRepList = model.salesRepList();
-                            resData.data.header.classList = model.classList(req.estimateId);
-                            resData.data.header.departmentList = model.departmentList(req.estimateId);
+                            log.debug("User ID in POST:", req.userId);
 
-                            res = resData;
+                            res = getKanbanEstimateDetails(req.estimateId, req.userId);
+                            res.data.header.jobDetails = model.jobDetails(req.estimateId);
+                            res.data.header.partnerDetails = model.partnerDetails(req.estimateId);
+                            res.data.header.classDetails = model.classDetails(req.estimateId);
+                            res.data.header.departmentDetails = model.departmentDetails(req.estimateId);
+                            res.data.header.locationDetails = model.locationDetails(req.estimateId);
+                            res.data.header.itemList = model.itemList(req.estimateId);
+                            res.data.header.salesRepList = model.salesRepList();
+                            res.data.header.classList = model.classList(req.estimateId);
+                            res.data.header.departmentList = model.departmentList(req.estimateId);
+                            res.data.header.unitList = model.unitList(req.estimateId);
+                            res.data.header.salesRoleList = model.salesRoleList();
                             break;
-
-
 
                         case 'getKanbanOpportunityDetails':
                             res = getKanbanOpportunityDetails(req.opportunityId);
@@ -3458,11 +3522,9 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             break;
 
                         case 'checkSalesManager':
-                            const userEmail = req.userId || request.parameters.userId;
-                            const managerStatus = checkIfSalesManager(userEmail);
-                            res = { success: true, isSalesManager: managerStatus };
+                            const isManager = checkIfSalesManager(req.userId);
+                            res = { success: true, isSalesManager: isManager };
                             break;
-
 
                         case 'fetchEstimates':
                             res = {

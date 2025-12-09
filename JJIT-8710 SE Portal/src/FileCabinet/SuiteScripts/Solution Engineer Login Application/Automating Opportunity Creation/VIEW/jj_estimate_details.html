@@ -18,16 +18,12 @@
         select:disabled { 
             color: black !important; 
             opacity: 1 !important;
+            background-color: inherit !important;
         }
         input:disabled { 
             color: black !important; 
             opacity: 1 !important;
             background-color: inherit !important;
-        }
-        input[type="checkbox"]:disabled {
-            opacity: 1 !important;
-            width: 15px;
-            height: 15px;
         }
     </style>
 </head>
@@ -43,14 +39,33 @@
                         <img src="https://www.jobinandjismi.com/images/secondary-logo.svg" class="w-32 sm:w-32 md:w-40 lg:w-48 xl:w-56 drop-shadow-lg" alt="Jobin And Jismi Logo"/>
                     </a>
                     <div>
-                        <button type="button" id="closeButton" class=" mt-4 mr-0 ml-auto block border border-[#0c6c73] text-[#0c6c73] text-sm px-3 py-1 rounded-md shadow active:bg-gray-200">Edit</button>
                         <div class="flex items-center justify-between mt-5">
-                            <span id="est-statusref" class="bg-[#0a514a] text-white px-2 py-1 text-sm text-center mr-4 rounded-sm font-semibold shadow capitalize mx-auto block w-fit"></span>
+                            <span id="est-statusref"
+                                class="bg-[#0a514a] text-white px-2 py-1 text-sm text-center mr-4 rounded-sm font-semibold shadow capitalize mx-auto block w-fit"></span>
                             <h1 class="text-3xl font-bold text-[#0a514a]" id="est-custname"></h1>
                         </div>
+
+                        <button type="button" id="editButton"
+                            class="mt-4 mr-0 ml-auto block border border-[#0c6c73] text-[#0c6c73] text-sm px-3 py-1 rounded-md shadow active:bg-gray-200">
+                            Edit Record
+                        </button>
+
+                        <!-- New Buttons -->
+                        <div id="editActions" class="flex items-center gap-3 mt-4 hidden">
+                            <button id="saveButton"
+                                class="bg-[#0c6c73] text-white text-sm px-3 py-1 rounded-md shadow">
+                                Save
+                            </button>
+                            <button id="cancelButton"
+                                class="block border border-[#0c6c73] text-[#0c6c73] text-sm px-3 py-1 rounded-md shadow">
+                                Cancel
+                            </button>
+                        </div>
+
                     </div>
                 </div>
             </div>
+
 
             <div class="flex-auto px-5 lg:px-12 py-10 border border-[#0a514a] rounded-b-xl">
                 <form>
@@ -214,14 +229,14 @@
                             <div id="items" class="tab-content tab-active">
                                 <div class="overflow-x-auto">
                                     <table class="min-w-full border border-[#95a2a0] rounded-lg">
-                                        <thead class="bg-gradient-to-r from-[#0a514a] to-[#0c6c73] text-white">
+                                        <thead class="bg-[#0a514a] text-white">
                                             <tr>
                                                 <th class="px-4 py-3 text-left text-sm font-semibold">Item</th>
                                                 <th class="px-4 py-3 text-left text-sm font-semibold">Quantity</th>
                                                 <th class="px-4 py-3 text-left text-sm font-semibold">Units</th>
                                                 <th class="px-4 py-3 text-left text-sm font-semibold">Description</th>
-                                                <th class="px-4 py-3 text-left text-sm font-semibold">Rate</th>
-                                                <th class="px-4 py-3 text-left text-sm font-semibold ">Amount</th>
+                                                <th id="th-rate" class="px-4 py-3 text-left text-sm font-semibold">Rate</th>
+                                                <th id="th-amount" class="px-4 py-3 text-left text-sm font-semibold ">Amount</th>
                                                 <th class="px-4 py-3 text-left text-sm font-semibold">Class</th>
                                                 <th class="px-4 py-3 text-left text-sm font-semibold text-right">Department</th>
                                             </tr>
@@ -236,7 +251,7 @@
                             <div id="sales-team" class="tab-content">
                                 <div class="overflow-x-auto">
                                     <table class="min-w-full border border-[#95a2a0] rounded-lg">
-                                        <thead class="bg-gradient-to-r from-[#0a514a] to-[#0c6c73] text-white">
+                                        <thead class="bg-[#0a514a] text-white">
                                             <tr>
                                                 <th class="px-4 py-3 text-left text-sm font-semibold">Employee</th>
                                                 <th class="px-4 py-3 text-left text-sm font-semibold">Sales Role</th>
@@ -264,39 +279,57 @@
         tabs.forEach(tab => {
             tab.addEventListener('click', () => {
 
-                // Reset all tab styles
                 tabs.forEach(t => {
                     t.classList.remove('border-[#0a514a]');
                     t.classList.add('border-transparent');
                 });
 
-                // Hide all content
                 tabContents.forEach(c => c.classList.remove('tab-active'));
-
-                // Activate clicked tab
                 tab.classList.remove('border-transparent');
                 tab.classList.add('border-[#0a514a]'); // highlight active tab
-
-                // Show selected content
                 const selectedTab = document.getElementById(tab.dataset.tab);
                 selectedTab.classList.add('tab-active');
             });
         });
 
+        function setEditMode(isEdit) {
+            // Enable/Disable all input fields
+            const editableFields = document.querySelectorAll("input, select, textarea");
+            editableFields.forEach(field => {
+                field.disabled = !isEdit;
+            });
+
+            // Toggle Buttons
+            document.getElementById("editButton").classList.toggle("hidden", isEdit);
+            document.getElementById("editActions").classList.toggle("hidden", !isEdit);
+        }
+
+        document.getElementById("editButton").addEventListener("click", () => {
+            setEditMode(true);
+        });
+
+        document.getElementById("cancelButton").addEventListener("click", () => {
+            setEditMode(false);
+        });
+
+
+
 
         function formatDateForInput(nsDate) {
             if (!nsDate) return "";
-            const parts = nsDate.split("/"); // ["12","2","2025"]
+            const parts = nsDate.split("/");
             if (parts.length !== 3) return "";
-            const month = parts[0].padStart(2, "0"); // "12"
-            const day = parts[1].padStart(2, "0");   // "02"
-            const year = parts[2];                   // "2025"
-            return `${year}-${month}-${day}`;        // "2025-12-02"
+            const month = parts[0].padStart(2, "0");
+            const day = parts[1].padStart(2, "0");
+            const year = parts[2];
+            return `${year}-${month}-${day}`;
         }
 
 
         const BASE_URL = 'https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM';
 
+        const loggedInUserId = "{{USER_ID}}";
+        
         // Read URL params
         const url = new URL(window.location.href);
         const pageType = url.searchParams.get("type");
@@ -314,7 +347,13 @@
         else if (pageType === "salesorder") action = "getKanbanSalesOrderDetails";
 
         // Build fetch body
-        let fetchBody = { action };
+        const userId = localStorage.getItem("userId");   // or however you store the logged-in email
+
+        let fetchBody = { 
+            action: "getKanbanEstimateDetails",
+            estimateId: recordId,
+            userId: loggedInUserId
+        };
         if (pageType === "estimate") fetchBody.estimateId = recordId;
         else if (pageType === "opportunity") fetchBody.opportunityId = recordId;
         else if (pageType === "salesorder") fetchBody.salesOrderId = recordId;
@@ -333,13 +372,20 @@
                 return;
             }
 
-            
-            // --- FIXED STRUCTURE ---
-            const { header, items, salesTeam, repList } = data.data;
-            console.log("Estimate Header:", header);
-            console.log("Estimate Items:", items);
-            console.log("Sales Team:", salesTeam);
-            console.log("repList:", repList);
+            // Extract required data including sales manager
+            const { header, items, salesTeam, repList, isSalesManager } = data.data;
+            const salesManager = (isSalesManager === true || isSalesManager === "true" || isSalesManager === "T");
+
+            console.log("Is Sales Manager?", salesManager);
+
+            // Hide Rate & Amount headers if not sales manager
+            if (!salesManager) {
+                const rateHeader = document.getElementById("th-rate");
+                const amountHeader = document.getElementById("th-amount");
+
+                if (rateHeader) rateHeader.style.display = "none";
+                if (amountHeader) amountHeader.style.display = "none";
+            }
 
 
             // Main header fields
@@ -568,6 +614,30 @@
                 return select;
             }
 
+            function createUnitDropdown(unitList = [], selectedUnit = "") {
+                const select = document.createElement("select");
+                select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm";
+                select.disabled = true;
+
+                // Blank option
+                const blank = document.createElement("option");
+                blank.value = "";
+                if (!selectedUnit) blank.selected = true;
+                select.appendChild(blank);
+
+                // unitList = ["EA", "SET", "CT"]
+                unitList.forEach(abbr => {
+                    const opt = document.createElement("option");
+                    opt.value = abbr;
+                    opt.textContent = abbr;
+                    if (abbr === selectedUnit) opt.selected = true;
+                    select.appendChild(opt);
+                });
+
+                return select;
+            }
+
+
             function createSalesRepDropdown(repList = [], selectedEmployeeId = "") {
                 const select = document.createElement("select");
                 select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm";
@@ -589,12 +659,41 @@
                 return select;
             }
 
+            function createSalesRoleDropdown(roleList = [], selectedRoleId = "") {
+                const select = document.createElement("select");
+                select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm";
+                select.disabled = true;
+
+                // blank
+                const blank = document.createElement("option");
+                blank.value = "";
+                if (!selectedRoleId) blank.selected = true;
+                select.appendChild(blank);
+
+                roleList.forEach(role => {
+                    const opt = document.createElement("option");
+                    opt.value = role.id;
+                    opt.textContent = role.name;
+
+                    if (String(role.id) === String(selectedRoleId)) opt.selected = true;
+
+                    select.appendChild(opt);
+                });
+
+                console.log("Sales Roles:", header.salesRoles);
+                console.log("Sales Team:", salesTeam);
+
+                return select;
+            }
+
+
+
             populateHeaderFields(header);
             populateJobDropdown(header.jobDetails?.jobs || [], header.jobDetails?.selectedJobId || "");
             populateStatusDropdown(header.status || "");
             populateLeadSourceDropdown(header.leadSource || "");
             populateForecastTypeDropdown(header.forecastType || "");
-            populatePartnerDropdown(header.partnerDetails?.partners || [], header.partnerDetails?.selectedPartnerId || "");
+            // populatePartnerDropdown(header.partnerDetails?.partners || [], header.partnerDetails?.selectedPartnerId || "");
             populateClassDropdown(header.classDetails);
             populateDepartmentDropdown(header.departmentDetails);
             populateLocationDropdown(header.locationDetails);
@@ -604,7 +703,7 @@
             tbody.innerHTML = "";
 
             if (!items || items.length === 0) {
-                tbody.innerHTML = `<tr><td class="text-sm px-3 py-2 text-gray-500 text-center" colspan="8">No items found</td></tr>`;
+                tbody.innerHTML = `<tr><td class="text-sm px-3 py-2 text-gray-500 text-center" colspan="9">No items found</td></tr>`;
             }
             else {
                 items.forEach(row => {
@@ -612,23 +711,42 @@
 
                     tr.innerHTML = `
                         <td class="itemCell px-3 py-2 text-sm"></td>
-                        <td class="px-3 py-2 text-sm"><input type="text" value="${row.quantity || ''}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
-                        <td class="px-3 py-2 text-sm"><input type="text" value="${row.units || ''}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
-                        <td class="px-3 py-2 text-sm"><input type="text" value="${row.description || ''}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
-                        <td class="px-3 py-2 text-sm"><input type="text" value="${row.rate != null ? row.rate.toFixed(2) : ''}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
-                        <td class="px-3 py-2 text-sm"><input type="text" value="${row.amount != null ? row.amount.toFixed(2) : ''}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
+                        <td class="px-3 py-2 text-sm"><input type="number" value="${row.quantity || ''}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
+                        <td class="unitCell px-3 py-2 text-sm"></td>
+                        <td class="px-3 py-2 text-sm"><textarea disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" rows="1">${row.description || ''}</textarea></td>
+                        <td class="rateCell px-3 py-2 text-sm"><input type="number" value="${row.rate != null ? row.rate.toFixed(2) : ''}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
+                        <td class="amountCell px-3 py-2 text-sm"><input type="number" value="${row.amount != null ? row.amount.toFixed(2) : ''}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
                         <td class="classCell px-3 py-2 text-sm"></td>
                         <td class="deptCell px-3 py-2 text-sm"></td>
                     `;
 
-                    // Insert dropdowns
-                    tr.querySelector(".itemCell").appendChild(createItemDropdown(header.itemList?.items || [], row.itemId));
-                    tr.querySelector(".classCell").appendChild(createClassDropdown(header.classDetails?.classes || [], row.classId));
-                    tr.querySelector(".deptCell").appendChild(createDepartmentDropdown(header.departmentDetails?.departments || [], row.departmentId));
+                    // Item dropdown
+                    tr.querySelector(".itemCell")
+                        .appendChild(createItemDropdown(header.itemList?.items || [], row.itemId));
+
+                    // Units dropdown
+                    const unitOptions = header.unitDetails?.[row.itemId] || [];
+                    tr.querySelector(".unitCell")
+                        .appendChild(createUnitDropdown(unitOptions, row.units));
+
+                    // Class dropdown
+                    tr.querySelector(".classCell")
+                        .appendChild(createClassDropdown(header.classDetails?.classes || [], row.classId));
+
+                    // Department dropdown
+                    tr.querySelector(".deptCell")
+                        .appendChild(createDepartmentDropdown(header.departmentDetails?.departments || [], row.departmentId));
+
+                    // Hide Rate & Amount if user is not sales manager
+                    if (!salesManager) {
+                        tr.querySelector(".rateCell").style.display = "none";
+                        tr.querySelector(".amountCell").style.display = "none";
+                    }
 
                     tbody.appendChild(tr);
                 });
             }
+
 
             // -------------------- RENDER SALES TEAM --------------------
             const salesBody = document.getElementById("salesTeamTableBody");
@@ -642,15 +760,34 @@
                     const tr = document.createElement("tr");
                     tr.innerHTML = `
                         <td class="px-3 py-2 text-sm"></td>
-                        <td class="px-3 py-2 text-sm"><input value="${row.salesRole || ''}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
-                        <td class="px-3 py-2 text-sm">${row.primary ? "Yes" : "No"}</td>
-                        <td class="px-3 py-2 text-sm"><input type="number" value="${row.contribution.toFixed(1)}" disabled class="contributionInput w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
+                        <td class="roleCell px-3 py-2 text-sm"></td>  
+
+                        <td class="primaryCell px-3 py-2 text-sm">
+                            <input type="checkbox" 
+                                class="primaryCheckbox h-5 w-5 ml-2 accent-[#007065]" 
+                                ${row.primary ? "checked" : ""} 
+                                disabled />
+                        </td>
+
+                        <td class="px-3 py-2 text-sm">
+                            <input type="number" 
+                                value="${row.contribution.toFixed(1)}" 
+                                disabled 
+                                class="contributionInput w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" />
+                        </td>
                     `;
 
+                    // Employee dropdown
                     tr.children[0].appendChild(createSalesRepDropdown(repList, row.employeeId));
+
+                    // 🌟 NEW: Sales Role dropdown
+                    tr.querySelector(".roleCell")
+                        .appendChild(createSalesRoleDropdown(header.salesRoles, row.salesRoleId));
+
                     salesBody.appendChild(tr);
                 });
             }
+
         })
         .catch(err => console.error(err));
 

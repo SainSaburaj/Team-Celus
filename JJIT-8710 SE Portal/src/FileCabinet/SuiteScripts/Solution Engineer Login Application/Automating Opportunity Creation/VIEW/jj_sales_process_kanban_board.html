@@ -1435,6 +1435,12 @@
      */
     function addCardToColumn(card) {
       try {
+        let currentURL = window.location.href;
+        let urlParams = new URLSearchParams(new URL(currentURL).search);
+        let userEmail = urlParams.get("userId");
+
+        console.log("Kanban Board userEmail:", userEmail);
+
         const readableStatus = formatStatus(card.status);
         const formattedCurrency = formatCurrency(card.amount, card.currency)
         const col = document.getElementById(`${card.stage}-col`);
@@ -1455,7 +1461,7 @@
           else if (card.stage === 'opportunity') urlParam = `opportunityId=${card.id}`;
           else if (card.stage === 'salesorder') urlParam = `salesOrderId=${card.id}`;
 
-          const fileUrl = `${BASE_URL}&action=${action}&${urlParam}&type=${card.stage}`;
+          const fileUrl = `${BASE_URL}&action=${action}&${urlParam}&type=${card.stage}&userId=${encodeURIComponent(userEmail)}`;
           window.open(fileUrl, "_blank"); // Opens in a new tab
         };
 
