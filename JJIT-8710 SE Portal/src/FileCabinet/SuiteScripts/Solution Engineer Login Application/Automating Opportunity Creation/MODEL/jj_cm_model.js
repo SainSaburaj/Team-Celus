@@ -998,6 +998,7 @@ define(['N/search', 'N/query', 'N/record'],
                 return resultData;
             },
 
+<<<<<<< HEAD
             leadSourceDetails(estimateId) {
                 const resultData = {
                     leadSources: [],
@@ -1050,6 +1051,8 @@ define(['N/search', 'N/query', 'N/record'],
                 return resultData;
             },
 
+=======
+>>>>>>> 09756057c86bda9bfc1372cfaa59f76cd756f7ff
             partnerDetails(estimateId) {
                 const resultData = {
                     partners: [],
@@ -1095,7 +1098,11 @@ define(['N/search', 'N/query', 'N/record'],
                         resultData.selectedPartnerName = lookup?.companyname || "";
                     }
 
+<<<<<<< HEAD
                 }
+=======
+                } 
+>>>>>>> 09756057c86bda9bfc1372cfaa59f76cd756f7ff
                 catch (err) {
                     log.error("partnerDetails Error", err);
                 }
@@ -1154,7 +1161,11 @@ define(['N/search', 'N/query', 'N/record'],
                         resultData.selectedClassName = lookup?.name || "";
                     }
 
+<<<<<<< HEAD
                 }
+=======
+                } 
+>>>>>>> 09756057c86bda9bfc1372cfaa59f76cd756f7ff
                 catch (e) {
                     log.error("classDetails Error", e);
                 }
@@ -1285,7 +1296,11 @@ define(['N/search', 'N/query', 'N/record'],
                     // Validate input
                     if (!estimateId) {
                         log.error("itemList", "No estimateId provided");
+<<<<<<< HEAD
                         return result;
+=======
+                        return result;       
+>>>>>>> 09756057c86bda9bfc1372cfaa59f76cd756f7ff
                     }
 
                     // Load estimate to get subsidiary
@@ -1586,6 +1601,7 @@ define(['N/search', 'N/query', 'N/record'],
                             search.createColumn({ name: "name" })
                         ]
                     })
+<<<<<<< HEAD
                         .run()
                         .each(role => {
                             result.salesRoles.push({
@@ -1594,11 +1610,26 @@ define(['N/search', 'N/query', 'N/record'],
                             });
                             return true;
                         });
+=======
+                    .run()
+                    .each(role => {
+                        result.salesRoles.push({
+                            id: role.getValue({ name: "internalid" }),
+                            name: role.getValue({ name: "name" })
+                        });
+                        return true;
+                    });
+
+                    log.debug("salesRoleList", `Loaded ${result.salesRoles.length} sales roles`);
+                    log.debug("salesRoleList", JSON.stringify(result.salesRoles));
+
+>>>>>>> 09756057c86bda9bfc1372cfaa59f76cd756f7ff
                 } catch (e) {
                     log.error("salesRoleList error", e);
                 }
 
                 return result;
+<<<<<<< HEAD
             },
 
             soClassDetails(salesOrderId) {
@@ -1659,6 +1690,9 @@ define(['N/search', 'N/query', 'N/record'],
 
                 return resultData;
             },
+=======
+            }
+>>>>>>> 09756057c86bda9bfc1372cfaa59f76cd756f7ff
 
         }
 

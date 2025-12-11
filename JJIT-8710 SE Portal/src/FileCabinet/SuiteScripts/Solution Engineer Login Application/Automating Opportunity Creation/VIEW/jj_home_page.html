@@ -70,11 +70,49 @@
             display: flex;
             align-items: center;
             justify-content: flex-start;
+=======
+    <!-- Skeleton CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {            
+                padding: 20px;
+                font-family: 'Montserrat', sans-serif;
+                color: #2a3533;
+                background: url('https://td3047046.app.netsuite.com/core/media/media.nl?id=1508&c=TD3047046&h=3s8X6F272RPyfw3whIdpSH7vTWt04yaLSJNn4wLq0PTKd2YS') no-repeat center center fixed;
+                background-size: cover;
+            
+        }
+
+        .banner {
+            background: #c8d9ce;
+            color: rgb(26, 23, 23);
+            text-align: left;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .banner-text {
+            padding: 30px 25px;
+            border-radius: 10px;
+            line-height: 1.8;
+            font-size: 16px;
+            position: sticky;
+            top: 0;
+            background: #c8d9ce;
+        }
+
+        .logo {
+            margin-bottom: 20px;
+>>>>>>> 09756057c86bda9bfc1372cfaa59f76cd756f7ff
         }
 
         .logo img {
             max-width: 200px;
             height: auto;
+<<<<<<< HEAD
             display: block;
             margin-left: 0; 
         }
@@ -249,10 +287,75 @@
                 max-width: 140px;
             }
         }
+
+        .tile {
+            background-color: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .tile:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .tile img {
+            width: 70px;
+            height: 70px;
+            margin-bottom: 20px;
+        }
+
+        .tile-title {
+            font-size: 22px;
+            font-weight: bold;
+            margin-top: 12px;
+            color: #679791;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
+        }
+
+        /* Page Size Reduction - 90% zoom effect */
+        #mainContainer {
+            max-width: 1200px;
+            margin: 0 auto;
+            transform: scale(0.9);
+            transform-origin: top center;
+            padding-bottom: 150px;
+        }
+
+        /* Adjust text sizes for 90% scale */
+        .sticky.top-0 .text-2xl {
+            font-size: 1.25rem;
+        }
+
+        .text-4xl {
+            font-size: 1.875rem !important;
+        }
+
+        .gap-6 {
+            gap: 1.25rem !important;
+        }
+
+        .h-80 {
+            height: 15rem;
+>>>>>>> 09756057c86bda9bfc1372cfaa59f76cd756f7ff
+        }
     </style>
 </head>
 
 <body>
+<<<<<<< HEAD
     <div class="logo-wrapper">
         <div class="logo" aria-hidden="false">
             <img src="https://5742736.app.netsuite.com/core/media/media.nl?id=968&c=5742736&h=GxmFAAxF9p6MoYAWQBZg8tMh2Qwq2hbBP7UAe_xlvmffMv_k"
@@ -363,6 +466,163 @@
         </div>
         </div>
     </main>
+=======
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script
+        src="https://td3047046.app.netsuite.com/core/media/media.nl?id=1438&c=TD3047046&h=joIRhuH4ppMYUlBARn7IrK5s0HNwF_X-sAEmWtYyc7TN2Kg2&_xt=.js"></script>
+    <div id="sessionExpired" style="display:none; text-align:center;">
+        <h1>Session Expired</h1>
+        <p>Your session has expired. Please <a
+                href="https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM">log
+                in</a> again.</p>
+    </div>
+    <div id="mainContainer" class="container">
+        <div class="logo">
+            <img src="https://5742736.app.netsuite.com/core/media/media.nl?id=968&c=5742736&h=GxmFAAxF9p6MoYAWQBZg8tMh2Qwq2hbBP7UAe_xlvmffMv_k"
+                alt="Jobin and Jismi Logo">
+        </div>
+        <div class="sticky top-0 z-10 bg-[#c8d9ce] rounded-lg p-4 mb-8 shadow-md">
+            <div class="px-6 py-8 rounded-lg text-2xl leading-relaxed text-[#1a1717]">
+                Welcome back ! Success starts with the opportunities you create—go seize yours today!
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div
+                class="h-80 bg-[#57e0ac] text-white rounded-xl p-8 shadow-xl hover:scale-105 transition transform flex flex-col justify-center items-center text-center">
+                <a
+                    href="https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM&action=implementation">
+                    <img src="https://5742736.app.netsuite.com/core/media/media.nl?id=188138&c=5742736&h=esxQXRk7pXauLsignVlc1WpJx_zhH9Fueb8URMDQMkhEzNa3"
+                        alt="manageleads" class="w-32 h-32 mt-10 mb-10 mx-auto mix-blend-multiply" />
+                </a>
+                <div class="text-4xl font-bold">Manage Leads</div>
+            </div>
+
+
+            <div
+                class="h-80 bg-gradient-to-r from-[#2193B0] to-[#6DD5ED] text-white rounded-xl p-8 shadow-xl hover:scale-105 transition transform flex flex-col justify-center items-center text-center">
+                <a
+                    href="https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM&action=upload">
+                    <img src="https://5742736.app.netsuite.com/core/media/media.nl?id=167311&c=5742736&h=f00HRR8_desYT-Q5_EJY1vZ7eFJh0pBLSKqmoH06atB1FnqS"
+                        alt="Sketches" class="w-24 h-24 mb-14 mt-14 mx-auto mix-blend-multiply">
+                </a>
+                <div class="text-4xl font-bold">Upload Opportunity</div>
+            </div>
+
+            <div
+                class="h-80 bg-gradient-to-r from-[#EEAECA] to-[#94BBE9] text-white rounded-xl p-8 shadow-xl hover:scale-105 transition transform flex flex-col justify-center items-center text-center">
+                <a id="oppLink" href="#">
+                    <img src="https://5742736.app.netsuite.com/core/media/media.nl?id=167313&c=5742736&h=593qGYnLfh9HiCrG5IHzjXRmRo9QzDgFYBrXCLthdkKBnMc0"
+                        alt="View/Edit Opportunity" class="w-24 h-28 mb-10 mt-14 mx-auto mix-blend-multiply">
+                </a>
+                <div class="text-4xl font-bold">View/Edit Opportunity</div>
+            </div>
+
+            <div
+                class="h-80 bg-gradient-to-r from-[#22C1C3] to-[#6DD5ED] text-white rounded-xl p-8 shadow-xl hover:scale-105 transition transform flex flex-col justify-center items-center text-center"
+                id="approveSoTile">
+                <a
+                    href="https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM&action=approveso">
+                    <img src="https://td3047046.app.netsuite.com/core/media/media.nl?id=1507&c=TD3047046&h=sKZuMuQpyawweklhevpCvHJC_CXNzwC8k1Pvp2oH05tXgeMe"
+                        alt="Approve Sales Order" class="w-24 h-24 mb-14 mt-16 mx-auto mix-blend-multiply">
+                </a>
+                <div class="text-4xl font-bold">Approve Sales Order</div>
+            </div>
+
+            <div class="h-80 bg-gradient-to-r from-[#FAD0C4] to-[#FFD1FF] text-white rounded-xl p-8 shadow-xl hover:scale-105 transition transform flex flex-col justify-center items-center text-center"
+                id="printEstimateTile">
+                <a id="estimateLink" href="#">
+                    <img src="https://td3047046.app.netsuite.com/core/media/media.nl?id=1486&c=TD3047046&h=8lTGUhaSRdfSsIFtARHYn1--NSrMtoOpfwZ7x_nnTXyCuoCt"
+                        alt="Print Estimate" class="w-24 h-28 mb-10 mt-14 mx-auto mix-blend-multiply">
+                </a>
+                <div class="text-4xl font-bold">Print Estimate</div>
+
+            </div>
+
+
+            <div class="h-80 bg-gradient-to-r from-[#E0D909] to-[#0DD158] text-white rounded-xl p-8 shadow-xl hover:scale-105 transition transform flex flex-col justify-center items-center text-center"
+            id="printEstimateTile">
+                <a id="kanbanEstimateLink" href="">
+                    <img src="https://td3047046.app.netsuite.com/core/media/media.nl?id=1505&c=TD3047046&h=5QdD0TQjnU2jxiXQIBEIwpIIETOjA_0hPI7hK5yxX8JJwOxz"
+                    alt="kanban board" class="w-28 h-36 mb-4 mt-10 mx-auto mix-blend-multiply">
+                </a>
+                <div class="text-4xl font-bold">Transaction Kanban Board</div>
+            </div>
+
+            <script>
+                let currentURL = window.location.href;
+                console.log("current URL::", currentURL);
+
+                let urlParams = new URLSearchParams(new URL(currentURL).search);
+                let encodedEmail = urlParams.get("userId");
+                console.log("encoded email:", encodedEmail);
+
+                // Update the href dynamically
+                if (encodedEmail) {
+                    document.getElementById("estimateLink").href =
+                        "https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM&action=listestimate&userId=" + encodeURIComponent(encodedEmail);
+                    document.getElementById("oppLink").href =
+                        "https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM&action=opportunityform&userId="
+                        + encodeURIComponent(encodedEmail);
+                    document.getElementById("kanbanEstimateLink").href =
+                        "https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM&action=kanbanBoard&userId="
+                        + encodeURIComponent(encodedEmail);
+                }
+            </script>
+            
+            <div class="h-80 bg-gradient-to-r from-[#794709] to-[#00D4FF] text-white rounded-xl p-8 shadow-xl hover:scale-105 transition transform flex flex-col justify-center items-center text-center"
+            id="printEstimateTile">
+                <a
+                href="https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM&action=createepic">
+                    <img src="https://icons.veryicon.com/png/o/system/remote-cost-control/electric-4.png"
+                    alt="Create Epic" class="w-24 h-28 mb-14 mt-8 mx-auto mix-blend-multiply">
+                </a>
+                <div class="text-4xl font-bold">Create Epic</div>
+            </div>
+
+            <div class="h-80 bg-gradient-to-r from-[#EEAECA] to-[#E9E694] text-white rounded-xl p-8 shadow-xl hover:scale-105 transition transform flex flex-col justify-center items-center text-center"
+                id="printEstimateTile">
+                <a
+                    href="https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM&action=report">
+                    <img src="https://5742736.app.netsuite.com/core/media/media.nl?id=172277&c=5742736&h=sZOIB6s7Qrdh7D6dI_RI7-eX7CMN8sJO8cUO8hM-n9ZKHFTn"
+                        alt="Reports" class="w-24 h-36 mb-6 mt-8 mx-auto mix-blend-multiply">
+                </a>
+                <div class="text-4xl font-bold">Reports</div>
+            </div>
+
+            <div class="h-80 bg-[#22e291] text-white rounded-xl p-8 shadow-xl hover:scale-105 transition transform flex flex-col justify-center items-center text-center"
+                id="printEstimateTile">
+                <a
+                    href="https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM&action=help">
+                    <img src="https://5742736.app.netsuite.com/core/media/media.nl?id=172278&c=5742736&h=f3vKX1Am86dF-wNf8FMQtRlmj7-XML8ZoQ-LE9CQM-Ow9HqR"
+                        alt="Help" class="w-24 h-30 mb-16 mt-12 mx-auto mix-blend-multiply">
+                </a>
+                <div class="text-4xl font-bold">Help</div>
+            </div>
+
+            <div class="h-80 bg-[#e0577b] text-white rounded-xl p-8 shadow-xl hover:scale-105 transition transform flex flex-col justify-center items-center text-center"
+                id="printEstimateTile">
+                <a href="https://www.jobinandjismi.com/" target="_blank">
+                    <img src="https://5742736.app.netsuite.com/core/media/media.nl?id=172280&c=5742736&h=ib6-zoYg597ShYmU7tAwRw3RwNMvh6BtgvKNN1RcqNmbRgPr"
+                        alt="Design" class="w-28 h-42 mb-6 mt-4 mx-auto mix-blend-multiply">
+                </a>
+                <div class="text-4xl font-bold">Visit our websites</div>
+            </div>
+
+            <div class="h-80 bg-gradient-to-r from-[#AEEEAE] to-[#94BBE9] text-white rounded-xl p-8 shadow-xl hover:scale-105 transition transform flex flex-col justify-center items-center text-center"
+                id="printEstimateTile">
+                <a
+                    href="https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM">
+                    <img src="https://5742736.app.netsuite.com/core/media/media.nl?id=172279&c=5742736&h=kaNQlTu7mOFqJHWqhlmwDeiKLNUrCpKvJLJp9-bS7RD2fXsP"
+                        alt="Logout" class="w-28 h-38 mb-14 mt-10 mx-auto mix-blend-multiply">
+                </a>
+                <div class="text-4xl font-bold">Logout</div>
+            </div>
+        </div>
+    </div>
+
+>>>>>>> 09756057c86bda9bfc1372cfaa59f76cd756f7ff
 
     <script>
 
@@ -422,7 +682,10 @@
 
     </script>
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 09756057c86bda9bfc1372cfaa59f76cd756f7ff
 </body>
 
 </html>
