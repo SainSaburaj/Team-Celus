@@ -1866,7 +1866,79 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             }
         }
 
-                function getKanbanOpportunityDetails(opportunityId) {
+        function updateEstimateRecord(req) {
+            try {
+                const estimateId = req.estimateId;
+                const data = req.data;
+
+                const estRec = record.load({
+                    type: record.Type.ESTIMATE,
+                    id: estimateId,
+                    isDynamic: true
+                });
+
+                // -------------------------
+                // HEADER FIELDS
+                // -------------------------
+                estRec.setValue('memo', data.header.memo || "");
+                estRec.setValue('entity', data.header.customer || "");
+                estRec.setValue('location', data.header.location || "");
+                estRec.setValue('department', data.header.department || "");
+                estRec.setValue('class', data.header.class || "");
+
+                // -------------------------
+                // CLEAR EXISTING LINES
+                // -------------------------
+                const lineCount = estRec.getLineCount({ sublistId: 'item' });
+                for (let i = lineCount - 1; i >= 0; i--) {
+                    estRec.removeLine({ sublistId: 'item', line: i });
+                }
+
+                // -------------------------
+                // ADD UPDATED LINE ITEMS
+                // -------------------------
+                data.items.forEach(item => {
+                    estRec.selectNewLine({ sublistId: 'item' });
+
+                    estRec.setCurrentSublistValue({
+                        sublistId: 'item',
+                        fieldId: 'item',
+                        value: item.itemId
+                    });
+
+                    estRec.setCurrentSublistValue({
+                        sublistId: 'item',
+                        fieldId: 'quantity',
+                        value: item.quantity
+                    });
+
+                    estRec.setCurrentSublistValue({
+                        sublistId: 'item',
+                        fieldId: 'rate',
+                        value: item.rate
+                    });
+
+                    estRec.commitLine({ sublistId: 'item' });
+                });
+
+                // SAVE
+                const updatedId = estRec.save();
+
+                return {
+                    success: true,
+                    message: "Estimate updated successfully",
+                    estimateId: updatedId
+                };
+
+            } catch (e) {
+                log.error("Update Estimate Failed", e);
+                return { success: false, message: e.message };
+            }
+        }
+
+
+
+        function getKanbanOpportunityDetails(opportunityId) {
             try {
                 if (!opportunityId) {
                     return { success: false, message: "No Opportunity ID provided." };
@@ -2076,7 +2148,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
         /**
          * Function to fetch Sales Order details and populate data (unchanged)
          */
-        function getKanbanSalesOrderDetails(salesOrderId) {
+        function getKanbanSalesOrderDetails(salesOrderId, userEmail) {
             try {
                 if (!salesOrderId) {
                     return { success: false, message: "No sales order ID provided." };
@@ -2092,6 +2164,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     tranid: salesOrderRecord.getValue('tranid'),
                     trandate: salesOrderRecord.getText('trandate'),
                     entity: salesOrderRecord.getText('entity'),
+                    entityId: salesOrderRecord.getValue('entity'),
                     enddate: salesOrderRecord.getText('enddate'),
                     memo: salesOrderRecord.getValue('memo'),
                     status: salesOrderRecord.getText('status'),
@@ -2099,6 +2172,8 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     job: salesOrderRecord.getText('job'),
                     startdate: salesOrderRecord.getText('startdate'),
                     total: salesOrderRecord.getText('total'),
+                    opportunity: salesOrderRecord.getText('opportunity'),
+                    partner: salesOrderRecord.getText('partner'),
 
                     salesrep: salesOrderRecord.getText('salesrep'),
                     saleseffectivedate: salesOrderRecord.getText('saleseffectivedate'),
@@ -2112,18 +2187,34 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
 
                     items: [],
                     salesteam: [],
+                    soCustomerDetails: {},
+                    soClassDetails: {},
+                    soDepartmentDetails: {},
+                    soLocationDetails: {},
+                    soJobDetails: {},
+                    soPartnerDetails: {},
+                    soLeadSourceDetails: {},
+                    soOpportunityDetails: {},
+                    soItemList: {},
+                    isSalesManager: checkIfSalesManager(userEmail)
+        
                 };
+
 
                 // Line items
                 const itemLineCount = salesOrderRecord.getLineCount({ sublistId: 'item' });
                 for (let i = 0; i < itemLineCount; i++) {
                     const lineData = {
                         item: salesOrderRecord.getSublistText({ sublistId: 'item', fieldId: 'item', line: i }),
+                        itemId: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'item', line: i }),
                         quantity: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'quantity', line: i }),
                         units: salesOrderRecord.getSublistText({ sublistId: 'item', fieldId: 'units', line: i }),
+                        description: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'description', line: i }),
                         rate: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'rate', line: i }),
                         amount: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'amount', line: i }),
-                        location: salesOrderRecord.getSublistText({ sublistId: 'item', fieldId: 'location', line: i })
+                        location: salesOrderRecord.getSublistText({ sublistId: 'item', fieldId: 'location', line: i }),
+                        classId: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'class', line: i }),
+                        departmentId: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'department', line: i })
                     };
                     header.items.push(lineData);
                 }
@@ -2133,7 +2224,8 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 for (let i = 0; i < salesTeamLineCount; i++) {
                     const lineData = {
                         employee: salesOrderRecord.getSublistText({ sublistId: 'salesteam', fieldId: 'employee', line: i }),
-                        salesrole: salesOrderRecord.getSublistText({ sublistId: 'salesteam', fieldId: 'salesrole', line: i }),
+                        employeeId: salesOrderRecord.getSublistValue({ sublistId: 'salesteam', fieldId: 'employee', line: i }),
+                        salesRole: salesOrderRecord.getSublistText({ sublistId: 'salesteam', fieldId: 'salesrole', line: i }),
                         primary: salesOrderRecord.getSublistValue({ sublistId: 'salesteam', fieldId: 'isprimary', line: i }),
                         contribution: salesOrderRecord.getSublistValue({ sublistId: 'salesteam', fieldId: 'contribution', line: i })
                     };
@@ -2145,6 +2237,87 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             } catch (e) {
                 log.error("Error @ getKanbanSalesOrderDetails", e);
                 return { success: false, message: "Failed to load sales order details." };
+            }
+        }
+
+        /**
+         * Update Sales Order with new values
+         * @param {Object} requestData - Request data containing salesOrderId and field values
+         * @returns {Object} Success/failure response
+         */
+        function updateSalesOrder(requestData) {
+            try {
+                if (!requestData.salesOrderId) {
+                    return { success: false, message: "No sales order ID provided." };
+                }
+
+                log.debug("Updating Sales Order", requestData.salesOrderId);
+
+                const salesOrderRecord = record.load({
+                    type: record.Type.SALES_ORDER,
+                    id: requestData.salesOrderId,
+                    isDynamic: false
+                });
+
+                // Update header fields if provided
+                if (requestData.entity) {
+                    salesOrderRecord.setValue({ fieldId: 'entity', value: requestData.entity });
+                }
+                if (requestData.trandate) {
+                    salesOrderRecord.setValue({ fieldId: 'trandate', value: new Date(requestData.trandate) });
+                }
+                if (requestData.startdate) {
+                    salesOrderRecord.setValue({ fieldId: 'startdate', value: new Date(requestData.startdate) });
+                }
+                if (requestData.enddate) {
+                    salesOrderRecord.setValue({ fieldId: 'enddate', value: new Date(requestData.enddate) });
+                }
+                if (requestData.otherrefnum !== undefined) {
+                    salesOrderRecord.setValue({ fieldId: 'otherrefnum', value: requestData.otherrefnum });
+                }
+                if (requestData.job) {
+                    salesOrderRecord.setValue({ fieldId: 'job', value: requestData.job });
+                }
+                if (requestData.memo !== undefined) {
+                    salesOrderRecord.setValue({ fieldId: 'memo', value: requestData.memo });
+                }
+                if (requestData.saleseffectivedate) {
+                    salesOrderRecord.setValue({ fieldId: 'saleseffectivedate', value: new Date(requestData.saleseffectivedate) });
+                }
+                if (requestData.leadsource) {
+                    salesOrderRecord.setValue({ fieldId: 'leadsource', value: requestData.leadsource });
+                }
+                if (requestData.opportunity) {
+                    salesOrderRecord.setValue({ fieldId: 'opportunity', value: requestData.opportunity });
+                }
+                if (requestData.partner) {
+                    salesOrderRecord.setValue({ fieldId: 'partner', value: requestData.partner });
+                }
+                if (requestData.class) {
+                    salesOrderRecord.setValue({ fieldId: 'class', value: requestData.class });
+                }
+                if (requestData.department) {
+                    salesOrderRecord.setValue({ fieldId: 'department', value: requestData.department });
+                }
+                if (requestData.location) {
+                    salesOrderRecord.setValue({ fieldId: 'location', value: requestData.location });
+                }
+
+                const savedId = salesOrderRecord.save();
+                log.debug("Sales Order Updated", savedId);
+
+                return { 
+                    success: true, 
+                    message: "Sales Order updated successfully.",
+                    salesOrderId: savedId
+                };
+
+            } catch (e) {
+                log.error("Error @ updateSalesOrder", e);
+                return { 
+                    success: false, 
+                    message: "Failed to update sales order: " + e.message 
+                };
             }
         }
 
@@ -2174,7 +2347,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 const locations = getActiveLocations(search);
                 const salesTypes = getActiveSalesTypes();
                 const forms = getOpportunityForms();
-                const items = getActiveItems(search);
                 const employees = getActiveEmployees(search);
                 const salesRoles = getActiveSalesRoles(search);
 
@@ -2188,7 +2360,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     locations,
                     salesTypes,
                     forms,
-                    items,
                     employees,
                     salesRoles
                 };
@@ -2640,7 +2811,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 throw e;
             }
         }
-
         /**
      * Set header fields on an existing record during update without performing create-only validation
      * This avoids throwing errors if fields are missing and doesn't touch line items.
@@ -2680,7 +2850,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 log.error('Error in setHeaderFieldsForUpdate', e);
             }
         }
-
         /**
         * Sets optional header fields on an Opportunity record based on request parameters.
         *
@@ -2824,7 +2993,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 log.error('Error in ensureCompanyOnRecord', e);
             }
         }
-
         /**
      * Retrieves active customers, leads, and prospects
      * @param {Object} search - The N/search module
@@ -2860,6 +3028,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
 
         }
 
+
         /**
     * Returns static list of opportunity statuses
     * @returns {Array<Object>} Array of status objects with id and name
@@ -2876,49 +3045,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             return opportunityForms;
         }
 
-        /**
-     * Fetches all active items from NetSuite with their rates.
-     * @param {Object} search - NetSuite search module reference.
-     * @returns {Array<{id: string, name: string, rate: number, type: string}>} Active items.
-     */
-        function getActiveItems(search) {
-            const items = [];
-            try {
-                const itemTypes = [
-                    { type: search.Type.INVENTORY_ITEM, label: 'Inventory' },
-                    { type: search.Type.SERVICE_ITEM, label: 'Service' },
-                    { type: search.Type.NON_INVENTORY_ITEM, label: 'Non-Inventory' },
-                    { type: search.Type.ASSEMBLY_ITEM, label: 'Assembly' }
-                ];
-                itemTypes.forEach(function (itemType) {
-                    try {
-                        const searchObj = search.create({
-                            type: itemType.type,
-                            filters: [
-                                ['subsidiary', 'anyof', subsidiaryId],
-                                'AND',
-                                ['isinactive', 'is', 'F']
-                            ],
-                            columns: ['internalid', 'itemid', 'baseprice'] // fetch ID, Name, Rate
-                        });
-                        searchObj.run().each(function (result) {
-                            items.push({
-                                id: result.getValue('internalid'),
-                                name: result.getValue('itemid'),
-                                rate: parseFloat(result.getValue('baseprice')) || 0,
-                                type: itemType.label
-                            });
-                            return true;
-                        });
-                    } catch (innerErr) {
-                        log.error('Error searching ' + itemType.label, innerErr);
-                    }
-                });
-            } catch (e) {
-                log.error('Error in getActiveItems', e);
-            }
-            return items;
-        }
 
 
         /**
@@ -3064,6 +3190,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             return locations;
         }
 
+
         /**
         * Retrieves active departments for a given subsidiary.
         * @param {Object} search - The N/search module reference.
@@ -3166,15 +3293,8 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
         function getItemsBySubsidiary(search, subsidiaryId) {
             const items = [];
             try {
-                const itemTypes = [
-                    { type: search.Type.INVENTORY_ITEM, label: 'Inventory' },
-                    { type: search.Type.SERVICE_ITEM, label: 'Service' },
-                    { type: search.Type.NON_INVENTORY_ITEM, label: 'Non-Inventory' },
-                    { type: search.Type.ASSEMBLY_ITEM, label: 'Assembly' }
-                ];
-                itemTypes.forEach(itemType => {
                     const searchObj = search.create({
-                        type: itemType.type,
+                    type: search.Type.INVENTORY_ITEM,
                         filters: [
                             ['subsidiary', 'anyof', subsidiaryId],
                             'AND',
@@ -3182,16 +3302,17 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                         ],
                         columns: ['internalid', 'itemid', 'baseprice']
                     });
+
                     searchObj.run().each(result => {
                         items.push({
                             id: result.getValue('internalid'),
                             name: result.getValue('itemid'),
                             rate: parseFloat(result.getValue('baseprice')) || 0,
-                            type: itemType.label
+                        type: 'Inventory'
                         });
                         return true;
                     });
-                });
+
             } catch (e) {
                 log.error('Error in getItemsBySubsidiary', e);
             }
@@ -3425,13 +3546,30 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             res.data.header.unitList = model.unitList(req.estimateId);
                             res.data.header.salesRoleList = model.salesRoleList();
                             break;
+                        case 'updateEstimate':
+                            res = updateEstimateRecord(req);
+                            break;
+
 
                         case 'getKanbanOpportunityDetails':
                             res = getKanbanOpportunityDetails(req.opportunityId);
                             break;
                         case 'getKanbanSalesOrderDetails':
-                            res = getKanbanSalesOrderDetails(req.salesOrderId);
-                            res.data.header.soClassDetails = model.soClassDetails(req.salesOrderId);
+                            res = getKanbanSalesOrderDetails(req.salesOrderId, req.userId);
+                            res.data.soCustomerDetails = model.soCustomerDetails(req.salesOrderId);
+                            res.data.soClassDetails = model.soClassDetails(req.salesOrderId);
+                            res.data.soDepartmentDetails = model.soDepartmentDetails(req.salesOrderId);
+                            res.data.soLocationDetails = model.soLocationDetails(req.salesOrderId);
+                            res.data.soJobDetails = model.soJobDetails(req.salesOrderId);
+                            res.data.soPartnerDetails = model.soPartnerDetails(req.salesOrderId);
+                            res.data.soLeadSourceDetails = model.soLeadSourceDetails(req.salesOrderId);
+                            res.data.soOpportunityDetails = model.soOpportunityDetails(req.salesOrderId);
+                            res.data.soItemList = model.soItemList(req.salesOrderId);
+                            res.data.soEmployeeList = model.salesRepList();
+                            break;
+
+                        case 'updateSalesOrder':
+                            res = updateSalesOrder(req);
                             break;
 
                         case 'checkSalesManager':

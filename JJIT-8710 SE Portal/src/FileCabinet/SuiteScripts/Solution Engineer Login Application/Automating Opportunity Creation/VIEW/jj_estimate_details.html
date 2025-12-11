@@ -52,7 +52,7 @@
 
                         <!-- New Buttons -->
                         <div id="editActions" class="flex items-center gap-3 mt-4 hidden">
-                            <button id="saveButton"
+                            <button id="saveButton" type="submit"
                                 class="bg-[#0c6c73] text-white text-sm px-3 py-1 rounded-md shadow">
                                 Save
                             </button>
@@ -77,6 +77,7 @@
                             <div class="w-full lg:w-1/2 mt-6 px-6">
                                 <label class="block text-gray-700 text-md font-semibold">Quote #</label>
                                 <label class="est-number"></label>
+                                <input type="hidden" id="estimateId" class="est-number">
                             </div>
                             
                             <div class="w-full lg:w-1/2 mt-6 px-6">
@@ -293,29 +294,6 @@
                 selectedTab.classList.add('tab-active');
             });
         });
-
-        function setEditMode(isEdit) {
-            // Enable/Disable all input fields
-            const editableFields = document.querySelectorAll("input, select, textarea");
-            editableFields.forEach(field => {
-                field.disabled = !isEdit;
-            });
-
-            // Toggle Buttons
-            document.getElementById("editButton").classList.toggle("hidden", isEdit);
-            document.getElementById("editActions").classList.toggle("hidden", !isEdit);
-        }
-
-        document.getElementById("editButton").addEventListener("click", () => {
-            setEditMode(true);
-        });
-
-        document.getElementById("cancelButton").addEventListener("click", () => {
-            setEditMode(false);
-        });
-
-
-
 
         function formatDateForInput(nsDate) {
             if (!nsDate) return "";
@@ -801,6 +779,162 @@
 
         })
         .catch(err => console.error(err));
+
+        // PAGE EDIT
+
+        function setEditMode(isEdit) {
+            const editableFields = document.querySelectorAll("input, select, textarea");
+            editableFields.forEach(field => {
+                field.disabled = !isEdit;
+            });
+
+            // Enable dynamically created selects inside line items
+            document.querySelectorAll("#itemsTableBody select").forEach(sel => {
+                sel.disabled = !isEdit ? true : false;
+            });
+
+            // Enable dynamically created selects inside sales team table
+            document.querySelectorAll("#salesTeamTableBody select").forEach(sel => {
+                sel.disabled = !isEdit ? true : false;
+            });
+
+            // Toggle Buttons
+            document.getElementById("editButton").classList.toggle("hidden", isEdit);
+            document.getElementById("editActions").classList.toggle("hidden", !isEdit);
+        }
+
+
+        document.getElementById("editButton").addEventListener("click", () => {
+            setEditMode(true);
+        });
+
+        document.getElementById("cancelButton").addEventListener("click", () => {
+            setEditMode(false);
+        });
+
+
+        function logEstimateFormData() {
+            const logOutput = {};
+
+            // HEADER FIELDS
+            logOutput.Header = {
+                "Quote #": document.querySelector(".est-number")?.innerText || "",
+                "Customer Name": document.getElementById("est-custname")?.innerText || "",
+                "Company": document.getElementById("est-name")?.innerText || "",
+                "Title": document.getElementById("est-title")?.value || "",
+                "Memo": document.getElementById("est-memo")?.value || "",
+                "Expected Close Date": document.getElementById("est-expclose")?.value || "",
+                "Expiration Date": document.getElementById("est-expires")?.value || "",
+                "Probability (%)": document.getElementById("est-prob")?.value || "",
+                "Status": document.getElementById("est-status")?.selectedOptions?.[0]?.text || "",
+                "Job": document.getElementById("est-job-id")?.selectedOptions?.[0]?.text || "",
+                "Class": document.getElementById("est-class")?.selectedOptions?.[0]?.text || "",
+                "Department": document.getElementById("est-department")?.selectedOptions?.[0]?.text || "",
+                "Location": document.getElementById("est-location")?.selectedOptions?.[0]?.text || "",
+                "Lead Source": document.getElementById("lead-source")?.selectedOptions?.[0]?.text || "",
+                "Forecast Type": document.getElementById("forecast-type")?.selectedOptions?.[0]?.text || "",
+                "Partner": document.getElementById("partner")?.selectedOptions?.[0]?.text || "",
+                "Sales Rep": document.getElementById("sales-rep")?.innerText || "",
+                "Opportunity": document.getElementById("opportunity")?.innerText || "",
+                "Subsidiary": document.getElementById("subsidiary")?.innerText || ""
+            };
+
+            // LINE ITEMS
+            const rows = document.querySelectorAll("#itemsTableBody tr");
+            const items = [];
+
+            rows.forEach((row, index) => {
+                const itemSelect = row.querySelector("td:nth-child(1) select"); // Item dropdown
+                const qtyInput = row.querySelector("td:nth-child(2) input");    // Quantity
+                const unitSelect = row.querySelector("td:nth-child(3) select"); // Units dropdown
+                const descInput = row.querySelector("td:nth-child(4) textarea"); // Description
+                const rateInput = row.querySelector("td:nth-child(5) input");   // Rate
+                const amountInput = row.querySelector("td:nth-child(6) input"); // Amount
+                const classSelect = row.querySelector("td:nth-child(7) select"); // Class
+                const deptSelect = row.querySelector("td:nth-child(8) select");  // Department
+
+                items.push({
+                    "Line #": index + 1,
+                    "Item Name": itemSelect?.selectedOptions?.[0]?.text || "",
+                    "Item ID": itemSelect?.value || "",
+                    "Quantity": qtyInput?.value || "",
+                    "Units": unitSelect?.selectedOptions?.[0]?.text || "",
+                    "Description": descInput?.value || "",
+                    "Rate": rateInput?.value || "",
+                    "Amount": amountInput?.value || "",
+                    "Class": classSelect?.selectedOptions?.[0]?.text || "",
+                    "Department": deptSelect?.selectedOptions?.[0]?.text || ""
+                });
+            });
+
+            logOutput.LineItems = items;
+
+            console.log("📌 ESTIMATE FORM DATA (Latest Values)", logOutput);
+            return logOutput;
+        }
+
+        
+        async function saveToNetSuite() {
+            const estimateData = logEstimateFormData();  // Latest edited values
+            const estimateId = document.querySelector(".est-number").dataset.id;
+
+            const payload = {
+                action: "updateEstimate",   // 🔥 IMPORTANT
+                estimateId: estimateId,
+                data: estimateData
+            };
+
+            try {
+                const response = await fetch("/app/site/hosting/scriptlet.nl?script=95&deploy=1", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                console.log("Suitelet Save Response:", result);
+
+                alert("Updated successfully in NetSuite!");
+            } catch (e) {
+                console.error("Update failed:", e);
+                alert("Update failed — check console");
+            }
+        }
+
+        document.getElementById("saveButton").addEventListener("click", async () => {
+
+            const estimateData = logEstimateFormData();  // your function
+            const estimateId = document.querySelector(".est-number").dataset.id;
+
+            const body = {
+                action: "updateEstimate",
+                estimateId: estimateId,
+                data: estimateData
+            };
+
+            const response = await fetch("/app/site/hosting/scriptlet.nl?script=95&deploy=1", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert("Updated successfully!");
+
+                // 🔥 VERY IMPORTANT
+                setEditMode(false);
+
+            } else {
+                alert("Failed to update: " + result.message);
+            }
+        });
+
+
+
+
+
 
     </script>
 
