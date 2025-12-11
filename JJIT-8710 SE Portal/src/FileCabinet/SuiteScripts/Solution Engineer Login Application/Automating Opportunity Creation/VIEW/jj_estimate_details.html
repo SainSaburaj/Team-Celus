@@ -731,24 +731,19 @@
                         <td class="deptCell px-3 py-2 text-sm"></td>
                     `;
 
-                    // Item dropdown
                     tr.querySelector(".itemCell")
                         .appendChild(createItemDropdown(header.itemList?.items || [], row.itemId));
 
-                    // Units dropdown
                     const unitOptions = header.unitDetails?.[row.itemId] || [];
                     tr.querySelector(".unitCell")
                         .appendChild(createUnitDropdown(unitOptions, row.units));
 
-                    // Class dropdown
                     tr.querySelector(".classCell")
                         .appendChild(createClassDropdown(header.classDetails?.classes || [], row.classId));
 
-                    // Department dropdown
                     tr.querySelector(".deptCell")
                         .appendChild(createDepartmentDropdown(header.departmentDetails?.departments || [], row.departmentId));
 
-                    // Hide Rate & Amount if user is not sales manager
                     if (!salesManager) {
                         tr.querySelector(".rateCell").style.display = "none";
                         tr.querySelector(".amountCell").style.display = "none";
@@ -788,10 +783,8 @@
                         </td>
                     `;
 
-                    // Employee dropdown
                     tr.children[0].appendChild(createSalesRepDropdown(repList, row.employeeId));
 
-                    // 🌟 NEW: Sales Role dropdown
                     tr.querySelector(".roleCell")
                         .appendChild(createSalesRoleDropdown(header.salesRoles, row.salesRoleId));
 
