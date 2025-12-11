@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Order Details</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet" />
+    <style>
+        body {
+            font-family: "Montserrat", sans-serif;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-active {
+            display: block;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 font-montserrat p-8">
+
+    <div class="space-y-6 w-full">
+
+        <!-- Header Card -->
+        <div class="bg-gradient-to-r from-[#68d391] to-[#81f1ac] text-gray-900 rounded-xl p-6">
+            <div class="flex justify-between items-center">
+                <h3 class="text-xl font-semibold mb-4">Sales Order #203</h3>
+                <span class="bg-green-200 text-gray-900 px-3 py-1 rounded-full font-semibold shadow">Pending</span>
+            </div>
+            <h1 class="text-3xl font-bold">Website Redesign Project</h1>
+        </div>
+
+        <!-- Primary Information -->
+        <div class="bg-[#fffef8] rounded-xl p-6 border border-gray-300 w-full">
+            <h2 class="text-xl font-semibold mb-4 text-gray-900 border-b pb-2">Primary Information</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
+                <p><span class="font-medium text-gray-900 font-semibold">Customer :</span> <span id="est-quotenum"></span></p>
+                <p><span class="font-medium text-gray-900 font-semibold">Customer :</span> ABC Corp</p>
+                <p><span class="font-medium text-gray-900 font-semibold">Order# :</span> abc@example.com</p>
+                <p><span class="font-medium text-gray-900 font-semibold">Job :</span> +1 123-456-7890</p>
+                <p><span class="font-medium text-gray-900 font-semibold">Date :</span> 01-Dec-2025</p>
+                <p><span class="font-medium text-gray-900 font-semibold">Start Date :</span> 31-Dec-2025</p>
+                <p><span class="font-medium text-gray-900 font-semibold">End Date :</span> 08-Jan-2026</p>
+                <p><span class="font-medium text-gray-900 font-semibold">PO# :</span> PO11</p>
+                <p><span class="font-medium text-gray-900 font-semibold">Memo :</span> Website Redesign</p>
+            </div>
+        </div>
+
+        <!-- Sales Information -->
+        <div class="bg-[#fffef8] rounded-xl p-6 border border-gray-300 w-full">
+            <h2 class="text-xl font-semibold mb-4 text-gray-900 border-b pb-2">Sales Information</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
+                <p><span class="font-medium text-gray-900 font-semibold">Sales Rep :</span> Emma Davies</p>
+                <p><span class="font-medium text-gray-900 font-semibold">Sales Effective Date :</span> John Smith</p>
+                <p><span class="font-medium text-gray-900 font-semibold">Lead Source :</span> $12,500</p>
+            </div>
+        </div>
+
+        <!-- Classification -->
+        <div class="bg-[#fffef8] rounded-xl p-6 border border-gray-300 w-full">
+            <h2 class="text-xl font-semibold mb-4 text-gray-900 border-b pb-2">Classification</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
+                <p><span class="font-medium text-gray-900 font-semibold">Subsidiary :</span> Marketing</p>
+                <p><span class="font-medium text-gray-900 font-semibold">Class :</span> Website Redesign</p>
+                <p><span class="font-medium text-gray-900 font-semibold">Location :</span> High</p>
+                <p><span class="font-medium text-gray-900 font-semibold">Department :</span> New York</p>
+            </div>
+        </div>
+
+        <!-- Line Level Tabs -->
+        <div class="bg-[#fffef8] rounded-xl p-6 border border-gray-300 w-full">
+            <!-- Tabs -->
+            <div class="flex space-x-4 mb-4 border-b border-green-200">
+                <button class="tab-btn py-2 px-4 text-gray-900 font-semibold border-b-2 border-green-800"
+                    data-tab="items">Items</button>
+                <button class="tab-btn py-2 px-4 text-gray-900 font-semibold border-b-2 border-transparent"
+                    data-tab="billing">Billing</button>
+                <button class="tab-btn py-2 px-4 text-gray-900 font-semibold border-b-2 border-transparent"
+                    data-tab="accounting">Accounting</button>
+                <button class="tab-btn py-2 px-4 text-gray-900 font-semibold border-b-2 border-transparent"
+                    data-tab="sales-team">Sales Team</button>
+            </div>
+
+            <!-- Tab Contents -->
+
+            <!-- Items Tab -->
+            <div id="items" class="tab-content tab-active">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full border border-gray-300 rounded-lg">
+                        <thead class="bg-green-100 text-gray-900">
+                            <tr>
+                                <th class="px-4 py-2 text-left font-semibold">Item</th>
+                                <th class="px-4 py-2 text-left font-semibold">Committed</th>
+                                <th class="px-4 py-2 text-left font-semibold">Location</th>
+                                <th class="px-4 py-2 text-left font-semibold">Requested To Fulfill</th>
+                                <th class="px-4 py-2 text-left font-semibold">Picked</th>
+                                <th class="px-4 py-2 text-left font-semibold">Packed</th>
+                                <th class="px-4 py-2 text-left font-semibold">Fulfilled</th>
+                                <th class="px-4 py-2 text-left font-semibold">Invoiced</th>
+                                <th class="px-4 py-2 text-left font-semibold">Back Ordered</th>
+                                <th class="px-4 py-2 text-left font-semibold">Quantity</th>
+                                <th class="px-4 py-2 text-left font-semibold">Units</th>
+                                <th class="px-4 py-2 text-left font-semibold">Inventory Detail</th>
+                                <th class="px-4 py-2 text-left font-semibold">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <!-- Row 1 -->
+                            <tr>
+                                <td class="px-4 py-2">Design Mockups</td>
+                                <td class="px-4 py-2">Yes</td>
+                                <td class="px-4 py-2">New York</td>
+                                <td class="px-4 py-2">Emma Davies</td>
+                                <td class="px-4 py-2">5</td>
+                                <td class="px-4 py-2">3</td>
+                                <td class="px-4 py-2">2</td>
+                                <td class="px-4 py-2">1</td>
+                                <td class="px-4 py-2">0</td>
+                                <td class="px-4 py-2">10</td>
+                                <td class="px-4 py-2">Hours</td>
+                                <td class="px-4 py-2">Detailed mockups for homepage + inner pages</td>
+                                <td class="px-4 py-2">Homepage + Inner Pages</td>
+                            </tr>
+                            <!-- Row 2 -->
+                            <tr>
+                                <td class="px-4 py-2">Development</td>
+                                <td class="px-4 py-2">Yes</td>
+                                <td class="px-4 py-2">New York</td>
+                                <td class="px-4 py-2">John Smith</td>
+                                <td class="px-4 py-2">10</td>
+                                <td class="px-4 py-2">5</td>
+                                <td class="px-4 py-2">0</td>
+                                <td class="px-4 py-2">0</td>
+                                <td class="px-4 py-2">0</td>
+                                <td class="px-4 py-2">15</td>
+                                <td class="px-4 py-2">Hours</td>
+                                <td class="px-4 py-2">Frontend + Backend development tasks</td>
+                                <td class="px-4 py-2">Frontend + Backend</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+
+            <!-- Billing Tab -->
+            <div id="billing" class="tab-content">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
+                    <p><span class="font-medium text-gray-900 font-semibold">Billing Address :</span> 123 Main Street,
+                        New York, NY</p>
+                    <p><span class="font-medium text-gray-900 font-semibold">Terms :</span> Net 30</p>
+                    <p><span class="font-medium text-gray-900 font-semibold">Billing Schedule :</span> $1,000</p>
+                </div>
+            </div>
+
+            <!-- Accounting Tab -->
+            <div id="accounting" class="tab-content">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
+                    <p><span class="font-medium text-gray-900 font-semibold">Currency :</span> 4000 - Sales</p>
+                    <p><span class="font-medium text-gray-900 font-semibold">Exchange Rate :</span> Marketing</p>
+                    <p><span class="font-medium text-gray-900 font-semibold">Revenue Status :</span> Website Project</p>
+                    <p><span class="font-medium text-gray-900 font-semibold">Est. Extended Cost :</span> New York</p>
+                    <p><span class="font-medium text-gray-900 font-semibold">Est. Gross Profit :</span> New York</p>
+                    <p><span class="font-medium text-gray-900 font-semibold">Est. Gross Profit Percent :</span> New York</p>
+                    <p><span class="font-medium text-gray-900 font-semibold">TAX :</span> New York</p>
+                    <p><span class="font-medium text-gray-900 font-semibold">TAX% :</span> New York</p>
+                </div>
+            </div>
+
+            <!-- Sales Team Tab -->
+            <div id="sales-team" class="tab-content">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full border border-gray-300 rounded-lg">
+                        <thead class="bg-green-100 text-gray-900">
+                            <tr>
+                                <th class="px-4 py-2 text-left font-semibold">Employee</th>
+                                <th class="px-4 py-2 text-left font-semibold">Sales Role</th>
+                                <th class="px-4 py-2 text-left font-semibold">Primary</th>
+                                <th class="px-4 py-2 text-left font-semibold">Contribution %</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <!-- Row 1 -->
+                            <tr>
+                                <td class="px-4 py-2">Emma Davies</td>
+                                <td class="px-4 py-2">Sales Rep</td>
+                                <td class="px-4 py-2">Yes</td>
+                                <td class="px-4 py-2">60%</td>
+                            </tr>
+                            <!-- Row 2 -->
+                            <tr>
+                                <td class="px-4 py-2">John Smith</td>
+                                <td class="px-4 py-2">Sales Manager</td>
+                                <td class="px-4 py-2">No</td>
+                                <td class="px-4 py-2">40%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+
+        </div>
+
+    </div>
+
+    <script>
+        const tabs = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Reset all tabs
+                tabs.forEach(t => {
+                    t.classList.remove('border-green-800', 'border-b-2');
+                    t.classList.add('border-transparent');
+                });
+
+                // Hide all contents
+                tabContents.forEach(c => c.classList.remove('tab-active'));
+
+                // Activate clicked tab
+                tab.classList.remove('border-transparent');
+                tab.classList.add('border-green-800', 'border-b-2');
+
+                // Show selected content
+                const selected = document.getElementById(tab.dataset.tab);
+                selected.classList.add('tab-active');
+            });
+        });
+
+        const BASE_URL = 'https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM';
+
+        // Read URL params
+        const url = new URL(window.location.href);
+        const pageType = url.searchParams.get("type");
+        // type = estimate | opportunity | salesorder
+
+        let recordId = '';
+        if (pageType === "estimate") recordId = url.searchParams.get("estimateId");
+        else if (pageType === "opportunity") recordId = url.searchParams.get("opportunityId");
+        else if (pageType === "salesorder") recordId = url.searchParams.get("salesOrderId");
+
+        // Decide Suitelet action
+        let action = "";
+        if (pageType === "estimate") action = "getKanbanEstimateDetails";
+        else if (pageType === "opportunity") action = "getKanbanOpportunityDetails";
+        else if (pageType === "salesorder") action = "getKanbanSalesOrderDetails";
+
+        // Build fetch body
+        let fetchBody = { action };
+        if (pageType === "estimate") fetchBody.estimateId = recordId;
+        else if (pageType === "opportunity") fetchBody.opportunityId = recordId;
+        else if (pageType === "salesorder") fetchBody.salesOrderId = recordId;
+
+        fetch(BASE_URL, {
+            method: "POST",
+            body: JSON.stringify(fetchBody)
+        })
+        .then(res => res.json())
+        .then(data => {
+
+            if (!data.success) {
+                console.error("Failed to load details");
+                return;
+            }
+
+            const e = data.data;
+
+            // Update HTML fields
+            document.getElementById("est-quotenum").innerText = e.tranid || "";
+            document.getElementById("est-date").innerText = e.trandate || "";
+            document.getElementById("est-customer").innerText = e.entity || "";
+            document.getElementById("est-status").innerText = e.status || "";
+            document.getElementById("est-job").innerText = e.job || "";
+            document.getElementById("est-prob").innerText = e.probability ? e.probability + "%" : "";
+            document.getElementById("est-title").innerText = e.title || "";
+            document.getElementById("est-expclose").innerText = e.expectedCloseDate || "";
+            document.getElementById("est-expires").innerText = e.expirationDate || "";
+            document.getElementById("est-memo").innerText = e.memo || "";
+        })
+        .catch(err => console.error(err));
+
+    </script>
+
+
+</body>
+
+</html>

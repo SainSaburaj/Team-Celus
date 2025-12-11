@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Opportunity Item Upload Help</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css" />
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #f9f9f9;
+            padding: 30px;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+        }
+
+        h2 {
+            color: #0a514a;
+        }
+
+        .download-template {
+            margin: 20px 0;
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        .download-template a {
+            background-color: #0a514a;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #0a514a;
+            color: white;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>📘 How to Upload Opportunity Items?</h2>
+
+        <p>This page will guide you through uploading opportunity line items using the predefined Excel or CSV template.
+        </p>
+
+        <div class="download-template">
+            <a href="https://5742736.app.netsuite.com/core/media/media.nl?id=172275&c=5742736&h=7erHsVarx67mC8A9UuFfxJNJ36esFzV5l_oCWk_NRrjYa07k&_xd=T&_xt=.xls&fcts=20250602235212"
+                download>⬇ Download Upload Template (.xlsx)</a>
+        </div>
+
+        <h4>Upload Template Field Specifications</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Column Name</th>
+                    <th>Description</th>
+                    <th>Example</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Item</td>
+                    <td>Internal ID of the NetSuite item. Refer to the item master or export list.</td>
+                    <td>601</td>
+                </tr>
+                <tr>
+                    <td>Hours</td>
+                    <td>Quantity or service hours for the item.</td>
+                    <td>5</td>
+                </tr>
+                <tr>
+                    <td>Task</td>
+                    <td>Description for the line item. Often includes JIRA ticket number and title.</td>
+                    <td>IEGUN-1202 Implement Scheduled Script to Update Expected Receipt Date via ShipEngine Tracking
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+        <h4>Reference: Item Internal IDs</h4>
+        <p>Use the following Item Internal IDs when preparing your upload file:</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Item Internal ID</th>
+                    <th>Item Name</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>609</td>
+                    <td>001 Customization</td>
+                </tr>
+                <tr>
+                    <td>610</td>
+                    <td>002 Implementation</td>
+                </tr>
+                <tr>
+                    <td>611</td>
+                    <td>003 Administration</td>
+                </tr>
+                <tr>
+                    <td>612</td>
+                    <td>004 Consulting</td>
+                </tr>
+                <tr>
+                    <td>613</td>
+                    <td>005 Integration</td>
+                </tr>
+                 <tr>
+                    <td>615</td>
+                    <td>007 Theme & Extension</td>
+                </tr>
+                
+            </tbody>
+        </table>
+
+        <h4>📖 Instructions:</h4>
+        <ul>
+            <li>Ensure you are using the exact <strong>Item Internal ID</strong> as in your NetSuite item list.</li>
+            <li>Upload only `.xlsx` or `.csv` files using the upload interface.</li>
+            <li>If you're unsure about an Item ID, contact your admin or download the item list.</li>
+            <li>Each line in the file represents a line in the Opportunity's item sublist.</li>
+            <li>The system will ignore blank lines.</li>
+        </ul>
+
+        <p>If you face any issues, please contact the support team at <a
+                href="mailto:sophia.yougin@jobinandjismi.com">sophia.yougin@jobinandjismi.com</a>.</p>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,1889 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NetSuite Sales Pipeline Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    /* Define CSS variables for theming */
+    :root {
+      --bg-primary: #1a202c;
+      --bg-secondary: #2d3748;
+      --bg-tertiary: #4a5568;
+      --bg-card: #4a5568;
+      --text-primary: #edf2f7;
+      --text-secondary: #a0aec0;
+      --accent-primary: #2b6cb0;
+      --accent-opportunity: #3182ce;
+      --accent-estimate: #d69e2e;
+      --accent-salesorder: #38a169;
+      --accent-opportunity-sec: #63b3ed;
+      --accent-estimate-sec: #ecc94b;
+      --accent-salesorder-sec: #68d391;
+      --border-primary: #4a5568;
+      --stats-opp-bg: linear-gradient(135deg, #2262a7, #2576c2);
+      --stats-est-bg: linear-gradient(135deg, #b7791f, #d69e2e);
+      --stats-so-bg: linear-gradient(135deg, #2f855a, #38a169);
+      --bg-main: #1a202c;
+    }
+
+    [data-theme="light"] {
+      --bg-primary: #f7fafc;
+      --bg-secondary: #edf2f7;
+      --bg-tertiary: #e2e8f0;
+      --bg-card: #ffffff;
+      --text-primary: #1a202c;
+      --text-secondary: #4a5568;
+      --accent-primary: #2b6cb0;
+      --accent-opportunity: #3182ce;
+      --accent-estimate: #d69e2e;
+      --accent-salesorder: #38a169;
+      --border-primary: #e2e8f0;
+      --stats-opp-bg: linear-gradient(135deg, #63b3ed, #90cdf4);
+      --stats-est-bg: linear-gradient(135deg, #ecc94b, #f6e05e);
+      --stats-so-bg: linear-gradient(135deg, #68d391, #9ae6b4);
+      --bg-main: #f7fafc;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+    }
+
+    .main-content {
+      background: var(--bg-main);
+      position: relative;
+    }
+
+    .main-content::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+      background-size: 20px 20px;
+      opacity: 0.5;
+      z-index: -1;
+    }
+
+    .kanban-board {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+      gap: 1.5rem;
+      padding: 1.5rem;
+      overflow-x: auto;
+      flex: 1;
+    }
+
+    .kanban-column {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      min-width: 20rem;
+      max-width: 26rem;
+      max-height: calc(100vh - 12rem);
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--bg-primary);
+      background-color: var(--bg-secondary);
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .kanban-column::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .kanban-column::-webkit-scrollbar-track {
+      background: var(--bg-secondary);
+      border-radius: 4px;
+    }
+
+    .kanban-column::-webkit-scrollbar-thumb {
+      background: var(--accent-primary);
+      border-radius: 4px;
+    }
+
+    .kanban-column:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .kanban-column.opportunity h3 {
+      background: var(--stats-opp-bg);
+      padding: 0.5rem;
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+
+    .kanban-column.estimate h3 {
+      background: var(--stats-est-bg);
+      padding: 0.5rem;
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+
+    .kanban-column.salesorder h3 {
+      background: var(--stats-so-bg);
+      padding: 0.5rem;
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+
+    .kanban-card {
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-left-width 0.2s ease, background-color 0.2s ease;
+      background-color: var(--bg-card);
+      border-radius: 0.75rem;
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+      border: 1px solid var(--border-primary);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      position: relative;
+      cursor: grab;
+    }
+
+    .kanban-card.opportunity {
+      border: 0.6px solid var(--accent-opportunity-sec);
+    }
+
+    .kanban-card.estimate {
+      border: 0.5px solid var(--accent-estimate-sec);
+    }
+
+    .kanban-card.salesorder {
+      border: 0.5px solid var(--accent-salesorder-sec);
+    }
+
+    .kanban-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+      border-left-width: 7px;
+      background-color: var(--bg-tertiary);
+    }
+
+    .kanban-card:active {
+      transform: scale(0.98);
+      transition: transform 0.1s ease;
+    }
+
+    .kanban-card.dragging {
+      opacity: 0.8;
+      transform: rotate(2deg);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .kanban-card:focus {
+      outline: 2px solid var(--accent-primary);
+      outline-offset: 2px;
+    }
+
+    .kanban-card .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      line-height: 1.4;
+      color: var(--text-primary);
+    }
+
+    .kanban-card .card-desc {
+      font-size: 0.875rem;
+      font-weight: 400;
+      line-height: 1.5;
+      color: var(--text-secondary);
+    }
+
+    .kanban-card .card-date {
+      font-size: 0.75rem;
+      font-weight: 400;
+      color: var(--text-secondary);
+      opacity: 0.8;
+    }
+
+    .kanban-card.collapsed {
+      padding: 0.75rem;
+      margin-bottom: 0.75rem;
+      background-color: var(--bg-secondary);
+    }
+
+    .kanban-card.collapsed .card-desc,
+    .kanban-card.collapsed .card-date {
+      display: none;
+    }
+
+    .kanban-card::before {
+      content: '';
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--accent-primary);
+      opacity: 0.7;
+    }
+
+    .kanban-card.opportunity::before {
+      background-color: var(--accent-opportunity);
+    }
+
+    .kanban-card.estimate::before {
+      background-color: var(--accent-estimate);
+    }
+
+    .kanban-card.salesorder::before {
+      background-color: var(--accent-salesorder);
+    }
+
+    .kanban-card:focus-visible {
+      outline: 2px solid var(--accent-opportunity);
+      outline-offset: 2px;
+    }
+
+    .kanban-card .card-status {
+      color: var(--bg-primary);
+      position: absolute;
+      font-size: 0.75rem;
+      width: auto;
+      border-radius: 0.5rem;
+      display: inline-block;
+      right: 0.75rem;
+      top: 0.75rem;
+    }
+
+    .card-title {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: block;
+      max-width: 195px;
+    }
+
+    @media (max-width: 768px) {
+      .kanban-card {
+        padding: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      .kanban-card .card-title {
+        font-size: 0.95rem;
+      }
+
+      .kanban-card .card-desc {
+        font-size: 0.8rem;
+      }
+
+      .kanban-card .card-date {
+        font-size: 0.7rem;
+      }
+
+      .custom-svg-container {
+        display: none !important;
+      }
+
+      #oppCount,
+      #oppTotal,
+      #estCount,
+      #estTotal,
+      #soCount,
+      #soTotal {
+        font-size: 0.75rem !important;
+      }
+
+      .stats-card .text-m {
+        font-size: 0.75rem !important;
+      }
+
+      .stats-card .text-l {
+        font-size: 0.85rem !important;
+      }
+
+      .sidebar {
+        position: fixed;
+        top: 4rem;
+        /* below the topbar */
+        left: 0;
+        width: 16rem;
+        height: calc(100vh - 4rem);
+        background-color: var(--bg-secondary);
+        z-index: 100;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+      }
+
+      .sidebar.show {
+        transform: translateX(0);
+      }
+
+      .main-content {
+        margin-left: 0 !important;
+      }
+    }
+
+    .kanban-column.drag-over {
+      background-color: var(--bg-tertiary);
+      transform: scale(1.02);
+    }
+
+    .stats-card {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      border-radius: 0.45rem;
+      cursor: pointer;
+    }
+
+    .stats-card.opportunity {
+      background: var(--stats-opp-bg);
+    }
+
+    .stats-card.estimate {
+      background: var(--stats-est-bg);
+    }
+
+    .stats-card.salesorder {
+      background: var(--stats-so-bg);
+    }
+
+    .stats-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .custom-svg-container.opportunity {
+      position: relative;
+      width: 50px;
+      height: 50px;
+      background-color: #C8E5FC;
+      color: var(--accent-opportunity-sec);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .custom-svg-icon.opportunity {
+      position: relative;
+      user-select: none;
+      width: 34px;
+      height: 34px;
+      display: block;
+      margin: auto;
+      fill: currentColor;
+      flex-shrink: 0;
+      font-size: 24px;
+      transform: rotate(45deg);
+      transition: fill 200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+    }
+
+    .custom-svg-container.estimate {
+      position: relative;
+      width: 50px;
+      height: 50px;
+      background-color: #FFF2BE;
+      color: var(--accent-estimate-sec);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .custom-svg-icon.estimate {
+      position: relative;
+      user-select: none;
+      width: 34px;
+      height: 34px;
+      display: block;
+      margin: auto;
+      fill: currentColor;
+      flex-shrink: 0;
+      font-size: 24px;
+      transition: fill 200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+    }
+
+    .custom-svg-container.salesorder {
+      position: relative;
+      width: 50px;
+      height: 50px;
+      background-color: #c1fdd6;
+      color: var(--accent-salesorder-sec);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .custom-svg-icon.salesorder {
+      position: relative;
+      user-select: none;
+      width: 34px;
+      height: 34px;
+      display: block;
+      margin: auto;
+      fill: currentColor;
+      flex-shrink: 0;
+      font-size: 24px;
+      transition: fill 200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+    }
+
+    .stats-card {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 1rem;
+    }
+
+    .stats-card .icon-text {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      width: 100%;
+      height: 90px;
+    }
+
+    .stats-card .icon-text svg {
+      margin-right: 8px;
+    }
+
+    .quick-actions {
+      transition: background-color 0.2s ease, transform 0.2s ease;
+      color: var(--text-primary);
+      border-radius: 0.5rem;
+    }
+
+    .quick-actions:hover {
+      background-color: var(--bg-tertiary);
+      transform: translateX(4px);
+    }
+
+    .collapse-toggle-opportunity {
+      transition: transform 0.2s ease;
+      background-color: var(--accent-opportunity-sec);
+      color: var(--text-primary);
+      border-radius: 50%;
+    }
+
+    .collapse-toggle-opportunity:hover {
+      transform: scale(1.1);
+      background-color: #4eabed;
+    }
+
+    .collapse-toggle-estimate {
+      transition: transform 0.2s ease;
+      background-color: var(--accent-estimate-sec);
+      color: var(--text-primary);
+      border-radius: 50%;
+    }
+
+    .collapse-toggle-estimate:hover {
+      transform: scale(1.1);
+      background-color: #e9c237;
+    }
+
+    .collapse-toggle-salesorder {
+      transition: transform 0.2s ease;
+      background-color: var(--accent-salesorder-sec);
+      color: var(--text-primary);
+      border-radius: 50%;
+    }
+
+    .collapse-toggle-salesorder:hover {
+      transform: scale(1.1);
+      background-color: #47d37d;
+    }
+
+    .sidebar {
+      transition: transform 0.3s ease;
+      background-color: var(--bg-secondary);
+      border-right: 1px solid var(--border-primary);
+    }
+
+    .sidebar.hidden {
+      transform: translateX(-100%);
+    }
+
+    .main-content {
+      transition: margin-left 0.3s ease;
+    }
+
+    .main-content.full-width {
+      margin-left: 0;
+    }
+
+    .toggle-btn,
+    .theme-toggle {
+      transition: transform 0.3s ease;
+      background-color: var(--accent-primary);
+      color: white;
+      border-radius: 50%;
+    }
+
+    .toggle-btn:hover,
+    .theme-toggle:hover {
+      transform: scale(1.1);
+      background-color: var(--accent-opportunity);
+    }
+
+    .theme-toggle::before {
+      content: '☾';
+    }
+
+    .theme-toggle.active::before {
+      content: '☀';
+    }
+
+    .modal-overlay {
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal {
+      background-color: var(--bg-secondary);
+      border-radius: 0.75rem;
+    }
+
+    .modal input,
+    .modal textarea {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-primary);
+      color: var(--text-primary);
+      border-radius: 0.5rem;
+    }
+
+    .modal input:focus,
+    .modal textarea:focus {
+      border-color: var(--accent-primary);
+      outline: none;
+      box-shadow: 0 0 0 2px var(--accent-opportunity);
+    }
+
+    .kanban-board::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    .kanban-board::-webkit-scrollbar-track {
+      background: var(--bg-secondary);
+      border-radius: 4px;
+    }
+
+    .kanban-board::-webkit-scrollbar-thumb {
+      background: var(--accent-primary);
+      border-radius: 4px;
+    }
+
+    .loader-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    .loader-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .loader-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      text-align: center;
+    }
+
+    .loader-spinner {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, var(--accent-primary), transparent);
+      animation: spin 1s linear infinite;
+      position: relative;
+    }
+
+    .loader-spinner::before {
+      content: '';
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      right: 5px;
+      bottom: 5px;
+      background: var(--bg-secondary);
+      border-radius: 50%;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .loader-text {
+      color: var(--text-primary);
+      font-size: 1rem;
+      font-weight: 500;
+    }
+
+    .alert-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    .alert-modal-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .alert-modal {
+      background: var(--bg-card);
+      border-radius: 1rem;
+      padding: 2rem;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+      transform: scale(0.9);
+      transition: transform 0.3s ease;
+    }
+
+    .alert-modal-overlay.show .alert-modal {
+      transform: scale(1);
+    }
+
+    .alert-icon {
+      width: 4rem;
+      height: 4rem;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-estimate), #f56565);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+      font-size: 1.5rem;
+      color: white;
+    }
+
+    .alert-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      text-align: center;
+      color: var(--text-primary);
+    }
+
+    .alert-message {
+      color: var(--text-secondary);
+      text-align: center;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+
+    .alert-close {
+      width: 100%;
+      padding: 0.75rem;
+      background: var(--accent-primary);
+      color: var(--text-primary);
+      border: none;
+      border-radius: 0.5rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .alert-close:hover {
+      background: var(--accent-opportunity);
+    }
+
+    .filter-container {
+      gap: 0.5rem;
+      align-items: left;
+      width: 80%;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .filter-container input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.5);
+      opacity: 0.8;
+    }
+
+    .filter-dropdown,
+    .filter-input {
+      padding: 0.25rem 0.5rem;
+      border: 1px solid var(--border-primary);
+      border-radius: 4px;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-size: smaller;
+      width: 100%;
+    }
+
+    .apply-filter-btn {
+      background-color: var(--accent-primary);
+      color: white;
+      border-radius: 0.5rem;
+    }
+
+    .apply-filter-btn:hover {
+      background-color: var(--accent-opportunity);
+    }
+
+    #oppCount,
+    #oppTotal,
+    #estCount,
+    #estTotal,
+    #soCount,
+    #soTotal {
+      color: var(--text-primary);
+    }
+
+    [data-theme="light"] #oppCount,
+    [data-theme="light"] #oppTotal {
+      color: var(--accent-opportunity);
+    }
+
+    [data-theme="light"] #estCount,
+    [data-theme="light"] #estTotal {
+      color: var(--accent-estimate);
+    }
+
+    [data-theme="light"] #soCount,
+    [data-theme="light"] #soTotal {
+      color: var(--accent-salesorder);
+    }
+  </style>
+</head>
+
+<body class="font-sans h-screen overflow-hidden">
+  <!-- Topbar -->
+  <div class="h-16 border-b flex items-center justify-between px-6 shadow-sm"
+    style="background-color: var(--bg-secondary); border-color: var(--border-primary);">
+    <div class="flex items-center gap-4">
+      <button id="sidebarToggleBtn" class="toggle-btn text-lg rounded-full w-8 h-8 flex items-center justify-center"
+        onclick="toggleSidebar()">«</button>
+      <div class="text-xl font-bold" style="color: var(--accent-primary);">NetSuite Sales Dashboard</div>
+    </div>
+    <div class="flex items-center gap-4">
+      <button class="theme-toggle text-lg rounded-full w-8 h-8 flex items-center justify-center"
+        onclick="toggleTheme()"></button>
+      <div class="text-sm" style="color: var(--text-secondary);" id="userInfo"></div>
+    </div>
+  </div>
+  <!-- Main Content -->
+  <div class="flex h-[calc(100vh-4rem)]">
+    <!-- Sidebar -->
+    <div class="sidebar w-64 p-4 flex flex-col">
+      <h3 class="text-xs uppercase font-semibold mb-4 tracking-wide" style="color: var(--text-secondary);">
+        Pipeline Filters
+      </h3>
+      <!-- Add Filter Button -->
+      <button id="filterToggleBtn" class="quick-actions py-2 px-3 text-sm transition mb-2 text-left flex items-center">
+        <span class="mr-2">➕</span>Add Filter
+      </button>
+      <!-- Hidden Filter Section -->
+      <div id="filterSection" class="filter-container hidden flex flex-col gap-3 mt-2">
+        <!-- Date Range Filter -->
+        <div class="flex flex-col gap-2">
+          <label class="text-xs font-medium" style="color: var(--text-secondary);">Date Range</label>
+          <div class="flex flex-col gap-2">
+            <input id="startDateFilter" type="date"
+              class="filter-input w-full p-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500"
+              placeholder="Start Date" />
+            <input id="endDateFilter" type="date"
+              class="filter-input w-full p-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500"
+              placeholder="End Date" />
+          </div>
+        </div>
+        <!-- Apply Filter Button -->
+        <button id="applyFilterBtn"
+          class="apply-filter-btn py-2 px-2 text-sm transition text-center flex items-center justify-center mt-2">
+          <span>Apply Filter</span>
+        </button>
+      </div>
+      <!-- Export Button -->
+      <button class="quick-actions py-2 px-3 text-sm transition text-left flex items-center mt-3"
+        onclick="exportData()">
+        <span class="mr-2">📊</span>Export Report
+      </button>
+      <div class="mt-auto pt-4 border-t" style="border-color: var(--border-primary);"></div>
+    </div>
+    <!-- Board Area -->
+    <div class="main-content flex-1 flex flex-col overflow-hidden">
+      <div class="p-4 text-sm font-medium tracking-wide"
+        style="background-color: var(--bg-secondary); border-bottom: 1px solid var(--border-primary); color: var(--text-secondary); display: flex; flex-direction: row; justify-content: space-between;">
+        <p>Sales Pipeline Overview</p>
+      </div>
+      <!-- Stats Row -->
+      <div class="p-4 grid grid-cols-3 gap-4"
+        style="background-color: var(--bg-secondary); border-bottom: 1px solid var(--border-primary);">
+        <div class="stats-card opportunity p-4 text-center" style="position: relative;"
+          onclick="filterByStage('opportunity')">
+          <div class="icon-text">
+            <div class="custom-svg-container opportunity">
+              <svg class="custom-svg-icon opportunity" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                <path fill-rule="evenodd"
+                  d="M3 3v8h8V3zm6 6H5V5h4zm-6 4v8h8v-8zm6 6H5v-4h4zm4-16v8h8V3zm6 6h-4V5h4zm-6 4v8h8v-8zm6 6h-4v-4h4z">
+                </path>
+              </svg>
+            </div>
+            <div style="position: absolute; text-align: right; right: 0.75rem;">
+              <div class="text-2xl font-bold" id="oppCount" style="right: 0.75rem;"></div>
+              <div class="text-m" style="color: var(--text-primary); right: 0.75rem; line-height: 2rem;">Opportunities
+              </div>
+              <div class="text-l font-bold" id="oppTotal" style="right: 0.75rem;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="stats-card estimate p-4 text-center" style="position: relative;"
+          onclick="filterByStage('estimate')">
+          <div class="icon-text">
+            <div class="custom-svg-container estimate">
+              <svg class="custom-svg-icon estimate" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                <path fill-rule="evenodd"
+                  d="m16.66 4.52 2.83 2.83-2.83 2.83-2.83-2.83zM9 5v4H5V5zm10 10v4h-4v-4zM9 15v4H5v-4zm7.66-13.31L11 7.34 16.66 13l5.66-5.66zM11 3H3v8h8zm10 10h-8v8h8zm-10 0H3v8h8z">
+                </path>
+              </svg>
+            </div>
+            <div style="position: absolute; text-align: right; right: 0.75rem;">
+              <div class="text-2xl font-bold" id="estCount" style="right: 0.75rem;"></div>
+              <div class="text-m" style="color: var(--text-primary); line-height: 2rem;">Estimates</div>
+              <div class="text-l font-bold" id="estTotal" style="right: 0.75rem;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="stats-card salesorder p-4 text-center" style="position: relative;"
+          onclick="filterByStage('salesorder')">
+          <div class="icon-text">
+            <div class="custom-svg-container salesorder"
+              style="background-color: #c1fdd6; color: var(--accent-salesorder-sec);">
+              <svg class="custom-svg-icon salesorder" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                <path
+                  d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2M4 9h10.5v3.5H4zm0 5.5h10.5V18H4zM20 18h-3.5V9H20z">
+                </path>
+              </svg>
+            </div>
+            <div style="position: absolute; text-align: right; right: 0.75rem;">
+              <div class="text-2xl font-bold" id="soCount"></div>
+              <div class="text-m" style="color: var(--text-primary); line-height: 2rem;">Sales Orders</div>
+              <div class="text-l font-bold" id="soTotal"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Kanban Board -->
+      <div class="kanban-board">
+        <div class="kanban-column opportunity p-4" id="opportunity-col">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-sm font-semibold tracking-wide" style="color: var(--text-primary);">Opportunity <span
+                style="color: var(--accent-opportunity);" class="text-xs"></span></h3>
+            <button class="collapse-toggle-opportunity text-xs rounded-full w-6 h-6 flex items-center justify-center"
+              onclick="toggleCollapse('opportunity')">−</button>
+          </div>
+        </div>
+        <div class="kanban-column estimate p-4" id="estimate-col">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-sm font-semibold tracking-wide" style="color: var(--text-primary);">Estimate <span
+                style="color: var(--accent-estimate);" class="text-xs"></span></h3>
+            <button class="collapse-toggle-estimate text-xs rounded-full w-6 h-6 flex items-center justify-center"
+              onclick="toggleCollapse('estimate')">−</button>
+          </div>
+        </div>
+        <div class="kanban-column salesorder p-4" id="salesorder-col">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-sm font-semibold tracking-wide" style="color: var(--text-primary);">Sales Order <span
+                style="color: var(--accent-salesorder);" class="text-xs"></span></h3>
+            <button class="collapse-toggle-salesorder text-xs rounded-full w-6 h-6 flex items-center justify-center"
+              onclick="toggleCollapse('salesorder')">−</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Add Card Modal -->
+  <div class="modal-overlay fixed inset-0 hidden items-center justify-center z-50" id="addCardModal">
+    <div class="modal p-6 w-full max-w-md shadow-lg">
+      <h3 class="text-lg font-semibold text-center mb-4" style="color: var(--text-primary);">Add New <span
+          id="modalTitle"></span></h3>
+      <form id="addCardForm">
+        <input type="hidden" id="cardStage" />
+        <label class="block text-sm font-medium mb-1" style="color: var(--text-secondary);">Title</label>
+        <input type="text" id="cardTitle" class="w-full p-2 mb-3" required />
+        <label class="block text-sm font-medium mb-1" style="color: var(--text-secondary);">Description</label>
+        <textarea id="cardDesc" class="w-full p-2 mb-3" rows="3"></textarea>
+        <div class="flex justify-end gap-3">
+          <button type="button" class="px-4 py-2 transition"
+            style="background-color: var(--bg-tertiary); color: var(--text-secondary);"
+            onmouseover="this.style.backgroundColor='var(--bg-secondary)'"
+            onmouseout="this.style.backgroundColor='var(--bg-tertiary)'">Cancel</button>
+          <button type="submit" class="px-4 py-2 transition"
+            style="background-color: var(--accent-primary); color: var(--text-primary);"
+            onmouseover="this.style.backgroundColor='var(--accent-opportunity)'"
+            onmouseout="this.style.backgroundColor='var(--accent-primary)'">Add</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <!-- Modern Global Loader -->
+  <div class="loader-overlay" id="globalLoader">
+    <div class="loader-container">
+      <div class="loader-spinner"></div>
+      <div class="loader-text">This may take a moment. Please wait…</div>
+    </div>
+  </div>
+  <!-- Modern Alert Modal -->
+  <div class="alert-modal-overlay" id="alertModal">
+    <div class="alert-modal">
+      <div class="alert-icon">⚠️</div>
+      <div class="alert-title" id="alertTitle">Error</div>
+      <div class="alert-message" id="alertMessage"></div>
+      <button class="alert-close" onclick="closeAlert()">OK</button>
+    </div>
+  </div>
+  <script>
+    //Suitelet URL
+    const BASE_URL = 'https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM';
+    console.log('BASE_URL:', BASE_URL);
+    $(document).ready(function () {
+      $('#filterToggleBtn').on('click', function () {
+        const $filterSection = $('#filterSection');
+        const $icon = $(this).find('span');
+
+        $filterSection.slideToggle(300, function () {
+          // Toggle icon after animation completes
+          if ($filterSection.is(':visible')) {
+            $icon.text('➖');
+          } else {
+            $icon.text('➕');
+          }
+        });
+      });
+    });
+
+
+
+    // Extract email (userId) from current URL
+    const currentURL = window.location.href;
+    const urlParams = new URLSearchParams(new URL(currentURL).search);
+    const emailParam = urlParams.get("userId");   // expects ?userId=emma.davies%40oracle.com
+    console.log("Email from URL:", emailParam);
+
+
+    /**
+     * Sets default values for the start and end date filters in the dashboard.
+     * The start date is set to 30 days before today, and the end date is set to today.
+     *
+     * @function
+     * @returns {void}
+     */
+    function setDefaultDateValues() {
+      try {
+        const currentDate = new Date();
+        const pastDate = new Date();
+        pastDate.setDate(currentDate.getDate() - 30);
+        const formatDate = (date) => {
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        };
+        document.getElementById('startDateFilter').value = formatDate(pastDate);
+        document.getElementById('endDateFilter').value = formatDate(currentDate);
+      } catch (error) {
+        log.error('Error @ setDefaultDateValues');
+      }
+    }
+
+    /**
+     * Sends a POST request to the current Suitelet URL to fetch filtered transaction records.
+     * It reads the selected start and end dates from the filter inputs and passes them to the backend.
+     * The response is expected to be JSON containing filtered data for rendering the dashboard.
+     *
+     * @function fetchFilteredRecords
+     * @returns {void}
+     */
+    function fetchFilteredRecords() {
+      try {
+
+        showLoader();
+        const startDate = document.getElementById('startDateFilter').value;
+        const endDate = document.getElementById('endDateFilter').value;
+        console.log('Fetching records with date range:', startDate, 'to', endDate);
+        fetch(BASE_URL + '&action=fetchRecords', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            // action: 'fetchRecords',
+            startDate: startDate,
+            endDate: endDate,
+            userId: emailParam
+          })
+        })
+
+          .then(response => response.json())
+          .then(data => {
+            console.log('Filtered data received:', data);
+            allCards = [...data.data];
+            ['opportunity', 'estimate', 'salesorder'].forEach(stage => {
+              const col = document.getElementById(`${stage}-col`);
+              if (col) {
+                [...col.querySelectorAll('.kanban-card')].forEach(card => card.remove());
+              }
+            });
+            if (Array.isArray(data.data)) {
+              data.data.forEach(card => {
+                addCardToColumn(card);
+              });
+            }
+            const totals = data.recordTypeTotal || {};
+            const counts = {
+              opportunity: data.data.filter(c => c.stage === 'opportunity').length,
+              estimate: data.data.filter(c => c.stage === 'estimate').length,
+              salesorder: data.data.filter(c => c.stage === 'salesorder').length
+            };
+            const updateEl = (id, value) => {
+              const el = document.getElementById(id);
+              if (el) el.textContent = value;
+            };
+            updateEl('oppTotal', formatNumberWithCommas(totals.opportunityTotal));
+            updateEl('estTotal', formatNumberWithCommas(totals.estimateTotal));
+            updateEl('soTotal', formatNumberWithCommas(totals.salesorderTotal));
+            updateEl('oppCount', counts.opportunity);
+            updateEl('estCount', counts.estimate);
+            updateEl('soCount', counts.salesorder);
+          })
+          .catch(error => {
+            hideLoader();
+            console.error('Fetch error:', error);
+          })
+          .finally(() => {
+            hideLoader();
+          });
+      } catch (error) {
+        log.error('Error @ fetchFilteredRecords', error);
+      }
+    }
+
+    /**
+     * Applies the selected theme to the document and updates the theme toggle button state.
+     * Also stores the selected theme in localStorage for persistence.
+     *
+     * @function
+     * @param {string} theme - The theme to apply ('light' or 'dark').
+     * @returns {void}
+     */
+    function setTheme(theme) {
+      try {
+        document.documentElement.setAttribute('data-theme', theme);
+        document.querySelector('.theme-toggle').classList.toggle('active', theme === 'light');
+        localStorage.setItem('theme', theme);
+      } catch (error) {
+        log.error('Error @ setTheme');
+      }
+    }
+
+    /**
+     * Toggles between 'light' and 'dark' themes based on the current theme setting.
+     *
+     * @function
+     * @returns {void}
+     */
+    function toggleTheme() {
+      try {
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+        setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+      } catch (error) {
+        log.error('Error @ toggleTheme');
+      }
+    }
+
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    setTheme(savedTheme);
+    let cardCounter = 4;
+    let allCards = [];
+
+    /**
+     * Displays the global loading overlay by adding the 'show' class to the loader element.
+     *
+     * @function
+     * @returns {void}
+     */
+    function showLoader() {
+      try {
+        document.getElementById('globalLoader').classList.add('show');
+      } catch (error) {
+        log.error('Error @ showLoader');
+      }
+    }
+
+    /**
+     * Hides the global loading overlay by removing the 'show' class from the loader element.
+     *
+     * @function
+     * @returns {void}
+     */
+    function hideLoader() {
+      try {
+        document.getElementById('globalLoader').classList.remove('show');
+      } catch (error) {
+        log.error('Error @ hideLoader');
+      }
+    }
+
+    /**
+     * Displays a modal alert with a given title and message.
+     *
+     * @function
+     * @param {string} title - The title text to display in the alert modal.
+     * @param {string} message - The message body to display in the alert modal.
+     * @returns {void}
+     */
+    function showAlert(title, message) {
+      try {
+        document.getElementById('alertTitle').textContent = title;
+        document.getElementById('alertMessage').textContent = message;
+        document.getElementById('alertModal').classList.add('show');
+      } catch (error) {
+        log.error('Error @ showAlert');
+      }
+    }
+
+    /**
+     * Closes the alert modal by removing the 'show' class from the modal element.
+     *
+     * @function
+     * @returns {void}
+     */
+    function closeAlert() {
+      try {
+        document.getElementById('alertModal').classList.remove('show');
+      } catch (error) {
+        log.error('Error @ closeAlert');
+      }
+    }
+
+    /**
+     * Clears all existing Kanban cards from the board and displays new cards in their respective columns.
+     *
+     * @function
+     * @param {Array<Object>} cards - Array of card objects to be displayed.
+     * @param {string} cards[].stage - The record type (e.g., 'opportunity', 'estimate', 'salesorder').
+     * @returns {void}
+     */
+    function displayCards(cards) {
+      try {
+        document.querySelectorAll('.kanban-card').forEach(card => card.remove());
+        cards.forEach(card => addCardToColumn(card));
+      } catch (error) {
+        log.error('Error @ displayCards');
+      }
+    }
+
+    /**
+     * Updates the count indicators for each Kanban column based on the provided list of records.
+     *
+     * @function
+     * @param {Array<Object>} list - Array of card objects to count.
+     * @param {string} list[].stage - The record type (e.g., 'opportunity', 'estimate', 'salesorder').
+     * @returns {void}
+     */
+    function updateCountsLocal(list) {
+      try {
+        const oppCount = list.filter(c => c.stage === 'opportunity').length;
+        const estCount = list.filter(c => c.stage === 'estimate').length;
+        const soCount = list.filter(c => c.stage === 'salesorder').length;
+        document.getElementById('oppCount').textContent = oppCount;
+        document.getElementById('estCount').textContent = estCount;
+        document.getElementById('soCount').textContent = soCount;
+        document.querySelector('#opportunity-col h3 span').textContent = `(${oppCount})`;
+        document.querySelector('#estimate-col h3 span').textContent = `(${estCount})`;
+        document.querySelector('#salesorder-col h3 span').textContent = `(${soCount})`;
+      } catch (error) {
+        log.error('Error @ updateCountsLocal');
+      }
+    }
+
+    /**
+     * Converts a string to camelCase format.
+     * Capitalizes letters after spaces and lowercases the first character.
+     *
+     * @function
+     * @param {string} str - The input string to convert.
+     * @returns {string} - The camelCase formatted string.
+     */
+    function toCamelCase(str) {
+      try {
+        return str
+          .replace(/\s(.)/g, function (match, group1) {
+            return group1.toUpperCase();
+          })
+          .replace(/^(.)/, function (match, group1) {
+            return group1.toLowerCase();
+          });
+      } catch (error) {
+        log.error('Error @ toCamelCase');
+      }
+    }
+
+    /**
+     * Applies frontend-only filters to the global `allCards` list based on selected date range.
+     * Optionally supports record type and status filtering (currently commented out).
+     * Updates the Kanban board and column counts with the filtered results.
+     *
+     * @function
+     * @returns {void}
+     */
+    function applyFilters() {
+      initCards()
+    }
+
+    document.getElementById('applyFilterBtn').addEventListener('click', applyFilters);
+
+    /**
+     * Fetches the current user's information from the Suitelet backend.
+     * Displays the user's name in the dashboard header and returns the user data.
+     * Falls back to dummy user info if the request fails.
+     *
+     * @async
+     * @function
+     * @returns {Promise<Object>} - A promise that resolves to the user info object.
+     * @property {string} name - The user's name.
+     * @property {string} email - The user's email address.
+     * @property {string} role - The user's role.
+     * @property {string} id - The user's internal ID.
+     * @property {string} lastLogin - Last login timestamp.
+     */
+    async function fetchUserInfo() {
+      try {
+        showLoader();
+        const response = await fetch(BASE_URL + '&action=getUserInfo', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(
+            {
+              // action: 'getUserInfo'
+            }
+          )
+        });
+        const data = await response.json();
+        if (data.name == '-System-') {
+          document.getElementById('userInfo').textContent = `Welcome`;
+        } else {
+          document.getElementById('userInfo').textContent = `Hello, ${data.name}`;
+        }
+        return data;
+      } catch (error) {
+        console.error('Error fetching user info:', error);
+        document.getElementById('userInfo').textContent = `Hi`;
+      } finally {
+        hideLoader();
+      }
+    }
+
+    /**
+     * Fetches filtered transaction records from the Suitelet backend.
+     * Clears existing cards, updates the global `allCards` list, and repopulates the Kanban board.
+     * Also updates record counts and totals for each transaction type.
+     * Falls back to dummy data if the request fails.
+     *
+     * @async
+     * @function
+     * @returns {Promise<Array<Object>>} - A promise that resolves to an array of card objects.
+     * @property {string} stage - Record type (e.g., 'opportunity', 'estimate', 'salesorder').
+     * @property {string} title - Title or transaction ID.
+     * @property {string} date - Transaction date.
+     * @property {string} desc - Memo or description.
+     * @property {string} status - Transaction status.
+     * @property {string} entity - Associated entity name.
+     * @property {number|string} amount - Projected amount.
+     * @property {number|string} probability - Probability percentage.
+     * @property {string} entityStatus - Entity status label.
+     */
+    async function fetchKanbanData() {
+      try {
+        showLoader();
+        const response = await fetch(BASE_URL + '&action=fetchRecords', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            // action: 'fetchRecords'
+          })
+        });
+
+        const cards = await response.json();
+        // Clear existing cards from all columns
+        document.querySelectorAll('.kanban-card').forEach(card => card.remove());
+        // Update allCards and repopulate
+        allCards = [...cards.data];
+        cards.data.forEach(card => addCardToColumn(card));
+        const oppCount = cards.data.filter(c => c.stage === 'opportunity').length;
+        const estCount = cards.data.filter(c => c.stage === 'estimate').length;
+        const soCount = cards.data.filter(c => c.stage === 'salesorder').length;
+        document.getElementById('oppCount').textContent = oppCount;
+        document.getElementById('estCount').textContent = estCount;
+        document.getElementById('soCount').textContent = soCount;
+        document.querySelector('#opportunity-col h3 span').textContent = `(${oppCount})`;
+        document.querySelector('#estimate-col h3 span').textContent = `(${estCount})`;
+        document.querySelector('#salesorder-col h3 span').textContent = `(${soCount})`;
+        const totals = cards.recordTypeTotal || {};
+        document.getElementById('oppTotal').textContent = totals.opportunityTotal?.toLocaleString() || '0';
+        document.getElementById('estTotal').textContent = totals.estimateTotal?.toLocaleString() || '0';
+        document.getElementById('soTotal').textContent = totals.salesorderTotal?.toLocaleString() || '0';
+        return cards.data;
+      } catch (error) {
+        console.error('Error fetching kanban data:', error);
+        allCards.forEach(card => addCardToColumn(card));
+        updateCounts();
+      } finally {
+        hideLoader();
+      }
+    }
+
+    /**
+     * Formats a camelCase status string into a human-readable format.
+     * Adds spaces before capital letters and capitalizes the first letter.
+     *
+     * @function
+     * @param {string} status - The camelCase status string to format.
+     * @returns {string} - The formatted status string.
+     */
+    function formatStatus(status) {
+      try {
+        return status
+          .replace(/([a-z])([A-Z])/g, '$1 $2') // Add space before capital letters
+          .replace(/^./, str => str.toUpperCase()); // Capitalize first letter
+      } catch (error) {
+        log.error('Error @ formatStatus');
+      }
+    }
+
+    /**
+     * Initializes the Kanban board by fetching card data from the backend
+     * and assigning it to the global `allCards` array.
+     *
+     * @async
+     * @function
+     * @returns {Promise<void>} - Resolves when cards are fetched and stored.
+     */
+    async function initCards() {
+      try {
+        allCards = await fetchFilteredRecords();
+        console.log('allCards', allCards);
+      } catch (error) {
+        log.error('Error @ initCards');
+      }
+    }
+
+    /**
+     * Fetches and displays the current user's information in the dashboard header.
+     *
+     * @async
+     * @function
+     * @returns {Promise<void>} - Resolves when user info is fetched and rendered.
+     */
+    async function updateUserInfo() {
+      try {
+        await fetchUserInfo();
+      } catch (error) {
+        log.error('Error @ updateUserInfo', error);
+      }
+    }
+
+    /**
+     * Adds a single card element to the appropriate Kanban column based on its stage.
+     *
+     * @function
+     * @param {Object} card - The card data object.
+     * @param {string} card.id - Internal ID of the record.
+     * @param {string} card.title - Title or transaction ID.
+     * @param {string} card.stage - Record type (e.g., 'opportunity', 'estimate', 'salesorder').
+     * @param {string} card.date - Transaction date.
+     * @param {string} card.desc - Memo or description.
+     * @param {string} card.status - Status of the transaction.
+     * @param {string} card.entity - Associated entity name.
+     * @param {string|number} card.amount - Projected amount.
+     * @param {string|number} card.probability - Probability percentage.
+     * @param {string} card.entityStatus - Entity status label.
+     * @returns {void}
+     */
+    function addCardToColumn(card) {
+      try {
+        const readableStatus = formatStatus(card.status);
+        const formattedCurrency = formatCurrency(card.amount, card.currency)
+        const col = document.getElementById(`${card.stage}-col`);
+        const div = document.createElement('div');
+        div.className = `kanban-card ${card.stage} p-3 mb-3 cursor-grab active:cursor-grabbing`;
+        div.draggable = true;
+        div.dataset.stage = card.stage;
+        div.dataset.id = card.id;
+        let stageInUrl = card.stage === 'opportunity' ? 'opprtnty.nl' : card.stage === 'estimate' ? 'estimate.nl' : 'salesord.nl';
+        div.onclick = () => {
+          let action = '';
+          if (card.stage === 'estimate') action = 'getKanbanEstimateDetails';
+          else if (card.stage === 'opportunity') action = 'getKanbanOpportunityDetails';
+          else if (card.stage === 'salesorder') action = 'getKanbanSalesOrderDetails';
+
+          let urlParam = '';
+          if (card.stage === 'estimate') urlParam = `estimateId=${card.id}`;
+          else if (card.stage === 'opportunity') urlParam = `opportunityId=${card.id}`;
+          else if (card.stage === 'salesorder') urlParam = `salesOrderId=${card.id}`;
+
+          const fileUrl = `${BASE_URL}&action=${action}&${urlParam}&type=${card.stage}`;
+          window.open(fileUrl, "_blank"); // Opens in a new tab
+        };
+
+
+        // Determine badge color based on status
+        let badgeColor = '';
+        if (card.status.includes('inProgress')) badgeColor = 'var(--accent-opportunity-sec)';
+        else if (card.status.includes('open')) badgeColor = 'var(--accent-estimate-sec)';
+        else if (card.status.includes('pendingFulfillment') ||
+          card.status.includes('fullyBilled') ||
+          card.status.includes('pendingApproval') ||
+          card.status.includes('partiallyBilled') ||
+          card.status.includes('partiallyFulfilled') ||
+          card.status.includes('closed') ||
+          card.status.includes('approved') ||
+          card.status.includes('due') ||
+          card.status.includes('created') ||
+          card.status.includes('pendingBilling')) badgeColor = 'var(--accent-salesorder-sec)';
+        else badgeColor = 'var(--accent-primary)';
+
+        if (card.stage === 'opportunity') {
+          div.innerHTML = `
+            <strong class="block text-sm font-medium mb-1 card-title" style="color: var(--text-primary);">${card.entity}</strong>
+            <span class="text-xs font-medium px-2 py-1 rounded-full card-status" style="background-color: ${badgeColor}; color: var(--text-primary);">${readableStatus}</span>
+            <p class="text-xs card-desc" style="color: var(--text-secondary);">Transaction ID: ${card.transactionNumber}</p>
+            <p class="text-xs card-desc" style="color: var(--text-secondary);">Status: ${card.entityStatus}</p>
+            <p class="text-xs card-desc" style="color: var(--text-secondary);">Amount: ${formattedCurrency}</p>
+            <small class="text-xs block mb-1 card-date" style="color: var(--text-secondary);">Transaction Date: ${card.date}</small>
+            <p class="text-xs card-desc" style="color: var(--text-secondary);">${card.desc}</p>
+          `;
+        } else {
+          div.innerHTML = `
+            <strong class="block text-sm font-medium mb-1 card-title" style="color: var(--text-primary);">${card.entity}</strong>
+            <span class="text-xs font-medium px-2 py-1 rounded-full card-status" style="background-color: ${badgeColor}; color: var(--text-primary);">${readableStatus}</span>
+            <p class="text-xs card-desc" style="color: var(--text-secondary);">Transaction ID: ${card.transactionNumber}</p>
+            <p class="text-xs card-desc" style="color: var(--text-secondary);">Amount: ${formattedCurrency}</p>
+            <small class="text-xs block mb-1 card-date" style="color: var(--text-secondary);">${card.date}</small>
+          `;
+        }
+        col.appendChild(div);
+      } catch (error) {
+        log.error('Error @ userInformation');
+      }
+    }
+
+    /**
+     * Formats a numeric amount into a currency string using Indian locale formatting.
+     *
+     * @param {number|string} amount - The numeric value to format.
+     * @param {string} [currencyCode='INR'] - The currency code to prefix (e.g., 'INR', 'USD').
+     * @returns {string} Formatted currency string (e.g., "INR 1,234.56").
+     */
+    function formatCurrency(amount, currencyCode = 'INR') {
+      try {
+        if (!amount || isNaN(amount)) return `${currencyCode} 0.00`;
+        return `${currencyCode} ${parseFloat(amount).toLocaleString('en-IN', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        })}`;
+      } catch (error) {
+        log.error('Error @ formatCurrency', error);
+      }
+    }
+
+    /**
+     * Formats a numeric amount with commas and two decimal places using Indian locale.
+     *
+     * @param {number|string} amount - The numeric value to format.
+     * @returns {string} Formatted number string (e.g., "1,234.56").
+     */
+    function formatNumberWithCommas(amount) {
+      try {
+        if (!amount || isNaN(amount)) return '0.00';
+        return parseFloat(amount).toLocaleString('en-IN', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
+      } catch (error) {
+        log.error('Error @ userInformation');
+      }
+    }
+
+    /**
+     * Creates a new card object with default values and adds it to the Kanban board.
+     * Updates the global `allCards` list, refreshes counts, and closes the modal.
+     *
+     * @function
+     * @param {string} stage - The record type or stage (e.g., 'opportunity', 'estimate', 'salesorder').
+     * @param {string} title - The title or name of the new card.
+     * @param {string} [desc=''] - Optional description or memo for the card.
+     * @returns {Object} newCard - The newly created card object.
+     * @property {number} newCard.id - Unique ID for the card.
+     * @property {string} newCard.title - Title of the card.
+     * @property {string} newCard.stage - Record type or stage.
+     * @property {string} newCard.date - Creation date in localized format.
+     * @property {string} newCard.desc - Description or memo.
+     * @property {string} newCard.entity - Entity name (same as title).
+     * @property {string} newCard.status - Default status ('Created').
+     * @property {string} newCard.entityStatus - Entity status label (e.g., 'Prospect' for opportunities).
+     * @property {string} newCard.amount - Default amount (e.g., '$0' for opportunities).
+     */
+    function createNewCard(stage, title, desc = '') {
+      try {
+        const newCard = {
+          id: cardCounter++,
+          title,
+          stage,
+          date: `Created: ${new Date().toLocaleDateString()}`,
+          desc,
+          entity: title,
+          status: 'Created',
+          entityStatus: stage === 'opportunity' ? 'Prospect' : '',
+          amount: stage === 'opportunity' ? '$0' : ''
+        };
+        allCards.push(newCard);
+        addCardToColumn(newCard);
+        updateCounts();
+        closeAddModal();
+        return newCard;
+      } catch (error) {
+        log.error('Error @ createNewCard', error);
+      }
+    }
+
+    /**
+     * Fetches the latest Kanban card data and updates the count indicators
+     * for each record type (opportunity, estimate, salesorder) in the dashboard.
+     *
+     * @async
+     * @function
+     * @returns {Promise<void>} - Resolves when counts are updated in the DOM.
+     */
+    async function updateCounts() {
+      try {
+        const cards = await fetchFilteredRecords();
+        const oppCount = cards.filter(c => c.stage === 'opportunity').length;
+        const estCount = cards.filter(c => c.stage === 'estimate').length;
+        const soCount = cards.filter(c => c.stage === 'salesorder').length;
+
+        document.getElementById('oppCount').textContent = oppCount;
+        document.getElementById('estCount').textContent = estCount;
+        document.getElementById('soCount').textContent = soCount;
+
+        document.querySelector('#opportunity-col h3 span').textContent = `(${oppCount})`;
+        document.querySelector('#estimate-col h3 span').textContent = `(${estCount})`;
+        document.querySelector('#salesorder-col h3 span').textContent = `(${soCount})`;
+      } catch (error) {
+        log.error('Error @ updateCounts');
+      }
+    }
+
+    /**
+     * Closes the "Add Card" modal by hiding it and resetting the form fields.
+     *
+     * @function
+     * @returns {void}
+     */
+    function closeAddModal() {
+      try {
+        const modal = document.getElementById('addCardModal');
+        const addCardForm = document.getElementById('addCardForm');
+        modal.style.display = 'none';
+        modal.classList.remove('active');
+        addCardForm.reset();
+      } catch (error) {
+        log.error('Error @ ');
+      }
+
+    }
+
+    /**
+     * Toggles the collapsed state of all cards within a specified Kanban column.
+     * Collapsed cards hide their description and date. The toggle button switches between '+' and '−'.
+     *
+     * @function
+     * @param {string} stage - The record type or column ID suffix (e.g., 'opportunity', 'estimate', 'salesorder').
+     * @returns {void}
+     */
+    function toggleCollapse(stage) {
+      try {
+        const col = document.getElementById(`${stage}-col`);
+        const toggleBtn = col.querySelector('.collapse-toggle-opportunity, .collapse-toggle-estimate, .collapse-toggle-salesorder');
+        const cards = col.querySelectorAll('.kanban-card');
+        const isCollapsed = toggleBtn.textContent === '−';
+        cards.forEach(card => card.classList.toggle('collapsed', isCollapsed));
+        toggleBtn.textContent = isCollapsed ? '+' : '−';
+      } catch (error) {
+        log.error('Error @ toggleCollapse', error);
+      }
+    }
+
+    /**
+     * Toggles the visibility of the sidebar based on screen width.
+     * On mobile (≤768px), toggles the 'show' class. On desktop, toggles the 'hidden' class.
+     * Also updates the sidebar toggle button icon accordingly.
+     *
+     * @function
+     * @returns {void}
+     */
+    function toggleSidebar() {
+      try {
+        const sidebar = document.querySelector('.sidebar');
+        const toggleBtn = document.getElementById('sidebarToggleBtn');
+        const screenWidth = window.innerWidth;
+        if (screenWidth <= 768) {
+          sidebar.classList.toggle('show');
+          toggleBtn.textContent = sidebar.classList.contains('show') ? '«' : '»';
+        } else {
+          sidebar.classList.toggle('hidden');
+          toggleBtn.textContent = sidebar.classList.contains('hidden') ? '»' : '«';
+        }
+      } catch (error) {
+        log.error('Error @ ', error);
+      }
+    }
+
+    /**
+     * Sets the initial sidebar toggle button icon based on screen width and sidebar visibility.
+     * Runs once when the DOM is fully loaded.
+     *
+     * @event
+     */
+    window.addEventListener('DOMContentLoaded', () => {
+      const sidebar = document.querySelector('.sidebar');
+      const toggleBtn = document.getElementById('sidebarToggleBtn');
+      const screenWidth = window.innerWidth;
+      if (screenWidth <= 768) {
+        toggleBtn.textContent = '»';
+      } else {
+        toggleBtn.textContent = sidebar.classList.contains('hidden') ? '»' : '«';
+      }
+    });
+
+    /**
+     * Fetches all card data from the backend and exports it as a CSV file.
+     * Includes ID, title, stage, and date for each card.
+     * Shows and hides the loader during the process.
+     *
+     * @function
+     * @returns {void}
+     */
+    function exportData() {
+      try {
+        let csv = "Stage,Title,Description\n";
+        $(".kanban-column").each(function () {
+          const stage = $(this).attr("id").replace("-col", "");
+          $(this).find(".kanban-card").each(function () {
+            const title = $(this).find(".card-title").text().trim();
+            const desc = $(this).find(".card-desc").text().trim();
+            csv += `"${stage}","${title}","${desc}"\n`;
+          });
+        });
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "sales_pipeline.csv";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (error) {
+        log.error('Error @ ', error);
+      }
+    }
+
+    /**
+     * Temporarily highlights a specific Kanban column by dimming others.
+     * Resets all columns to full opacity after 3 seconds.
+     *
+     * @function
+     * @param {string} stage - The record type to highlight (e.g., 'opportunity', 'estimate', 'salesorder').
+     * @returns {void}
+     */
+    function filterByStage(stage) {
+      try {
+        const columns = document.querySelectorAll('.kanban-column');
+        columns.forEach(col => col.style.opacity = '0.5');
+        document.getElementById(`${stage}-col`).style.opacity = '1';
+        setTimeout(() => {
+          columns.forEach(col => col.style.opacity = '1');
+        }, 3000);
+      } catch (error) {
+        log.error('Error @ ', error);
+      }
+    }
+
+    const addCardForm = document.getElementById('addCardForm');
+    addCardForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const stage = document.getElementById('cardStage').value;
+      const title = document.getElementById('cardTitle').value;
+      const desc = document.getElementById('cardDesc').value;
+      createNewCard(stage, title, desc);
+    });
+
+    let draggedCard = null;
+
+    document.addEventListener('dragstart', (e) => {
+      if (e.target.classList.contains('kanban-card')) {
+        draggedCard = e.target;
+        e.target.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', e.target.outerHTML);
+        e.dataTransfer.setDragImage(e.target, 10, 10);
+      }
+    });
+
+    document.addEventListener('dragend', (e) => {
+      if (e.target.classList.contains('kanban-card')) {
+        e.target.classList.remove('dragging');
+        document.querySelectorAll('.kanban-column').forEach(col => {
+          col.classList.remove('drag-over');
+        });
+        draggedCard = null;
+      }
+    });
+
+    document.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      if (e.target.closest('.kanban-column') && draggedCard) {
+        const column = e.target.closest('.kanban-column');
+        column.classList.add('drag-over');
+      }
+    });
+
+    document.addEventListener('dragleave', (e) => {
+      if (e.target.closest('.kanban-column')) {
+        const column = e.target.closest('.kanban-column');
+        column.classList.remove('drag-over');
+      }
+    });
+
+    document.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (draggedCard && e.target.closest('.kanban-column')) {
+        const column = e.target.closest('.kanban-column');
+        const colId = column.id.replace('-col', '');
+        column.classList.remove('drag-over');
+
+        const cardId = draggedCard.dataset.id;
+        const card = allCards.find(c => c.id == cardId);
+
+        if (card) {
+          const fromRecordType = card.stage;
+
+          const currentCard = draggedCard;
+          const toRecordType = colId;
+          const fromId = cardId;
+
+          const validTransitions = {
+            opportunity: ['estimate', 'salesorder'],
+            estimate: ['salesorder']
+          };
+
+          if (validTransitions[fromRecordType] && validTransitions[fromRecordType].includes(toRecordType)) {
+            console.log(`Transforming ${fromRecordType} → ${toRecordType} for record ID ${fromId}`);
+            showLoader();
+            fetch(BASE_URL + '&action=updateStage', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                // action: 'updateStage',
+                fromRecordType,
+                toRecordType,
+                fromId
+              })
+            })
+              .then(res => res.json())
+              .then(data => {
+                if (data.success) {
+                  console.log(`Moved card ${cardId} to stage: ${colId}`);
+
+                  card.stage = colId;
+                  card.date = `${card.date} | Moved: ${new Date().toLocaleDateString()}`;
+
+                  currentCard.className = `kanban-card ${colId} p-3 mb-3 cursor-grab active:cursor-grabbing`;
+                  const targetColumn = document.getElementById(`${colId}-col`);
+                  if (targetColumn) {
+                    targetColumn.appendChild(currentCard);
+                  }
+
+                  fetchFilteredRecords();
+                } else {
+                  showAlert('Update Failed', data.message);
+                  card.stage = fromRecordType;
+                  currentCard.className = `kanban-card ${fromRecordType} p-3 mb-3 cursor-grab active:cursor-grabbing`;
+                }
+              })
+              .catch(err => console.error('Transform API error:', err))
+              .finally(() => {
+                hideLoader();
+              });
+          } else {
+            showAlert('Invalid Transition', `Cannot move from ${fromRecordType} to ${toRecordType}.`);
+            return;
+          }
+        }
+        draggedCard = null;
+      }
+    });
+
+    /*
+    * Initializes the sales dashboard by:
+    * - Setting default date filters
+    * - Fetching Kanban data and filtered records
+    * - Displaying the global loader
+    * - Fetching and displaying user info
+    * - Populating the Kanban board with cards
+    * - Hiding the loader once all async tasks complete
+    *
+    * @function
+    * @returns {void}
+    */
+    function initDashboard() {
+      try {
+        setDefaultDateValues();
+        showLoader();
+        updateUserInfo().then(() => {
+          initCards().then(() => {
+            hideLoader();
+          });
+        });
+      } catch (error) {
+        log.error('Error @ initDashboard', error);
+      }
+    }
+
+    initDashboard();
+  </script>
+</body>
+
+</html>
