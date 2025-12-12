@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sales Dashboard</title>
-    <!-- Skeleton CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -13,7 +12,7 @@
                 padding: 20px;
                 font-family: 'Montserrat', sans-serif;
                 color: #2a3533;
-                background: url('https://td3047046.app.netsuite.com/core/media/media.nl?id=1508&c=TD3047046&h=3s8X6F272RPyfw3whIdpSH7vTWt04yaLSJNn4wLq0PTKd2YS') no-repeat center center fixed;
+                background: url('https://td3047046.app.netsuite.com/core/media/media.nl?id=1514&c=TD3047046&h=xJtGWlfgbJepSiwQzlmMJ9J8A_buKo61OR2uPSvQi7tjpPJm') no-repeat center center fixed;
                 background-size: cover;
             
         }
@@ -84,7 +83,6 @@
             gap: 25px;
         }
 
-        /* Page Size Reduction - 90% zoom effect */
         #mainContainer {
             max-width: 1200px;
             margin: 0 auto;
@@ -93,7 +91,6 @@
             padding-bottom: 150px;
         }
 
-        /* Adjust text sizes for 90% scale */
         .sticky.top-0 .text-2xl {
             font-size: 1.25rem;
         }
@@ -129,7 +126,7 @@
                 alt="Jobin and Jismi Logo">
         </div>
         <div class="sticky top-0 z-10 bg-[#c8d9ce] rounded-lg p-4 mb-8 shadow-md">
-            <div class="px-6 py-8 rounded-lg text-2xl leading-relaxed text-[#1a1717]">
+            <div class="px-6 py-8 rounded-lg text-4xl leading-relaxed text-[#1a1717]">
                 Welcome back ! Success starts with the opportunities you create—go seize yours today!
             </div>
         </div>
@@ -147,7 +144,7 @@
 
 
             <div
-                class="h-80 bg-gradient-to-r from-[#2193B0] to-[#6DD5ED] text-white rounded-xl p-8 shadow-xl hover:scale-105 transition transform flex flex-col justify-center items-center text-center">
+                class="h-80 bg-[#f1946b] text-white rounded-xl p-8 shadow-xl hover:scale-105 transition transform flex flex-col justify-center items-center text-center">
                 <a
                     href="https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM&action=upload">
                     <img src="https://5742736.app.netsuite.com/core/media/media.nl?id=167311&c=5742736&h=f00HRR8_desYT-Q5_EJY1vZ7eFJh0pBLSKqmoH06atB1FnqS"
@@ -157,7 +154,7 @@
             </div>
 
             <div
-                class="h-80 bg-gradient-to-r from-[#EEAECA] to-[#94BBE9] text-white rounded-xl p-8 shadow-xl hover:scale-105 transition transform flex flex-col justify-center items-center text-center">
+                class="h-80 bg-gradient-to-r from-[#22C1C3] to-[#6DD5ED] text-white rounded-xl p-8 shadow-xl hover:scale-105 transition transform flex flex-col justify-center items-center text-center">
                 <a id="oppLink" href="#">
                     <img src="https://5742736.app.netsuite.com/core/media/media.nl?id=167313&c=5742736&h=593qGYnLfh9HiCrG5IHzjXRmRo9QzDgFYBrXCLthdkKBnMc0"
                         alt="View/Edit Opportunity" class="w-24 h-28 mb-10 mt-14 mx-auto mix-blend-multiply">
@@ -166,7 +163,7 @@
             </div>
 
             <div
-                class="h-80 bg-gradient-to-r from-[#22C1C3] to-[#6DD5ED] text-white rounded-xl p-8 shadow-xl hover:scale-105 transition transform flex flex-col justify-center items-center text-center"
+                class="h-80 bg-[#ff9f9f] text-white rounded-xl p-8 shadow-xl hover:scale-105 transition transform flex flex-col justify-center items-center text-center"
                 id="approveSoTile">
                 <a
                     href="https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM&action=approveso">
@@ -176,7 +173,7 @@
                 <div class="text-4xl font-bold">Approve Sales Order</div>
             </div>
 
-            <div class="h-80 bg-gradient-to-r from-[#FAD0C4] to-[#FFD1FF] text-white rounded-xl p-8 shadow-xl hover:scale-105 transition transform flex flex-col justify-center items-center text-center"
+            <div class="h-80 bg-[#d26ee4] text-white rounded-xl p-8 shadow-xl hover:scale-105 transition transform flex flex-col justify-center items-center text-center"
                 id="printEstimateTile">
                 <a id="estimateLink" href="#">
                     <img src="https://td3047046.app.netsuite.com/core/media/media.nl?id=1486&c=TD3047046&h=8lTGUhaSRdfSsIFtARHYn1--NSrMtoOpfwZ7x_nnTXyCuoCt"
@@ -186,12 +183,11 @@
 
             </div>
 
-
-            <div class="h-80 bg-gradient-to-r from-[#E0D909] to-[#0DD158] text-white rounded-xl p-8 shadow-xl hover:scale-105 transition transform flex flex-col justify-center items-center text-center"
-            id="printEstimateTile">
-                <a id="kanbanEstimateLink" href="">
+            <div class="h-80 bg-[#3996dc] text-white rounded-xl p-8 shadow-xl hover:scale-105 transition transform flex flex-col justify-center items-center text-center"
+                id="kanbanEstimateTile">
+                <a id="kanbanEstimateLink" href="#">
                     <img src="https://td3047046.app.netsuite.com/core/media/media.nl?id=1505&c=TD3047046&h=5QdD0TQjnU2jxiXQIBEIwpIIETOjA_0hPI7hK5yxX8JJwOxz"
-                    alt="kanban board" class="w-28 h-36 mb-4 mt-10 mx-auto mix-blend-multiply">
+                        alt="kanban board" class="w-28 h-36 mb-4 mt-10 mx-auto mix-blend-multiply">
                 </a>
                 <div class="text-4xl font-bold">Transaction Kanban Board</div>
             </div>
@@ -204,7 +200,8 @@
                 let encodedEmail = urlParams.get("userId");
                 console.log("encoded email:", encodedEmail);
 
-                // Update the href dynamically
+                
+
                 if (encodedEmail) {
                     document.getElementById("estimateLink").href =
                         "https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM&action=listestimate&userId=" + encodeURIComponent(encodedEmail);
@@ -216,9 +213,10 @@
                         + encodeURIComponent(encodedEmail);
                 }
             </script>
-            
-            <div class="h-80 bg-gradient-to-r from-[#794709] to-[#00D4FF] text-white rounded-xl p-8 shadow-xl hover:scale-105 transition transform flex flex-col justify-center items-center text-center"
-            id="printEstimateTile">
+
+
+            <div class="h-80 bg-[#cdb4db]  text-white rounded-xl p-8 shadow-xl hover:scale-105 transition transform flex flex-col justify-center items-center text-center"
+                id="printEstimateTile">
                 <a
                 href="https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM&action=createepic">
                     <img src="https://icons.veryicon.com/png/o/system/remote-cost-control/electric-4.png"
@@ -227,7 +225,7 @@
                 <div class="text-4xl font-bold">Create Epic</div>
             </div>
 
-            <div class="h-80 bg-gradient-to-r from-[#EEAECA] to-[#E9E694] text-white rounded-xl p-8 shadow-xl hover:scale-105 transition transform flex flex-col justify-center items-center text-center"
+            <div class="h-80 bg-[#76ea85] text-white rounded-xl p-8 shadow-xl hover:scale-105 transition transform flex flex-col justify-center items-center text-center"
                 id="printEstimateTile">
                 <a
                     href="https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM&action=report">
@@ -237,7 +235,7 @@
                 <div class="text-4xl font-bold">Reports</div>
             </div>
 
-            <div class="h-80 bg-[#22e291] text-white rounded-xl p-8 shadow-xl hover:scale-105 transition transform flex flex-col justify-center items-center text-center"
+            <div class="h-80 bg-gradient-to-r from-[#2193B0] to-[#6DD5ED] text-white rounded-xl p-8 shadow-xl hover:scale-105 transition transform flex flex-col justify-center items-center text-center"
                 id="printEstimateTile">
                 <a
                     href="https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM&action=help">
@@ -247,21 +245,21 @@
                 <div class="text-4xl font-bold">Help</div>
             </div>
 
-            <div class="h-80 bg-[#e0577b] text-white rounded-xl p-8 shadow-xl hover:scale-105 transition transform flex flex-col justify-center items-center text-center"
+            <div class="h-80 bg-[#22e291] text-white rounded-xl p-8 shadow-xl hover:scale-105 transition transform flex flex-col justify-center items-center text-center"
                 id="printEstimateTile">
                 <a href="https://www.jobinandjismi.com/" target="_blank">
                     <img src="https://5742736.app.netsuite.com/core/media/media.nl?id=172280&c=5742736&h=ib6-zoYg597ShYmU7tAwRw3RwNMvh6BtgvKNN1RcqNmbRgPr"
-                        alt="Design" class="w-28 h-42 mb-6 mt-4 mx-auto mix-blend-multiply">
+                        alt="Design" class="w-30 h-44 mb-4 mt-4 mx-auto mix-blend-multiply">
                 </a>
                 <div class="text-4xl font-bold">Visit our websites</div>
             </div>
 
-            <div class="h-80 bg-gradient-to-r from-[#AEEEAE] to-[#94BBE9] text-white rounded-xl p-8 shadow-xl hover:scale-105 transition transform flex flex-col justify-center items-center text-center"
+            <div class="h-80 bg-[#B83D43] text-white rounded-xl p-8 shadow-xl hover:scale-105 transition transform flex flex-col justify-center items-center text-center"
                 id="printEstimateTile">
                 <a
                     href="https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM">
                     <img src="https://5742736.app.netsuite.com/core/media/media.nl?id=172279&c=5742736&h=kaNQlTu7mOFqJHWqhlmwDeiKLNUrCpKvJLJp9-bS7RD2fXsP"
-                        alt="Logout" class="w-28 h-38 mb-14 mt-10 mx-auto mix-blend-multiply">
+                        alt="Logout" class="w-28 h-38 mb-12 mt-12 mx-auto mix-blend-multiply">
                 </a>
                 <div class="text-4xl font-bold">Logout</div>
             </div>
@@ -330,3 +328,384 @@
 </body>
 
 </html>
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Good UI Dashboard</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+
+        /* CSS STYLES BEGIN HERE */
+ 
+        :root {
+
+            /* Define a clean, restrained color palette */
+
+            --color-primary: #3876A8;    /* Dark Blue/Teal for header */
+
+            --color-sales: #74B0D8;      /* Light Blue for Sales tiles */
+
+            --color-ops: #8FC99F;        /* Soft Green for Operations tiles */
+
+            --color-report: #B593C7;     /* Lavender for Report/Metric tiles */
+
+            --color-system: #F0F0F0;     /* Light Gray for system tiles */
+
+            --color-logout: #B83D43;     /* Deep Red for Logout */
+
+            --color-text: #333;
+
+            --color-white: #ffffff;
+
+            --color-background: #F8F8F8; /* Very light background */
+
+            --spacing-unit: 1rem;
+
+        }
+ 
+        /* General Reset and Body Styling */
+
+        * {
+
+            box-sizing: border-box;
+
+            margin: 0;
+
+            padding: 0;
+
+        }
+ 
+        body {
+
+            font-family: 'Inter', 'Roboto', sans-serif;
+
+            background-color: var(--color-background);
+
+            color: var(--color-text);
+
+            line-height: 1.6;
+
+        }
+ 
+        /* Header Styling */
+
+        .dashboard-header {
+
+            background-color: var(--color-primary);
+
+            color: var(--color-white);
+
+            padding: var(--spacing-unit) calc(2 * var(--spacing-unit));
+
+            text-align: center;
+
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+        }
+ 
+        .welcome-message {
+
+            font-size: 1.2rem;
+
+            font-weight: 500;
+
+        }
+ 
+        /* Main Grid Layout */
+
+        .dashboard-grid-container {
+
+            max-width: 1200px;
+
+            margin: 2rem auto;
+
+            padding: 0 1rem;
+
+        }
+ 
+        .section-title {
+
+            font-size: 1rem;
+
+            font-weight: 700;
+
+            color: #666;
+
+            margin-top: 2rem;
+
+            margin-bottom: 1rem;
+
+            border-bottom: 2px solid #eee;
+
+            padding-bottom: 0.5rem;
+
+        }
+ 
+        .tile-group {
+
+            display: grid;
+
+            /* Default: 4 columns on large screens */
+
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+
+            gap: 1.5rem;
+
+            margin-bottom: 2rem;
+
+        }
+ 
+        /* Tile Styling */
+
+        .tile {
+
+            display: flex;
+
+            flex-direction: column;
+
+            justify-content: center;
+
+            align-items: center;
+
+            padding: 2rem 1rem;
+
+            border-radius: 8px;
+
+            text-decoration: none;
+
+            color: var(--color-white);
+
+            text-align: center;
+
+            transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+            position: relative; /* For the notification badge */
+
+        }
+ 
+        /* Tile Hover Effect (Good UI) */
+
+        .tile:hover {
+
+            transform: translateY(-5px);
+
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+
+            opacity: 0.95;
+
+        }
+ 
+        /* Icon and Label Styling */
+
+        .tile i {
+
+            font-size: 3rem;
+
+            margin-bottom: 0.75rem;
+
+            opacity: 0.8;
+
+        }
+ 
+        .tile-label {
+
+            font-size: 1rem;
+
+            font-weight: 600;
+
+            line-height: 1.2;
+
+        }
+ 
+        /* Color Palette for Tiles */
+
+        .sales-tile { background-color: var(--color-sales); }
+
+        .ops-tile { background-color: var(--color-ops); }
+
+        .system-tile {
+
+            background-color: var(--color-system);
+
+            color: var(--color-text); /* Black text on gray tile */
+
+            box-shadow: none; /* Make system tiles less prominent */
+
+        }
+
+        .system-tile:hover {
+
+            background-color: #e0e0e0;
+
+        }
+
+        .logout-tile { background-color: var(--color-logout); }
+
+        .metric-tile { background-color: var(--color-report); }
+ 
+        /* Notification Badge Styling */
+
+        .notification-tile::after {
+
+            content: attr(data-count);
+
+            position: absolute;
+
+            top: -10px;
+
+            right: -10px;
+
+            background-color: var(--color-logout); /* Use red for urgency */
+
+            color: var(--color-white);
+
+            border-radius: 50%;
+
+            padding: 0.25rem 0.5rem;
+
+            font-size: 0.8rem;
+
+            font-weight: 700;
+
+            line-height: 1;
+
+            min-width: 25px;
+
+            text-align: center;
+
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+
+        }
+ 
+        /* Responsiveness (Media Queries) */
+
+        @media (max-width: 900px) {
+
+            .tile-group {
+
+                /* 3 columns on medium screens */
+
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+
+            }
+
+        }
+ 
+        @media (max-width: 600px) {
+
+            .tile-group {
+
+                /* 2 columns on small/mobile screens */
+
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+
+                gap: 1rem;
+
+            }
+
+            .tile {
+
+                padding: 1.5rem 0.5rem;
+
+            }
+
+            .tile i {
+
+                font-size: 2.5rem;
+
+            }
+
+            .welcome-message {
+
+                font-size: 1rem;
+
+            }
+
+        }
+ 
+        /* CSS STYLES END HERE */
+</style>
+</head>
+<body>
+ 
+    <header class="dashboard-header">
+<div class="welcome-message">
+
+            Welcome back, John Doe! Your tasks are ready.
+</div>
+</header>
+ 
+    <main class="dashboard-grid-container">
+ 
+        <h2 class="section-title">SALES WORKFLOW</h2>
+<div class="tile-group">
+<a href="#" class="tile sales-tile">
+<i class="fas fa-brain"></i>
+<span class="tile-label">Manage Leads</span>
+</a>
+<a href="#" class="tile sales-tile">
+<i class="fas fa-file-upload"></i>
+<span class="tile-label">Upload Opportunity</span>
+</a>
+<a href="#" class="tile sales-tile">
+<i class="fas fa-edit"></i>
+<span class="tile-label">View/Edit Opportunity</span>
+</a>
+<a href="#" class="tile sales-tile notification-tile" data-count="3">
+<i class="fas fa-check-square"></i>
+<span class="tile-label">Approve Sales Order</span>
+</a>
+<a href="#" class="tile ops-tile">
+<i class="fas fa-print"></i>
+<span class="tile-label">Print Estimate</span>
+</a>
+<a href="#" class="tile ops-tile">
+<i class="fas fa-columns"></i>
+<span class="tile-label">Transaction Kanban Board</span>
+</a>
+</div>
+ 
+        <h2 class="section-title">OPERATIONS & REPORTING</h2>
+<div class="tile-group">
+<a href="#" class="tile ops-tile">
+<i class="fas fa-bolt"></i>
+<span class="tile-label">Create Epic</span>
+</a>
+<a href="#" class="tile ops-tile">
+<i class="fas fa-chart-bar"></i>
+<span class="tile-label">Reports</span>
+</a>
+<a href="#" class="tile metric-tile" style="background-color: var(--color-report);">
+<i class="fas fa-hand-holding-dollar"></i>
+<span class="tile-label">Sales Q4: +$120k</span>
+</a>
+</div>
+ 
+        <h2 class="section-title">SYSTEM</h2>
+<div class="tile-group system-group">
+<a href="#" class="tile system-tile">
+<i class="fas fa-question-circle"></i>
+<span class="tile-label">Help</span>
+</a>
+<a href="#" class="tile system-tile">
+<i class="fas fa-globe"></i>
+<span class="tile-label">Visit our websites</span>
+</a>
+<a href="#" class="tile logout-tile">
+<i class="fas fa-power-off"></i>
+<span class="tile-label">Logout</span>
+</a>
+</div>
+</main>
+ 
+</body>
+</html>
+ 
