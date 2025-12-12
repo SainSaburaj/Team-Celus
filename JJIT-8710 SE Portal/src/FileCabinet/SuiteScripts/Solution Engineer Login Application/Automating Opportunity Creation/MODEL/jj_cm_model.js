@@ -1947,6 +1947,11 @@ define(['N/search', 'N/query', 'N/record'],
                         resultData.selectedLeadSourceName = lookup?.title ? String(lookup.title) : "";
                     }
 
+<<<<<<< HEAD
+=======
+                    log.debug("leadSourceDetails", resultData);
+
+>>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
                 } catch (err) {
                     log.error("leadSourceDetails Error", err);
                 }

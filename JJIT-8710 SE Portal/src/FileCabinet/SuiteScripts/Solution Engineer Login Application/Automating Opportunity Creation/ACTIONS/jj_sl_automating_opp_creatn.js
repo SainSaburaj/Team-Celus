@@ -1162,6 +1162,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             type: "transaction",
                             settings: [{ "name": "consolidationtype", "value": "ACCTTYPE" }],
                             filters:
+<<<<<<< HEAD
                                 [
                                     ["type", "anyof", "Opprtnty", "SalesOrd", "Estimate"],
                                     "AND",
@@ -1171,6 +1172,17 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                                     "AND",
                                     ["status", "noneof", "Opprtnty:C", "Estimate:C", "Estimate:X", "Estimate:B", "Estimate:V", "Opprtnty:D", "Opprtnty:B", "SalesOrd:G", "SalesOrd:C", "SalesOrd:H", "SalesOrd:D", "SalesOrd:F", "SalesOrd:E", "SalesOrd:B"]
                                 ],
+=======
+                            [
+                                ["type", "anyof", "Opprtnty", "SalesOrd", "Estimate"],
+                                "AND",
+                                ["mainline", "is", "T"],
+                                "AND",
+                                ["trandate", "within", formattedStartDate, formattedEndDate],
+                                "AND",
+                                    ["status", "noneof", "Opprtnty:C", "Estimate:C", "Estimate:X", "Estimate:B", "Estimate:V", "Opprtnty:D", "Opprtnty:B", "SalesOrd:G", "SalesOrd:C", "SalesOrd:H", "SalesOrd:D", "SalesOrd:F", "SalesOrd:E", "SalesOrd:B"]
+                            ],
+>>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
                             columns:
                                 [
                                     search.createColumn({ name: "transactionnumber", label: "Transaction Number" }),
@@ -1868,6 +1880,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
         }
 
         function updateEstimateRecord(req) {
+<<<<<<< HEAD
             log.debug("🔵 updateEstimateRecord() — START", req);
 
             try {
@@ -1933,12 +1946,19 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 // -------------------------
                 // LOAD RECORD (dynamic)
                 // -------------------------
+=======
+            try {
+                const estimateId = req.estimateId;
+                const data = req.data;
+
+>>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
                 const estRec = record.load({
                     type: record.Type.ESTIMATE,
                     id: estimateId,
                     isDynamic: true
                 });
 
+<<<<<<< HEAD
                 log.audit("✅ Record Loaded", estimateId);
 
                 // -------------------------
@@ -2092,12 +2112,73 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             } catch (e) {
                 log.error("❌ Update Failed", e);
                 return { success: false, message: e.message || "Error updating estimate" };
+=======
+                // -------------------------
+                // HEADER FIELDS
+                // -------------------------
+                estRec.setValue('memo', data.header.memo || "");
+                estRec.setValue('entity', data.header.customer || "");
+                estRec.setValue('location', data.header.location || "");
+                estRec.setValue('department', data.header.department || "");
+                estRec.setValue('class', data.header.class || "");
+
+                // -------------------------
+                // CLEAR EXISTING LINES
+                // -------------------------
+                const lineCount = estRec.getLineCount({ sublistId: 'item' });
+                for (let i = lineCount - 1; i >= 0; i--) {
+                    estRec.removeLine({ sublistId: 'item', line: i });
+                }
+
+                // -------------------------
+                // ADD UPDATED LINE ITEMS
+                // -------------------------
+                data.items.forEach(item => {
+                    estRec.selectNewLine({ sublistId: 'item' });
+
+                    estRec.setCurrentSublistValue({
+                        sublistId: 'item',
+                        fieldId: 'item',
+                        value: item.itemId
+                    });
+
+                    estRec.setCurrentSublistValue({
+                        sublistId: 'item',
+                        fieldId: 'quantity',
+                        value: item.quantity
+                    });
+
+                    estRec.setCurrentSublistValue({
+                        sublistId: 'item',
+                        fieldId: 'rate',
+                        value: item.rate
+                    });
+
+                    estRec.commitLine({ sublistId: 'item' });
+                });
+
+                // SAVE
+                const updatedId = estRec.save();
+
+                return {
+                    success: true,
+                    message: "Estimate updated successfully",
+                    estimateId: updatedId
+                };
+
+            } catch (e) {
+                log.error("Update Estimate Failed", e);
+                return { success: false, message: e.message };
+>>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
             }
         }
 
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
 
         function getKanbanOpportunityDetails(opportunityId) {
             try {
@@ -2349,6 +2430,10 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
 
                     items: [],
                     salesteam: [],
+<<<<<<< HEAD
+=======
+                    soCustomerDetails: {},
+>>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
                     soClassDetails: {},
                     soDepartmentDetails: {},
                     soLocationDetails: {},
@@ -2358,7 +2443,11 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     soOpportunityDetails: {},
                     soItemList: {},
                     isSalesManager: checkIfSalesManager(userEmail)
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
                 };
 
 
@@ -2375,9 +2464,13 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                         amount: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'amount', line: i }),
                         location: salesOrderRecord.getSublistText({ sublistId: 'item', fieldId: 'location', line: i }),
                         classId: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'class', line: i }),
+<<<<<<< HEAD
                         departmentId: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'department', line: i }),
                         class:salesOrderRecord.getSublistText({ sublistId: 'item', fieldId: 'class', line: i }),
                         department:salesOrderRecord.getSublistText({ sublistId: 'item', fieldId: 'department', line: i }),
+=======
+                        departmentId: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'department', line: i })
+>>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
                     };
                     header.items.push(lineData);
                 }
@@ -2423,6 +2516,12 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 });
 
                 // Update header fields if provided
+<<<<<<< HEAD
+=======
+                if (requestData.entity) {
+                    salesOrderRecord.setValue({ fieldId: 'entity', value: requestData.entity });
+                }
+>>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
                 if (requestData.trandate) {
                     salesOrderRecord.setValue({ fieldId: 'trandate', value: new Date(requestData.trandate) });
                 }
@@ -2466,17 +2565,28 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 const savedId = salesOrderRecord.save();
                 log.debug("Sales Order Updated", savedId);
 
+<<<<<<< HEAD
                 return {
                     success: true,
+=======
+                return { 
+                    success: true, 
+>>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
                     message: "Sales Order updated successfully.",
                     salesOrderId: savedId
                 };
 
             } catch (e) {
                 log.error("Error @ updateSalesOrder", e);
+<<<<<<< HEAD
                 return {
                     success: false,
                     message: "Failed to update sales order: " + e.message
+=======
+                return { 
+                    success: false, 
+                    message: "Failed to update sales order: " + e.message 
+>>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
                 };
             }
         }
@@ -3453,6 +3563,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
         function getItemsBySubsidiary(search, subsidiaryId) {
             const items = [];
             try {
+<<<<<<< HEAD
                 const searchObj = search.create({
                     type: search.Type.INVENTORY_ITEM,
                     filters: [
@@ -3472,6 +3583,27 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     });
                     return true;
                 });
+=======
+                    const searchObj = search.create({
+                    type: search.Type.INVENTORY_ITEM,
+                        filters: [
+                            ['subsidiary', 'anyof', subsidiaryId],
+                            'AND',
+                            ['isinactive', 'is', 'F']
+                        ],
+                        columns: ['internalid', 'itemid', 'baseprice']
+                    });
+
+                    searchObj.run().each(result => {
+                        items.push({
+                            id: result.getValue('internalid'),
+                            name: result.getValue('itemid'),
+                            rate: parseFloat(result.getValue('baseprice')) || 0,
+                        type: 'Inventory'
+                        });
+                        return true;
+                    });
+>>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
 
             } catch (e) {
                 log.error('Error in getItemsBySubsidiary', e);
@@ -3724,6 +3856,10 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             break;
                         case 'getKanbanSalesOrderDetails':
                             res = getKanbanSalesOrderDetails(req.salesOrderId, req.userId);
+<<<<<<< HEAD
+=======
+                            res.data.soCustomerDetails = model.soCustomerDetails(req.salesOrderId);
+>>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
                             res.data.soClassDetails = model.soClassDetails(req.salesOrderId);
                             res.data.soDepartmentDetails = model.soDepartmentDetails(req.salesOrderId);
                             res.data.soLocationDetails = model.soLocationDetails(req.salesOrderId);
