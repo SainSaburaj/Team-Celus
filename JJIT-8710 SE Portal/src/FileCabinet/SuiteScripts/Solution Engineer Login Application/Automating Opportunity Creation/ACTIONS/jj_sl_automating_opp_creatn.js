@@ -1162,15 +1162,15 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             type: "transaction",
                             settings: [{ "name": "consolidationtype", "value": "ACCTTYPE" }],
                             filters:
-                            [
-                                ["type", "anyof", "Opprtnty", "SalesOrd", "Estimate"],
-                                "AND",
-                                ["mainline", "is", "T"],
-                                "AND",
-                                ["trandate", "within", formattedStartDate, formattedEndDate],
-                                "AND",
+                                [
+                                    ["type", "anyof", "Opprtnty", "SalesOrd", "Estimate"],
+                                    "AND",
+                                    ["mainline", "is", "T"],
+                                    "AND",
+                                    ["trandate", "within", formattedStartDate, formattedEndDate],
+                                    "AND",
                                     ["status", "noneof", "Opprtnty:C", "Estimate:C", "Estimate:X", "Estimate:B", "Estimate:V", "Opprtnty:D", "Opprtnty:B", "SalesOrd:G", "SalesOrd:C", "SalesOrd:H", "SalesOrd:D", "SalesOrd:F", "SalesOrd:E", "SalesOrd:B"]
-                            ],
+                                ],
                             columns:
                                 [
                                     search.createColumn({ name: "transactionnumber", label: "Transaction Number" }),
@@ -1627,6 +1627,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 return { success: false, message: 'Error saving Job record' };
             }
         }
+        
 
         /**
          * Approve sales order(s)
@@ -1867,74 +1868,234 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
         }
 
         function updateEstimateRecord(req) {
+            log.debug("🔵 updateEstimateRecord() — START", req);
+
             try {
+                // -------------------------
+                // BASIC VALIDATION
+                // -------------------------
+                if (!req || !req.estimateId || !req.data) {
+                    log.error("❌ Invalid Request Data", req);
+                    return { success: false, message: "Invalid request data received." };
+                }
+
                 const estimateId = req.estimateId;
                 const data = req.data;
 
+                const header = data.Header || {};
+                const items = data.LineItems || [];
+                const salesTeam = data.SalesTeam || [];
+
+                log.debug("📌 Estimate ID", estimateId);
+                log.debug("📌 Header payload", header);
+
+                // -------------------------
+                // SAFE SET FUNCTION
+                // -------------------------
+                function safeSet(rec, fieldId, value, isDate = false, allowEmpty = true) {
+                    try {
+                        let finalValue = value;
+
+                        // Parse integers for number fields
+                        if (!isDate && typeof value === "string" && value.match(/^\d+$/)) {
+                            finalValue = parseInt(value, 10);
+                        }
+
+                        // Parse dates
+                        if (isDate && value) {
+                            finalValue = new Date(value);
+                            if (isNaN(finalValue.getTime())) {
+                                log.debug(`⚠ Invalid date for ${fieldId}: ${value}`);
+                                return;
+                            }
+                        }
+
+                        // If value is empty string and allowEmpty, send null to NetSuite
+                        if ((value === undefined || value === null || value === "") && allowEmpty) {
+                            finalValue = null;
+                        } else if (value === undefined || value === null || value === "") {
+                            log.debug(`⚠ Skipping empty field: ${fieldId}`);
+                            return;
+                        }
+
+                        rec.setValue({
+                            fieldId: fieldId,
+                            value: finalValue
+                        });
+
+                        log.debug(`✔ Set ${fieldId}`, finalValue);
+
+                    } catch (e) {
+                        log.error(`❌ Failed to set field: ${fieldId}`, e);
+                    }
+                }
+
+                // -------------------------
+                // LOAD RECORD (dynamic)
+                // -------------------------
                 const estRec = record.load({
                     type: record.Type.ESTIMATE,
                     id: estimateId,
                     isDynamic: true
                 });
 
-                // -------------------------
-                // HEADER FIELDS
-                // -------------------------
-                estRec.setValue('memo', data.header.memo || "");
-                estRec.setValue('entity', data.header.customer || "");
-                estRec.setValue('location', data.header.location || "");
-                estRec.setValue('department', data.header.department || "");
-                estRec.setValue('class', data.header.class || "");
+                log.audit("✅ Record Loaded", estimateId);
 
                 // -------------------------
-                // CLEAR EXISTING LINES
+                // HEADER FIELD UPDATES
                 // -------------------------
-                const lineCount = estRec.getLineCount({ sublistId: 'item' });
-                for (let i = lineCount - 1; i >= 0; i--) {
-                    estRec.removeLine({ sublistId: 'item', line: i });
+                const dropdownFields = ["class", "department", "location", "partner", "leadsource", "forecasttype"];
+                dropdownFields.forEach(field => {
+                    // Normalize keys: remove spaces and lowercase
+                    const keyNoSpace = field.replace(/\s+/g, '').toLowerCase();
+                    const val = Object.keys(header).find(k => k.replace(/\s+/g, '').toLowerCase() === keyNoSpace);
+                    safeSet(estRec, field, val ? header[val] : null);
+                });
+
+
+                safeSet(estRec, "memo", header.Memo);
+                safeSet(estRec, "probability", header["Probability (%)"] ? parseFloat(header["Probability (%)"]) : null);
+                safeSet(estRec, "title", header.Title);
+
+                // -------------------------
+                // STATUS (entitystatus)
+                // -------------------------
+                if (header.Status) {
+                    let statusVal = header.Status;
+
+                    if (!String(header.Status).match(/^\d+$/)) {
+                        const stRes = search.create({
+                            type: search.Type.ESTIMATE,
+                            filters: [["entitystatus", "is", header.Status]],
+                            columns: ["entitystatus"]
+                        }).run().getRange({ start: 0, end: 1 });
+
+                        if (stRes && stRes.length) {
+                            statusVal = stRes[0].getValue("entitystatus");
+                            log.debug("✔ Status text → internal id", statusVal);
+                        } else {
+                            log.debug("⚠ Status lookup failed. Skipping.");
+                            statusVal = null;
+                        }
+                    }
+
+                    safeSet(estRec, "entitystatus", statusVal);
                 }
 
                 // -------------------------
-                // ADD UPDATED LINE ITEMS
+                // JOB
                 // -------------------------
-                data.items.forEach(item => {
-                    estRec.selectNewLine({ sublistId: 'item' });
+                if (header.Job) {
+                    if (String(header.Job).match(/^\d+$/)) {
+                        safeSet(estRec, "job", parseInt(header.Job, 10));
+                    } else {
+                        try {
+                            const jobSearch = search.create({
+                                type: search.Type.JOB,
+                                filters: [["entityid", "is", header.Job]],
+                                columns: ["internalid"]
+                            }).run().getRange({ start: 0, end: 1 });
 
-                    estRec.setCurrentSublistValue({
-                        sublistId: 'item',
-                        fieldId: 'item',
-                        value: item.itemId
-                    });
+                            if (jobSearch && jobSearch.length) {
+                                const jobInternal = jobSearch[0].getValue("internalid");
+                                safeSet(estRec, "job", parseInt(jobInternal, 10));
+                            } else {
+                                log.debug("⚠ Job text lookup failed.");
+                            }
+                        } catch (e) {
+                            log.error("❌ Job lookup failed", e);
+                        }
+                    }
+                }
 
-                    estRec.setCurrentSublistValue({
-                        sublistId: 'item',
-                        fieldId: 'quantity',
-                        value: item.quantity
-                    });
+                // -------------------------
+                // DATE FIELDS
+                // -------------------------
+                safeSet(estRec, "trandate", header["Transaction Date"] || header["Date"], true);
+                safeSet(estRec, "expectedclosedate", header["Expected Close Date"], true);
+                safeSet(estRec, "duedate", header["Expiration Date"], true);
 
-                    estRec.setCurrentSublistValue({
-                        sublistId: 'item',
-                        fieldId: 'rate',
-                        value: item.rate
-                    });
+                // -------------------------
+                // UPDATE EXISTING LINE ITEMS
+                // -------------------------
+                const lineCount = estRec.getLineCount({ sublistId: "item" });
+                log.debug("🛒 Existing Lines", lineCount);
 
-                    estRec.commitLine({ sublistId: 'item' });
+                const itemsByLineNo = {};
+                items.forEach(it => {
+                    const ln = it["Line #"] || it.LineNo;
+                    if (ln) itemsByLineNo[Number(ln) - 1] = it;
                 });
 
-                // SAVE
-                const updatedId = estRec.save();
+                for (let i = 0; i < lineCount; i++) {
+                    estRec.selectLine({ sublistId: "item", line: i });
 
-                return {
-                    success: true,
-                    message: "Estimate updated successfully",
-                    estimateId: updatedId
-                };
+                    const itemData = itemsByLineNo[i] || items[i] || {};
+
+                    if (!itemData || Object.keys(itemData).length === 0) {
+                        estRec.commitLine({ sublistId: "item" });
+                        continue;
+                    }
+
+                    try {
+                        if (itemData.Quantity != null && itemData.Quantity !== "") safeSet(estRec, "quantity", parseFloat(itemData.Quantity));
+                        if (itemData.Rate != null && itemData.Rate !== "") safeSet(estRec, "rate", parseFloat(itemData.Rate));
+                        if (itemData.Units != null) safeSet(estRec, "units", itemData.Units);
+                        if (itemData.Description != null) safeSet(estRec, "description", itemData.Description);
+                        if (itemData.Amount != null && itemData.Amount !== "") safeSet(estRec, "amount", parseFloat(itemData.Amount));
+                        if (itemData.Class != null && itemData.Class !== "") safeSet(estRec, "class", parseInt(itemData.Class));
+                        if (itemData.Department != null && itemData.Department !== "") safeSet(estRec, "department", parseInt(itemData.Department));
+                    } catch (e) {
+                        log.error(`❌ Line update failed ${i + 1}`, e);
+                    }
+
+                    estRec.commitLine({ sublistId: "item" });
+                }
+
+
+                // -------------------------
+                // SALES TEAM UPDATE
+                // -------------------------
+                const stCount = estRec.getLineCount({ sublistId: "salesteam" });
+                for (let i = 0; i < stCount; i++) {
+                    estRec.selectLine({ sublistId: "salesteam", line: i });
+
+                    const stData = salesTeam[i] || {};
+                    if (!stData || Object.keys(stData).length === 0) {
+                        estRec.commitLine({ sublistId: "salesteam" });
+                        continue;
+                    }
+
+                    try {
+                        if (stData["Employee ID"]) safeSet(estRec, "employee", parseInt(stData["Employee ID"], 10));
+                        if (stData["Role ID"]) safeSet(estRec, "salesrole", parseInt(stData["Role ID"], 10));
+                        if (stData["Contribution %"]) safeSet(estRec, "contribution", parseFloat(stData["Contribution %"]));
+                        if (stData.Primary !== undefined) {
+                            const p = (stData.Primary === true || stData.Primary === "Yes" || stData.Primary === "true");
+                            safeSet(estRec, "isprimary", p);
+                        }
+                    } catch (e) {
+                        log.error(`❌ Sales team update failed ${i + 1}`, e);
+                    }
+
+                    estRec.commitLine({ sublistId: "salesteam" });
+                }
+
+                // -------------------------
+                // SAVE
+                // -------------------------
+                const updatedId = estRec.save();
+                log.audit("🎉 Estimate Updated Successfully", updatedId);
+
+                return { success: true, message: "Estimate updated successfully", estimateId: updatedId };
 
             } catch (e) {
-                log.error("Update Estimate Failed", e);
-                return { success: false, message: e.message };
+                log.error("❌ Update Failed", e);
+                return { success: false, message: e.message || "Error updating estimate" };
             }
         }
+
+
 
 
 
@@ -2145,6 +2306,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             return results;
         }
 
+
         /**
          * Function to fetch Sales Order details and populate data (unchanged)
          */
@@ -2187,7 +2349,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
 
                     items: [],
                     salesteam: [],
-                    soCustomerDetails: {},
                     soClassDetails: {},
                     soDepartmentDetails: {},
                     soLocationDetails: {},
@@ -2197,7 +2358,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     soOpportunityDetails: {},
                     soItemList: {},
                     isSalesManager: checkIfSalesManager(userEmail)
-        
+
                 };
 
 
@@ -2214,7 +2375,9 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                         amount: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'amount', line: i }),
                         location: salesOrderRecord.getSublistText({ sublistId: 'item', fieldId: 'location', line: i }),
                         classId: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'class', line: i }),
-                        departmentId: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'department', line: i })
+                        departmentId: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'department', line: i }),
+                        class:salesOrderRecord.getSublistText({ sublistId: 'item', fieldId: 'class', line: i }),
+                        department:salesOrderRecord.getSublistText({ sublistId: 'item', fieldId: 'department', line: i }),
                     };
                     header.items.push(lineData);
                 }
@@ -2260,9 +2423,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 });
 
                 // Update header fields if provided
-                if (requestData.entity) {
-                    salesOrderRecord.setValue({ fieldId: 'entity', value: requestData.entity });
-                }
                 if (requestData.trandate) {
                     salesOrderRecord.setValue({ fieldId: 'trandate', value: new Date(requestData.trandate) });
                 }
@@ -2306,17 +2466,17 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 const savedId = salesOrderRecord.save();
                 log.debug("Sales Order Updated", savedId);
 
-                return { 
-                    success: true, 
+                return {
+                    success: true,
                     message: "Sales Order updated successfully.",
                     salesOrderId: savedId
                 };
 
             } catch (e) {
                 log.error("Error @ updateSalesOrder", e);
-                return { 
-                    success: false, 
-                    message: "Failed to update sales order: " + e.message 
+                return {
+                    success: false,
+                    message: "Failed to update sales order: " + e.message
                 };
             }
         }
@@ -3293,25 +3453,25 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
         function getItemsBySubsidiary(search, subsidiaryId) {
             const items = [];
             try {
-                    const searchObj = search.create({
+                const searchObj = search.create({
                     type: search.Type.INVENTORY_ITEM,
-                        filters: [
-                            ['subsidiary', 'anyof', subsidiaryId],
-                            'AND',
-                            ['isinactive', 'is', 'F']
-                        ],
-                        columns: ['internalid', 'itemid', 'baseprice']
-                    });
+                    filters: [
+                        ['subsidiary', 'anyof', subsidiaryId],
+                        'AND',
+                        ['isinactive', 'is', 'F']
+                    ],
+                    columns: ['internalid', 'itemid', 'baseprice']
+                });
 
-                    searchObj.run().each(result => {
-                        items.push({
-                            id: result.getValue('internalid'),
-                            name: result.getValue('itemid'),
-                            rate: parseFloat(result.getValue('baseprice')) || 0,
+                searchObj.run().each(result => {
+                    items.push({
+                        id: result.getValue('internalid'),
+                        name: result.getValue('itemid'),
+                        rate: parseFloat(result.getValue('baseprice')) || 0,
                         type: 'Inventory'
-                        });
-                        return true;
                     });
+                    return true;
+                });
 
             } catch (e) {
                 log.error('Error in getItemsBySubsidiary', e);
@@ -3427,6 +3587,10 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
 
                     let req = null;
                     let action = request.parameters.action || null;
+                    if (action === 'createOpportunity' || action === 'updateOpportunity' || action === 'opportunityform') {
+                        req = request.parameters;
+                        action = req.action;
+                    }
 
                     if (action === 'upload') {
                         req = request.files;
@@ -3434,7 +3598,11 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     else if (action === 'updateLead') {
                         req = request.parameters;
                     }
-                    else if (JSON.parse(request.body).action === 'kanbanBoard') {
+                    else if (
+                        request.body &&
+                        request.body.startsWith('{') &&
+                        JSON.parse(request.body).action === 'kanbanBoard'
+                    ) {
                         let reqBody = JSON.parse(request.body);
                         res = fetchKanbanData(reqBody.startDate, reqBody.endDate);
 
@@ -3551,12 +3719,12 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             break;
 
 
+
                         case 'getKanbanOpportunityDetails':
                             res = getKanbanOpportunityDetails(req.opportunityId);
                             break;
                         case 'getKanbanSalesOrderDetails':
                             res = getKanbanSalesOrderDetails(req.salesOrderId, req.userId);
-                            res.data.soCustomerDetails = model.soCustomerDetails(req.salesOrderId);
                             res.data.soClassDetails = model.soClassDetails(req.salesOrderId);
                             res.data.soDepartmentDetails = model.soDepartmentDetails(req.salesOrderId);
                             res.data.soLocationDetails = model.soLocationDetails(req.salesOrderId);

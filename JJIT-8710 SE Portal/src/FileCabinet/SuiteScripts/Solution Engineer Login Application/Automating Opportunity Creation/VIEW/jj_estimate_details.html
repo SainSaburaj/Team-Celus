@@ -51,7 +51,7 @@
                         </button>
 
                         <!-- New Buttons -->
-                        <div id="editActions" class="flex items-center gap-3 mt-4 hidden">
+                        <div id="editActions" class="flex items-center gap-3 mt-4 float-right hidden">
                             <button id="saveButton" type="submit"
                                 class="bg-[#0c6c73] text-white text-sm px-3 py-1 rounded-md shadow">
                                 Save
@@ -77,7 +77,7 @@
                             <div class="w-full lg:w-1/2 mt-6 px-6">
                                 <label class="block text-gray-700 text-md font-semibold">Quote #</label>
                                 <label class="est-number"></label>
-                                <input type="hidden" id="estimateId" class="est-number">
+                                <input type="hidden" id="estimateId">
                             </div>
                             
                             <div class="w-full lg:w-1/2 mt-6 px-6">
@@ -408,13 +408,13 @@
 
             function populateStatusDropdown(selectedStatus = "") {
                 const statuses = [
-                    "Closed Lost",
-                    "Qualified Prospect",
-                    "In Discussion",
-                    "Identified Decision Makers",
-                    "Proposal",
-                    "In Negotiation",
-                    "Purchasing"
+                    { id: 14, text: "Closed Lost" },
+                    { id: 17, text: "Qualified Prospect" },
+                    { id: 8,  text: "In Discussion" },
+                    { id: 9,  text: "Identified Decision Makers" },
+                    { id: 10, text: "Proposal" },
+                    { id: 11, text: "In Negotiation" },
+                    { id: 12, text: "Purchasing" }
                 ];
 
                 const select = document.getElementById("est-status");
@@ -422,14 +422,18 @@
 
                 statuses.forEach(status => {
                     const opt = document.createElement("option");
-                    opt.value = status;
-                    opt.textContent = status;
+                    opt.value = status.id;           // internal ID in value
+                    opt.textContent = status.text;   // label shown to user
 
-                    if (selectedStatus.trim().toLowerCase() === status.trim().toLowerCase()) opt.selected = true;
+                    // SELECT item by comparing text (since UI sends selectedStatus as text)
+                    if (selectedStatus.trim().toLowerCase() === status.text.trim().toLowerCase()) {
+                        opt.selected = true;
+                    }
 
                     select.appendChild(opt);
                 });
             }
+
 
             function populateLeadSourceDropdown(leadSources = [], selectedLeadSourceId = "") {
                 const select = document.getElementById("lead-source");
@@ -458,15 +462,26 @@
 
 
             function populateForecastTypeDropdown(selectedForecast = "") {
-                const forecastTypes = ["Omitted", "Worst Case", "Most Likely", "Upside"];
+                const forecastTypes = [
+                    { id: 0, text: "Omitted" },
+                    { id: 1, text: "Worst Case" },
+                    { id: 2, text: "Most Likely" },
+                    { id: 3, text: "Upside" }
+                ];
+
                 const select = document.getElementById("forecast-type");
                 select.innerHTML = "";
 
                 forecastTypes.forEach(type => {
                     const opt = document.createElement("option");
-                    opt.value = type;
-                    opt.textContent = type;
-                    if (selectedForecast.trim().toLowerCase() === type.trim().toLowerCase()) opt.selected = true;
+                    opt.value = type.id;        // store internal ID
+                    opt.textContent = type.text;
+
+                    // select using TEXT (NetSuite returns text)
+                    if (selectedForecast.trim().toLowerCase() === type.text.trim().toLowerCase()) {
+                        opt.selected = true;
+                    }
+
                     select.appendChild(opt);
                 });
             }
@@ -542,10 +557,12 @@
                 });
             }
 
+
+
             // -------------------- LINE ITEM DROPDOWNS --------------------
             function createItemDropdown(itemList = [], selectedItemId = "") {
                 const select = document.createElement("select");
-                select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm";
+                select.className = "line-item-select border border-[#95a2a0] p-1 rounded w-full text-xsm";
                 select.disabled = true;
 
                 const blank = document.createElement("option");
@@ -675,8 +692,6 @@
                 return select;
             }
 
-
-
             populateHeaderFields(header);
             populateJobDropdown(header.jobDetails?.jobs || [], header.jobDetails?.selectedJobId || "");
             populateStatusDropdown(header.status || "");
@@ -712,6 +727,12 @@
                     // Item dropdown
                     tr.querySelector(".itemCell")
                         .appendChild(createItemDropdown(header.itemList?.items || [], row.itemId));
+
+                    const itemSelect = tr.querySelector(".itemCell select");
+                    itemSelect.addEventListener("change", () => {
+                        handleItemChange(tr, header);
+                    });
+
 
                     // Units dropdown
                     const unitOptions = header.unitDetails?.[row.itemId] || [];
@@ -816,9 +837,12 @@
         function logEstimateFormData() {
             const logOutput = {};
 
+            // -----------------------------------
             // HEADER FIELDS
+            // -----------------------------------
             logOutput.Header = {
                 "Quote #": document.querySelector(".est-number")?.innerText || "",
+                "Transaction Date": document.getElementById("est-date")?.value || "",
                 "Customer Name": document.getElementById("est-custname")?.innerText || "",
                 "Company": document.getElementById("est-name")?.innerText || "",
                 "Title": document.getElementById("est-title")?.value || "",
@@ -826,57 +850,92 @@
                 "Expected Close Date": document.getElementById("est-expclose")?.value || "",
                 "Expiration Date": document.getElementById("est-expires")?.value || "",
                 "Probability (%)": document.getElementById("est-prob")?.value || "",
-                "Status": document.getElementById("est-status")?.selectedOptions?.[0]?.text || "",
+                "Status": document.getElementById("est-status")?.value || "",
                 "Job": document.getElementById("est-job-id")?.selectedOptions?.[0]?.text || "",
-                "Class": document.getElementById("est-class")?.selectedOptions?.[0]?.text || "",
-                "Department": document.getElementById("est-department")?.selectedOptions?.[0]?.text || "",
-                "Location": document.getElementById("est-location")?.selectedOptions?.[0]?.text || "",
-                "Lead Source": document.getElementById("lead-source")?.selectedOptions?.[0]?.text || "",
-                "Forecast Type": document.getElementById("forecast-type")?.selectedOptions?.[0]?.text || "",
-                "Partner": document.getElementById("partner")?.selectedOptions?.[0]?.text || "",
+                "Class": document.getElementById("est-class")?.value || "", 
+                "Department": document.getElementById("est-department")?.value || "", 
+                "Location": document.getElementById("est-location")?.value || "", 
+                "Lead Source": document.getElementById("lead-source")?.value || "", 
+                "Forecast Type": document.getElementById("forecast-type")?.value || "", 
+                "Partner": document.getElementById("partner")?.value || "", 
                 "Sales Rep": document.getElementById("sales-rep")?.innerText || "",
                 "Opportunity": document.getElementById("opportunity")?.innerText || "",
                 "Subsidiary": document.getElementById("subsidiary")?.innerText || ""
             };
 
+            // -----------------------------------
             // LINE ITEMS
-            const rows = document.querySelectorAll("#itemsTableBody tr");
+            // -----------------------------------
+            const itemRows = document.querySelectorAll("#itemsTableBody tr");
             const items = [];
 
-            rows.forEach((row, index) => {
-                const itemSelect = row.querySelector("td:nth-child(1) select"); // Item dropdown
-                const qtyInput = row.querySelector("td:nth-child(2) input");    // Quantity
-                const unitSelect = row.querySelector("td:nth-child(3) select"); // Units dropdown
-                const descInput = row.querySelector("td:nth-child(4) textarea"); // Description
-                const rateInput = row.querySelector("td:nth-child(5) input");   // Rate
-                const amountInput = row.querySelector("td:nth-child(6) input"); // Amount
-                const classSelect = row.querySelector("td:nth-child(7) select"); // Class
-                const deptSelect = row.querySelector("td:nth-child(8) select");  // Department
-
+            itemRows.forEach((row, index) => {
                 items.push({
                     "Line #": index + 1,
-                    "Item Name": itemSelect?.selectedOptions?.[0]?.text || "",
-                    "Item ID": itemSelect?.value || "",
-                    "Quantity": qtyInput?.value || "",
-                    "Units": unitSelect?.selectedOptions?.[0]?.text || "",
-                    "Description": descInput?.value || "",
-                    "Rate": rateInput?.value || "",
-                    "Amount": amountInput?.value || "",
-                    "Class": classSelect?.selectedOptions?.[0]?.text || "",
-                    "Department": deptSelect?.selectedOptions?.[0]?.text || ""
+                    "Item": row.querySelector("td:nth-child(1) select")?.value || "",
+                    "Item Name": row.querySelector("td:nth-child(1) select")?.selectedOptions?.[0]?.text || "",
+                    "Item ID": row.querySelector("td:nth-child(1) select")?.value || "",
+                    "Quantity": row.querySelector("td:nth-child(2) input")?.value || "",
+                    "Units": row.querySelector("td:nth-child(3) select")?.value || "",
+                    "Description": row.querySelector("td:nth-child(4) textarea")?.value || "",
+                    "Rate": row.querySelector("td:nth-child(5) input")?.value || "",
+                    "Amount": row.querySelector("td:nth-child(6) input")?.value || "",
+                    "Class": row.querySelector("td:nth-child(7) select")?.value || "",
+                    "Department": row.querySelector("td:nth-child(8) select")?.value || ""
                 });
+
             });
 
             logOutput.LineItems = items;
 
-            console.log("📌 ESTIMATE FORM DATA (Latest Values)", logOutput);
+            // --------------------
+            // SALES TEAM
+            // --------------------
+            const salesRows = document.querySelectorAll("#salesTeamTableBody tr");
+            const salesTeam = [];
+
+            salesRows.forEach((row, index) => {
+                const empSelect = row.querySelector("td:nth-child(1) select");
+                const roleSelect = row.querySelector("td:nth-child(2) select");
+                const primaryCheckbox = row.querySelector("td:nth-child(3) input[type='checkbox']");
+                const contributionInput = row.querySelector("td:nth-child(4) input");
+
+                salesTeam.push({
+                    "Line #": index + 1,
+                    "Employee": empSelect?.selectedOptions?.[0]?.text || "",
+                    "Employee ID": empSelect?.value || "",
+                    "Role": roleSelect?.selectedOptions?.[0]?.text || "",
+                    "Role ID": roleSelect?.value || "",
+                    "Primary": primaryCheckbox?.checked || false,
+                    "Contribution %": contributionInput?.value || ""
+                });
+            });
+
+            logOutput.SalesTeam = salesTeam;
+
+
+            // -----------------------------------
+            // LOG FINAL OUTPUT
+            // -----------------------------------
+            console.log("📌 ESTIMATE FORM DATA (LATEST)", logOutput);
             return logOutput;
         }
 
-        
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const estimateIdFromUrl = urlParams.get("estimateId");
+
+        // Set hidden input value
+        const estimateInput = document.querySelector("#estimateId");
+        if (estimateInput) estimateInput.value = estimateIdFromUrl || "";
+
+        // Also store in label dataset for reference
+        const estLabel = document.querySelector(".est-number");
+        if (estLabel) estLabel.dataset.id = estimateIdFromUrl || "";
+              
         async function saveToNetSuite() {
             const estimateData = logEstimateFormData();  // Latest edited values
-            const estimateId = document.querySelector(".est-number").dataset.id;
+            const estimateId = document.querySelector("#estimateId").dataset.id;
 
             const payload = {
                 action: "updateEstimate",   // 🔥 IMPORTANT
@@ -901,18 +960,28 @@
             }
         }
 
-        document.getElementById("saveButton").addEventListener("click", async () => {
+        
 
-            const estimateData = logEstimateFormData();  // your function
-            const estimateId = document.querySelector(".est-number").dataset.id;
+        document.getElementById("saveButton").addEventListener("click", async () => {
+            const rows = document.querySelectorAll("#itemsTableBody tr");
+
+            for (const row of rows) {
+                if (row.dataset.blocked === "true") {
+                    alert("One or more line items are missing rate. Please enter rate before saving.");
+                    return;
+                }
+            }
+
+            const estimateData = logEstimateFormData();
+            const estimateId = document.querySelector("#estimateId").value;
 
             const body = {
                 action: "updateEstimate",
-                estimateId: estimateId,
+                estimateId,
                 data: estimateData
             };
 
-            const response = await fetch("/app/site/hosting/scriptlet.nl?script=95&deploy=1", {
+            const response = await fetch(BASE_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body)
@@ -922,10 +991,7 @@
 
             if (result.success) {
                 alert("Updated successfully!");
-
-                // 🔥 VERY IMPORTANT
                 setEditMode(false);
-
             } else {
                 alert("Failed to update: " + result.message);
             }
@@ -933,7 +999,70 @@
 
 
 
+        // -------------------- LINE ITEM HELPERS --------------------
+        function recalculateAmount(row) {
+            const qty = parseFloat(row.querySelector("td:nth-child(2) input")?.value) || 0;
+            const rate = parseFloat(row.querySelector("td:nth-child(5) input")?.value) || 0;
 
+            row.querySelector("td:nth-child(6) input").value = (qty * rate).toFixed(2);
+
+            row.dataset.blocked = rate > 0 ? "false" : "true";
+        }
+
+
+
+        function validateRate(row) {
+            const rateInput = row.querySelector("td:nth-child(5) input");
+
+            if (!rateInput || rateInput.value === "" || Number(rateInput.value) <= 0) {
+                row.dataset.blocked = "true";
+                return false;
+            }
+
+            row.dataset.blocked = "false";
+            return true;
+        }
+
+        function handleItemChange(row, header) {
+            const itemId = row.querySelector("td:nth-child(1) select").value;
+            if (!itemId) return;
+
+            const defaults = header.itemDefaults?.[itemId] || {};
+
+            // Units
+            const unitSelect = row.querySelector(".unitCell select");
+            unitSelect.innerHTML = "<option value=''></option>";
+            (defaults.units || []).forEach(u => {
+                const opt = document.createElement("option");
+                opt.value = u;
+                opt.textContent = u;
+                if (u === defaults.defaultUnit) opt.selected = true;
+                unitSelect.appendChild(opt);
+            });
+
+            // Description
+            row.querySelector("td:nth-child(4) textarea").value =
+                defaults.description || "";
+
+            // Rate (populate only)
+            row.querySelector("td:nth-child(5) input").value =
+                defaults.rate != null ? Number(defaults.rate).toFixed(2) : "";
+        }
+
+        document
+        .getElementById("itemsTableBody")
+        .addEventListener("input", function (e) {
+
+            const target = e.target;
+
+            if (
+                target.matches("td:nth-child(2) input") || // Quantity
+                target.matches("td:nth-child(5) input")    // Rate
+            ) {
+                const row = target.closest("tr");
+                recalculateAmount(row);
+            }
+        });
 
 
     </script>
