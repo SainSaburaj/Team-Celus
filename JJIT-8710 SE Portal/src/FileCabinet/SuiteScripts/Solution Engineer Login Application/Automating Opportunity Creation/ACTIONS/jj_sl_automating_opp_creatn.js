@@ -3719,7 +3719,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             break;
 
 
-
                         case 'getKanbanOpportunityDetails':
                             res = getKanbanOpportunityDetails(req.opportunityId);
                             break;

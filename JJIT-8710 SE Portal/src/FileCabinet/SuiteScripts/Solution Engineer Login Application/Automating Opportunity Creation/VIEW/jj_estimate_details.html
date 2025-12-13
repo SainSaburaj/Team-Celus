@@ -999,6 +999,7 @@
 
 
 
+
         // -------------------- LINE ITEM HELPERS --------------------
         function recalculateAmount(row) {
             const qty = parseFloat(row.querySelector("td:nth-child(2) input")?.value) || 0;
@@ -1049,6 +1050,7 @@
                 defaults.rate != null ? Number(defaults.rate).toFixed(2) : "";
         }
 
+
         document
         .getElementById("itemsTableBody")
         .addEventListener("input", function (e) {
@@ -1063,9 +1065,6 @@
                 recalculateAmount(row);
             }
         });
-
-
     </script>
-
 </body>
 </html>
