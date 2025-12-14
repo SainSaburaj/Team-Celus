@@ -2031,26 +2031,80 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     estRec.selectLine({ sublistId: "item", line: i });
 
                     const itemData = itemsByLineNo[i] || items[i] || {};
-
-                    if (!itemData || Object.keys(itemData).length === 0) {
+                    if (!itemData || !itemData["Item ID"]) {
                         estRec.commitLine({ sublistId: "item" });
                         continue;
                     }
 
                     try {
-                        if (itemData.Quantity != null && itemData.Quantity !== "") safeSet(estRec, "quantity", parseFloat(itemData.Quantity));
-                        if (itemData.Rate != null && itemData.Rate !== "") safeSet(estRec, "rate", parseFloat(itemData.Rate));
-                        if (itemData.Units != null) safeSet(estRec, "units", itemData.Units);
-                        if (itemData.Description != null) safeSet(estRec, "description", itemData.Description);
-                        if (itemData.Amount != null && itemData.Amount !== "") safeSet(estRec, "amount", parseFloat(itemData.Amount));
-                        if (itemData.Class != null && itemData.Class !== "") safeSet(estRec, "class", parseInt(itemData.Class));
-                        if (itemData.Department != null && itemData.Department !== "") safeSet(estRec, "department", parseInt(itemData.Department));
+                        // 1️⃣ ITEM (FIRST)
+                        estRec.setCurrentSublistValue({
+                            sublistId: "item",
+                            fieldId: "item",
+                            value: parseInt(itemData["Item ID"], 10)
+                        });
+
+                        // 2️⃣ QUANTITY (NEVER EMPTY)
+                        const qty =
+                            itemData.Quantity !== "" && itemData.Quantity != null
+                                ? parseFloat(itemData.Quantity)
+                                : 1;
+
+                        estRec.setCurrentSublistValue({
+                            sublistId: "item",
+                            fieldId: "quantity",
+                            value: qty
+                        });
+
+                        // 3️⃣ RATE (MANDATORY)
+                        if (!itemData.Rate || Number(itemData.Rate) <= 0) {
+                            throw new Error(`Missing rate on line ${i + 1}`);
+                        }
+
+                        estRec.setCurrentSublistValue({
+                            sublistId: "item",
+                            fieldId: "rate",
+                            value: parseFloat(itemData.Rate)
+                        });
+
+                        // OPTIONAL FIELDS
+                        if (itemData.Units)
+                            estRec.setCurrentSublistValue({
+                                sublistId: "item",
+                                fieldId: "units",
+                                value: itemData.Units
+                            });
+
+                        if (itemData.Description)
+                            estRec.setCurrentSublistValue({
+                                sublistId: "item",
+                                fieldId: "description",
+                                value: itemData.Description
+                            });
+
+                        if (itemData.Class)
+                            estRec.setCurrentSublistValue({
+                                sublistId: "item",
+                                fieldId: "class",
+                                value: parseInt(itemData.Class)
+                            });
+
+                        if (itemData.Department)
+                            estRec.setCurrentSublistValue({
+                                sublistId: "item",
+                                fieldId: "department",
+                                value: parseInt(itemData.Department)
+                            });
+
                     } catch (e) {
-                        log.error(`❌ Line update failed ${i + 1}`, e);
+                        log.error(`❌ Line ${i + 1} failed`, e);
+                        throw e;
                     }
 
+                    // 4️⃣ COMMIT (NOW AMOUNT IS AUTO-CALCULATED)
                     estRec.commitLine({ sublistId: "item" });
                 }
+
 
 
                 // -------------------------

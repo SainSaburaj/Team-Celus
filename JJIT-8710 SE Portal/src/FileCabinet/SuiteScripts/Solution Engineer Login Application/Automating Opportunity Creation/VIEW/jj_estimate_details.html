@@ -814,10 +814,19 @@
                 sel.disabled = !isEdit ? true : false;
             });
 
+            document.querySelectorAll("#itemsTableBody tr").forEach(row => {
+                const amountInput = row.querySelector("td:nth-child(6) input");
+                if (amountInput) {
+                    amountInput.readOnly = true;
+                }
+            });
+
             // Enable dynamically created selects inside sales team table
             document.querySelectorAll("#salesTeamTableBody select").forEach(sel => {
                 sel.disabled = !isEdit ? true : false;
             });
+
+
 
             // Toggle Buttons
             document.getElementById("editButton").classList.toggle("hidden", isEdit);
@@ -932,35 +941,6 @@
         // Also store in label dataset for reference
         const estLabel = document.querySelector(".est-number");
         if (estLabel) estLabel.dataset.id = estimateIdFromUrl || "";
-              
-        async function saveToNetSuite() {
-            const estimateData = logEstimateFormData();  // Latest edited values
-            const estimateId = document.querySelector("#estimateId").dataset.id;
-
-            const payload = {
-                action: "updateEstimate",   // 🔥 IMPORTANT
-                estimateId: estimateId,
-                data: estimateData
-            };
-
-            try {
-                const response = await fetch("/app/site/hosting/scriptlet.nl?script=95&deploy=1", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
-
-                const result = await response.json();
-                console.log("Suitelet Save Response:", result);
-
-                alert("Updated successfully in NetSuite!");
-            } catch (e) {
-                console.error("Update failed:", e);
-                alert("Update failed — check console");
-            }
-        }
-
-        
 
         document.getElementById("saveButton").addEventListener("click", async () => {
 
@@ -978,20 +958,27 @@
                 data: estimateData
             };
 
-            const response = await fetch(BASE_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body)
-            });
+            try {
+                const response = await fetch(BASE_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body)
+                });
 
-            const result = await response.json();
+                const result = await response.json();
 
-            if (result.success) {
-                alert("Updated successfully!");
-                setEditMode(false);
-            } else {
-                alert("Failed to update: " + result.message);
+                if (result.success) {
+                    alert("Updated successfully!");
+                    setEditMode(false);
+                } else {
+                    alert("Failed to update: " + result.message);
+                }
             }
+            catch (e) {
+                console.error("Update failed", e);
+                alert("Update failed — check console");
+            }
+            
         });
 
         // -------------------- LINE ITEM HELPERS --------------------
@@ -1116,15 +1103,29 @@
             const rows = document.querySelectorAll("#itemsTableBody tr");
 
             for (const row of rows) {
-                const blocked = row.dataset.blocked;
+                const rateInput = row.querySelector("td:nth-child(5) input");
+                const rate = parseFloat(rateInput?.value);
 
-                if (blocked === "true" || blocked === undefined) {
+                if (!rate || rate <= 0) {
                     alert("Please enter the rate for all items before saving.");
+
+                    // keep dataset consistent
+                    row.dataset.blocked = "true";
+
+                    // force amount reset
+                    const amountInput = row.querySelector("td:nth-child(6) input");
+                    if (amountInput) amountInput.value = "0.00";
+
                     return false;
                 }
+
+                // valid row
+                row.dataset.blocked = "false";
             }
+
             return true;
         }
+
 
         document
         .getElementById("itemsTableBody")
