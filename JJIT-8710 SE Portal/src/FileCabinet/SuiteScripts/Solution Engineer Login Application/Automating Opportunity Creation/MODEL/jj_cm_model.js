@@ -2058,6 +2058,79 @@ define(['N/search', 'N/query', 'N/record'],
                 return resultData;
             },
 
+            getItemDetails(itemId) {
+                const result = {
+                    units: [],
+                    defaultUnit: "",
+                    description: "",
+                    rate: 0,
+                    classId: "",
+                    departmentId: ""
+                };
+
+                try {
+                    if (!itemId) return { success: false };
+
+                    let unitTypeId = "";
+
+                    // STEP 1: Get item details
+                    search.create({
+                        type: "item",
+                        filters: [["internalid", "anyof", itemId]],
+                        columns: [
+                            "salesdescription",
+                            "baseprice",
+                            "unitstype",
+                            "class",
+                            "department"
+                        ]
+                    }).run().each(row => {
+                        unitTypeId = row.getValue("unitstype");
+                        result.description = row.getValue("salesdescription") || "";
+                        result.rate = parseFloat(row.getValue("baseprice")) || 0;
+                        result.classId = row.getValue("class") || "";
+                        result.departmentId = row.getValue("department") || "";
+                        return false;
+                    });
+
+                    if (!unitTypeId) {
+                        return { success: true, data: result };
+                    }
+
+                    // STEP 2: Fetch units + default
+                    let firstUnit = "";
+
+                    search.create({
+                        type: "unitstype",
+                        filters: [
+                            ["internalid", "anyof", unitTypeId],
+                            "AND",
+                            ["isinactive", "is", "F"]
+                        ],
+                        columns: ["abbreviation"]
+                    }).run().each((row, i) => {
+                        const abbr = row.getValue("abbreviation");
+                        if (abbr) {
+                            result.units.push(abbr);
+                            if (!firstUnit) firstUnit = abbr; // first = default
+                        }
+                        return true;
+                    });
+
+                    // ✅ DEFAULT UNIT = abbreviation
+                    result.defaultUnit = firstUnit;
+
+                    return { success: true, data: result };
+
+                } catch (e) {
+                    log.error("getItemDetails error", e);
+                    return { success: false };
+                }
+            }
+
+
+
+
         }
 
     });

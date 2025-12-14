@@ -963,13 +963,10 @@
         
 
         document.getElementById("saveButton").addEventListener("click", async () => {
-            const rows = document.querySelectorAll("#itemsTableBody tr");
 
-            for (const row of rows) {
-                if (row.dataset.blocked === "true") {
-                    alert("One or more line items are missing rate. Please enter rate before saving.");
-                    return;
-                }
+            // ✅ FINAL LINE VALIDATION (BEFORE SAVE)
+            if (!validateBeforeSubmit()) {
+                return;
             }
 
             const estimateData = logEstimateFormData();
@@ -997,26 +994,31 @@
             }
         });
 
-
-
-
         // -------------------- LINE ITEM HELPERS --------------------
         function recalculateAmount(row) {
             const qty = parseFloat(row.querySelector("td:nth-child(2) input")?.value) || 0;
-            const rate = parseFloat(row.querySelector("td:nth-child(5) input")?.value) || 0;
+            const rateInput = row.querySelector("td:nth-child(5) input");
+            const amountInput = row.querySelector("td:nth-child(6) input");
 
-            row.querySelector("td:nth-child(6) input").value = (qty * rate).toFixed(2);
+            const rate = parseFloat(rateInput?.value);
 
-            row.dataset.blocked = rate > 0 ? "false" : "true";
+            if (!rate || rate <= 0) {
+                amountInput.value = "0.00";
+                row.dataset.blocked = "true";
+                return;
+            }
+
+            amountInput.value = (qty * rate).toFixed(2);
+            row.dataset.blocked = "false";
         }
-
-
 
         function validateRate(row) {
             const rateInput = row.querySelector("td:nth-child(5) input");
+            const amountInput = row.querySelector("td:nth-child(6) input");
 
-            if (!rateInput || rateInput.value === "" || Number(rateInput.value) <= 0) {
+            if (!rateInput || Number(rateInput.value) <= 0) {
                 row.dataset.blocked = "true";
+                amountInput.value = "0.00";
                 return false;
             }
 
@@ -1024,47 +1026,120 @@
             return true;
         }
 
-        function handleItemChange(row, header) {
-            const itemId = row.querySelector("td:nth-child(1) select").value;
+        function handleItemChange(row) {
+            const itemSelect = row.querySelector("td:nth-child(1) select");
+            const itemId = itemSelect.value;
             if (!itemId) return;
 
-            const defaults = header.itemDefaults?.[itemId] || {};
+            const prevItemId = itemSelect.dataset.prevValue || "";
 
-            // Units
-            const unitSelect = row.querySelector(".unitCell select");
-            unitSelect.innerHTML = "<option value=''></option>";
-            (defaults.units || []).forEach(u => {
-                const opt = document.createElement("option");
-                opt.value = u;
-                opt.textContent = u;
-                if (u === defaults.defaultUnit) opt.selected = true;
-                unitSelect.appendChild(opt);
-            });
+            // 🔍 DUPLICATE ITEM CHECK
+            const rows = document.querySelectorAll("#itemsTableBody tr");
+            for (const r of rows) {
+                if (r === row) continue;
 
-            // Description
-            row.querySelector("td:nth-child(4) textarea").value =
-                defaults.description || "";
+                const otherSelect = r.querySelector("td:nth-child(1) select");
+                if (otherSelect && otherSelect.value === itemId) {
+                    alert("This item already exists in another line.");
 
-            // Rate (populate only)
-            row.querySelector("td:nth-child(5) input").value =
-                defaults.rate != null ? Number(defaults.rate).toFixed(2) : "";
+                    // 🔁 revert to previous item
+                    itemSelect.value = prevItemId;
+                    return;
+                }
+            }
+
+            // ✅ update previous value only if valid
+            itemSelect.dataset.prevValue = itemId;
+
+            // 🔽 YOUR EXISTING BACKEND CALL (UNCHANGED)
+            fetch(BASE_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    action: "getItemDetails",
+                    itemId: itemId
+                })
+            })
+            .then(res => res.json())
+            .then(unitRes => {
+                if (!unitRes?.success) return;
+
+                const data = unitRes.data;
+
+                // ---------- UNITS ----------
+                const unitSelect = row.querySelector(".unitCell select");
+                unitSelect.innerHTML = "<option value=''></option>";
+
+                (data.units || []).forEach(abbr => {
+                    const opt = document.createElement("option");
+                    opt.value = abbr;
+                    opt.textContent = abbr;
+                    unitSelect.appendChild(opt);
+                });
+
+                if (data.defaultUnit) {
+                    unitSelect.value = data.defaultUnit;
+                }
+
+                // ---------- DESCRIPTION ----------
+                row.querySelector("td:nth-child(4) textarea").value =
+                    data.description || "";
+
+                // ---------- RATE ----------
+                const rateInput = row.querySelector("td:nth-child(5) input");
+                const amountInput = row.querySelector("td:nth-child(6) input");
+
+                if (data.rate && Number(data.rate) > 0) {
+                    rateInput.value = Number(data.rate).toFixed(2);
+                    row.dataset.blocked = "false";
+                    recalculateAmount(row);
+                } else {
+                    rateInput.value = "";
+                    amountInput.value = "0.00";
+                    row.dataset.blocked = "true";
+
+                    alert("Please enter the rate for this item.");
+                }
+
+                // ---------- CLASS ----------
+                const classSelect = row.querySelector("td:nth-child(7) select");
+                classSelect.value = data.classId || "";
+
+                // ---------- DEPARTMENT ----------
+                const deptSelect = row.querySelector("td:nth-child(8) select");
+                deptSelect.value = data.departmentId || "";
+            })
+            .catch(err => console.error("Failed to fetch item details:", err));
         }
 
+        function validateBeforeSubmit() {
+            const rows = document.querySelectorAll("#itemsTableBody tr");
+
+            for (const row of rows) {
+                const blocked = row.dataset.blocked;
+
+                if (blocked === "true" || blocked === undefined) {
+                    alert("Please enter the rate for all items before saving.");
+                    return false;
+                }
+            }
+            return true;
+        }
 
         document
         .getElementById("itemsTableBody")
         .addEventListener("input", function (e) {
 
-            const target = e.target;
-
             if (
-                target.matches("td:nth-child(2) input") || // Quantity
-                target.matches("td:nth-child(5) input")    // Rate
+                e.target.matches("td:nth-child(2) input") ||
+                e.target.matches("td:nth-child(5) input")
             ) {
-                const row = target.closest("tr");
+                const row = e.target.closest("tr");
                 recalculateAmount(row);
             }
         });
+
+
     </script>
 </body>
 </html>

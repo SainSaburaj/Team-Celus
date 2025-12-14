@@ -3717,6 +3717,9 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                         case 'updateEstimate':
                             res = updateEstimateRecord(req);
                             break;
+                        case 'getItemDetails': 
+                            res = model.getItemDetails(req.itemId);
+                            break;
 
 
                         case 'getKanbanOpportunityDetails':
