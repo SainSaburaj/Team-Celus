@@ -2175,11 +2175,6 @@ define(['N/search', 'N/query', 'N/record'],
                     return { success: false };
                 }
             }
-
-
-
-
-
         }
 
     });
