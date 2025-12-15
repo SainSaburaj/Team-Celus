@@ -109,11 +109,6 @@
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Title</label>
                                 <input type="text" id="est-title" class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full" disabled/>
                             </div>
-                            
-                            <div class="w-full lg:w-1/2 mt-6 px-6">
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Probability</label>
-                                <input type="text" id="est-prob" class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full" disabled/>
-                            </div>
 
                             <div class="w-full lg:w-1/2 mt-6 px-6">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Expires</label>
@@ -377,11 +372,9 @@
                 document.getElementById("est-name").innerText = header.entity || "";
                 document.getElementById("est-date").value = formatDateForInput(header.trandate) || "";
                 document.getElementById("est-title").value = header.title || "";
-                document.getElementById("est-prob").value = header.probability ? `${header.probability}%` : "";
                 document.getElementById("est-expires").value = formatDateForInput(header.expirationDate) || "";
                 document.getElementById("est-expclose").value = formatDateForInput(header.expectedCloseDate) || "";
                 document.getElementById("est-memo").value = header.memo || "";
-
                 document.getElementById("sales-rep").innerText = header.salesRep || "";
                 document.getElementById("opportunity").innerText = header.opportunity || "";
                 document.getElementById("subsidiary").innerText = header.subsidiary || "";
@@ -864,7 +857,6 @@
                 "Memo": document.getElementById("est-memo")?.value || "",
                 "Expected Close Date": document.getElementById("est-expclose")?.value || "",
                 "Expiration Date": document.getElementById("est-expires")?.value || "",
-                "Probability (%)": document.getElementById("est-prob")?.value || "",
                 "Status": document.getElementById("est-status")?.value || "",
                 "Job": document.getElementById("est-job-id")?.selectedOptions?.[0]?.text || "",
                 "Class": document.getElementById("est-class")?.value || "", 
@@ -1083,9 +1075,6 @@
                     // ✅ fallback to first actual UOM
                     unitSelect.selectedIndex = 1;
                 }
-
-                console.log("UOMs:", data.units);
-                console.log("Default UOM:", data.defaultUnit);
 
                 // ---------- DESCRIPTION ----------
                 row.querySelector("td:nth-child(4) textarea").value =

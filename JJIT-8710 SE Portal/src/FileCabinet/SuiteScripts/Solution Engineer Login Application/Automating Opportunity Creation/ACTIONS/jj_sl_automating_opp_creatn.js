@@ -1863,7 +1863,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     statusRef: estimateRecord.getValue("statusRef"),
                     status: estimateRecord.getText("entitystatus"),
                     job: estimateRecord.getText("job"),
-                    probability: estimateRecord.getValue("probability"),
                     title: estimateRecord.getValue("title"),
                     expectedCloseDate: estimateRecord.getText("expectedclosedate"),
                     expirationDate: estimateRecord.getText("duedate"),
@@ -2086,7 +2085,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
 
 
                 safeSet(estRec, "memo", header.Memo);
-                safeSet(estRec, "probability", header["Probability (%)"] ? parseFloat(header["Probability (%)"]) : null);
                 safeSet(estRec, "title", header.Title);
 
                 // -------------------------
@@ -2240,30 +2238,56 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
 
 
                 // -------------------------
-                // SALES TEAM UPDATE
+                // SALES TEAM UPDATE (Dynamic Mode)
                 // -------------------------
                 const stCount = estRec.getLineCount({ sublistId: "salesteam" });
+
                 for (let i = 0; i < stCount; i++) {
                     estRec.selectLine({ sublistId: "salesteam", line: i });
 
                     const stData = salesTeam[i] || {};
+
+                    // Skip empty lines
                     if (!stData || Object.keys(stData).length === 0) {
                         estRec.commitLine({ sublistId: "salesteam" });
                         continue;
                     }
 
-                    try {
-                        if (stData["Employee ID"]) safeSet(estRec, "employee", parseInt(stData["Employee ID"], 10));
-                        if (stData["Role ID"]) safeSet(estRec, "salesrole", parseInt(stData["Role ID"], 10));
-                        if (stData["Contribution %"]) safeSet(estRec, "contribution", parseFloat(stData["Contribution %"]));
-                        if (stData.Primary !== undefined) {
-                            const p = (stData.Primary === true || stData.Primary === "Yes" || stData.Primary === "true");
-                            safeSet(estRec, "isprimary", p);
-                        }
-                    } catch (e) {
-                        log.error(`❌ Sales team update failed ${i + 1}`, e);
+                    // ✅ Use setCurrentSublistValue instead of safeSet
+                    if (stData["Employee ID"]) {
+                        estRec.setCurrentSublistValue({
+                            sublistId: "salesteam",
+                            fieldId: "employee",
+                            value: parseInt(stData["Employee ID"], 10)
+                        });
                     }
 
+                    if (stData["Role ID"]) {
+                        estRec.setCurrentSublistValue({
+                            sublistId: "salesteam",
+                            fieldId: "salesrole",
+                            value: parseInt(stData["Role ID"], 10)
+                        });
+                    }
+
+                    if (stData["Contribution %"] !== undefined) {
+                        estRec.setCurrentSublistValue({
+                            sublistId: "salesteam",
+                            fieldId: "contribution",
+                            value: parseFloat(stData["Contribution %"])
+                        });
+                    }
+
+                    if (stData.Primary !== undefined) {
+                        const isPrimary = stData.Primary === true || stData.Primary === "Yes" || stData.Primary === "true";
+                        estRec.setCurrentSublistValue({
+                            sublistId: "salesteam",
+                            fieldId: "isprimary",
+                            value: isPrimary
+                        });
+                    }
+
+                    // Commit the line after changes
                     estRec.commitLine({ sublistId: "salesteam" });
                 }
 
@@ -2280,9 +2304,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 return { success: false, message: e.message || "Error updating estimate" };
             }
         }
-
-
-
 
 
         function getKanbanOpportunityDetails(opportunityId) {
@@ -2543,6 +2564,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     soLeadSourceDetails: {},
                     soOpportunityDetails: {},
                     soItemList: {},
+                    soUnitList: {},
                     isSalesManager: checkIfSalesManager(userEmail)
 
                 };
@@ -2555,7 +2577,8 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                         item: salesOrderRecord.getSublistText({ sublistId: 'item', fieldId: 'item', line: i }),
                         itemId: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'item', line: i }),
                         quantity: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'quantity', line: i }),
-                        units: salesOrderRecord.getSublistText({ sublistId: 'item', fieldId: 'units', line: i }),
+                        units: salesOrderRecord.getSublistValue
+                        ({ sublistId: 'item', fieldId: 'units', line: i }),
                         description: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'description', line: i }),
                         rate: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'rate', line: i }),
                         amount: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'amount', line: i }),
@@ -3922,6 +3945,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             res.data.soOpportunityDetails = model.soOpportunityDetails(req.salesOrderId);
                             res.data.soItemList = model.soItemList(req.salesOrderId);
                             res.data.soEmployeeList = model.salesRepList();
+                            res.data.soUnitList = model.soUnitList(req.salesOrderId);
                             break;
 
                         case 'updateSalesOrder':

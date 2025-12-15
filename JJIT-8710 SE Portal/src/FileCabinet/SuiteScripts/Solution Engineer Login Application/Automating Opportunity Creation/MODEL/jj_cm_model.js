@@ -1580,13 +1580,9 @@ define(['N/search', 'N/query', 'N/record'],
                                     name: abbr  // EA / SET / BX
                                 });
                             }
-
-                            log.debug("unitList", `UOM: ${uomId}: ${abbr}`);
                         }
 
                         result.units[itemId] = uoms;
-
-                        log.debug('Object:', result);
                     }
 
 
@@ -2083,6 +2079,107 @@ define(['N/search', 'N/query', 'N/record'],
 
                 return resultData;
             },
+            
+            soUnitList(salesOrderId) {
+                const result = { units: {} }; // itemId → [abbreviation]
+
+                try {
+                    if (!salesOrderId) return result;
+
+                    const soRecord = record.load({
+                        type: record.Type.SALES_ORDER,
+                        id: salesOrderId
+                    });
+
+                    const itemCount = soRecord.getLineCount({ sublistId: "item" });
+                    const itemIds = new Set();
+
+                    // Collect item IDs from estimate
+                    for (let i = 0; i < itemCount; i++) {
+                        const itemId = soRecord.getSublistValue({
+                            sublistId: "item",
+                            fieldId: "item",
+                            line: i
+                        });
+                        if (itemId) itemIds.add(itemId);
+                    }
+
+                    if (itemIds.size === 0) return result;
+
+                    const unitTypeMap = {}; // itemId → unitTypeId
+
+                    // STEP 1: Get each item's unitstype
+                    search.create({
+                        type: "item",
+                        filters: [
+                            ["internalid", "anyof", Array.from(itemIds)]
+                        ],
+                        columns: [
+                            search.createColumn({ name: "internalid" }),
+                            search.createColumn({ name: "unitstype" })
+                        ]
+                    }).run().each(row => {
+                        const itemId = row.getValue("internalid");
+                        const unitTypeId = row.getValue("unitstype");
+                        if (unitTypeId) unitTypeMap[itemId] = unitTypeId;
+                        return true;
+                    });
+
+                    // STEP 2: For each unit type, get its UOMs
+                    // STEP 2: Load each unit type and extract UOMs
+                    for (const [itemId, unitTypeId] of Object.entries(unitTypeMap)) {
+
+                        const uoms = [];
+
+                        const unitTypeRec = record.load({
+                            type: "unitstype",
+                            id: unitTypeId
+                        });
+
+                        const lineCount = unitTypeRec.getLineCount({ sublistId: "uom" });
+
+                        for (let i = 0; i < lineCount; i++) {
+
+                            const abbr = unitTypeRec.getSublistValue({
+                                sublistId: "uom",
+                                fieldId: "abbreviation",
+                                line: i
+                            });
+
+                            const uomId = unitTypeRec.getSublistValue({
+                                sublistId: "uom",
+                                fieldId: "internalid",
+                                line: i
+                            });
+
+                            const inUse = unitTypeRec.getSublistValue({
+                                sublistId: "uom",
+                                fieldId: "inuse",
+                                line: i
+                            });
+
+                            if (abbr && uomId) {
+                                uoms.push({
+                                    id: uomId,   // ✅ UOM internal ID
+                                    name: abbr  // EA / SET / BX
+                                });
+                            }
+
+                            log.debug("unitList", `UOM: ${uomId}: ${abbr}`);
+                        }
+
+                        result.units[itemId] = uoms;
+
+                        log.debug('Object:', result);
+                    }
+
+
+                } catch (e) {
+                    log.error("unitList error", e);
+                }
+
+                return result;
+            },
 
             getItemDetails(itemId) {
                 const result = {
@@ -2175,6 +2272,11 @@ define(['N/search', 'N/query', 'N/record'],
                     return { success: false };
                 }
             }
+
+
+
+
+
         }
 
     });
