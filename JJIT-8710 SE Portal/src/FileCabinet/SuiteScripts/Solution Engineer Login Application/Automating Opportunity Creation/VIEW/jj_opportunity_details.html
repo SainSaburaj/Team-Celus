@@ -2,11 +2,14 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Opportunity Details</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet" />
+    <title>Opportunity Details</title>
+
     <style>
         body {
             font-family: "Montserrat", sans-serif;
@@ -20,302 +23,324 @@
             display: block;
         }
     </style>
+
 </head>
 
-<body class="bg-gray-100 font-montserrat p-8">
+<body class="bg-gray-100 min-h-screen">
 
-    <div class="space-y-6 w-full">
+    <div id="mainContent" class="w-full px-6 mt-10">
+        <div
+            class="relative flex flex-col min-w-0 break-words w-full mb-10 shadow-2xl bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl">
 
-        <!-- Header Card -->
-        <div class="bg-gradient-to-r from-blue-400 to-blue-500 text-gray-900 rounded-xl p-6">
-            <div class="flex justify-between items-center">
-                <h3 class="text-xl font-semibold mb-4">Opportunity #201</h3>
-                <span class="bg-blue-200 text-gray-900 px-3 py-1 rounded-full font-semibold shadow">Pending</span>
-            </div>
-            <h1 class="text-3xl font-bold">Website Redesign Project</h1>
-        </div>
-
-        <!-- Primary Information -->
-        <div class="bg-[#fffef8] rounded-xl p-6 border border-gray-300 w-full">
-            <h2 class="text-xl font-semibold mb-4 text-gray-900 border-b pb-2">Opportunity #18</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
-                <p><span class="font-medium text-gray-900 font-semibold">Title:</span> Website Redesign Project</p>
-                <p><span class="font-medium text-gray-900 font-semibold">Company:</span> 1 Anonymous</p>
-                <p><span class="font-medium text-gray-900 font-semibold">Job:</span> Sales Rep</p>
-                <p><span class="font-medium text-gray-900 font-semibold">Partner:</span> —</p>
-                <p><span class="font-medium text-gray-900 font-semibold">Status:</span> In Discussion</p>
-                <p><span class="font-medium text-gray-900 font-semibold">Probability:</span> 20.0%</p>
-                <p><span class="font-medium text-gray-900 font-semibold">Expected Close:</span> 12/01/2025</p>
-                <p><span class="font-medium text-gray-900 font-semibold">Actual Close:</span> —</p>
-                <p><span class="font-medium text-gray-900 font-semibold">Win/Loss Reason:</span> —</p>
-                <p><span class="font-medium text-gray-900 font-semibold">Details:</span> —</p>
-            </div>
-        </div>
-
-
-        <!-- Forecasting -->
-        <div class="bg-[#fffef8] rounded-xl p-6 border border-gray-300 w-full">
-            <h2 class="text-xl font-semibold mb-4 text-gray-900 border-b pb-2">Forecasting</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
-                <p><span class="font-medium text-gray-900 font-semibold">Projected Total:</span> 300.00</p>
-                <p><span class="font-medium text-gray-900 font-semibold">Range:</span> 300.00 To 300.00</p>
-                <p><span class="font-medium text-gray-900 font-semibold">Forecast Type:</span> Omitted</p>
-                <p><span class="font-medium text-gray-900 font-semibold">Weighted Total:</span> 60.00</p>
-            </div>
-        </div>
-
-        <!-- Classification -->
-        <div class="bg-[#fffef8] rounded-xl p-6 border border-gray-300 w-full">
-            <h2 class="text-xl font-semibold mb-4 text-gray-900 border-b pb-2">Classification</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
-                <p><span class="font-medium text-gray-900 font-semibold">Department:</span> Marketing</p>
-                <p><span class="font-medium text-gray-900 font-semibold">Project Type:</span> Website Redesign</p>
-                <p><span class="font-medium text-gray-900 font-semibold">Priority:</span> High</p>
-                <p><span class="font-medium text-gray-900 font-semibold">Location:</span> New York</p>
-            </div>
-        </div>
-
-        <!-- Line Level Tabs -->
-        <div class="bg-[#fffef8] rounded-xl p-6 border border-gray-300 w-full">
-            <!-- Tabs -->
-            <div class="flex space-x-4 mb-4 border-b border-blue-200">
-                <button class="tab-btn py-2 px-4 text-gray-900 font-semibold border-b-2 border-blue-800"
-                    data-tab="items">Items</button>
-                <button class="tab-btn py-2 px-4 text-gray-900 font-semibold border-b-2 border-transparent"
-                    data-tab="relationships">Relationships</button>
-                <button class="tab-btn py-2 px-4 text-gray-900 font-semibold border-b-2 border-transparent"
-                    data-tab="communication">Communication</button>
-                <button class="tab-btn py-2 px-4 text-gray-900 font-semibold border-b-2 border-transparent"
-                    data-tab="sales">Sales</button>
-                <button class="tab-btn py-2 px-4 text-gray-900 font-semibold border-b-2 border-transparent"
-                    data-tab="accounting">Accounting</button>
-            </div>
-
-            <!-- Tab Contents -->
-
-            <!-- Items Tab -->
-            <div id="items" class="tab-content tab-active">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full border border-gray-300 rounded-lg">
-                        <thead class="bg-blue-100">
-                            <tr>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Item</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Quantity</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Units</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Description</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Price Level</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Rate</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Amount</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Options</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Expected Ship Date</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Project Item</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Billable Estimate</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Cost Estimate Type</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Est. Extended Cost</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Est. Gross Profit</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Est. Gross Profit %</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">History</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr class="border-t">
-                                <td class="px-4 py-2">ABS Plastic</td>
-                                <td class="px-4 py-2">1</td>
-                                <td class="px-4 py-2">KG</td>
-                                <td class="px-4 py-2"></td>
-                                <td class="px-4 py-2">Custom</td>
-                                <td class="px-4 py-2">300.00</td>
-                                <td class="px-4 py-2"></td>
-                                <td class="px-4 py-2"></td>
-                                <td class="px-4 py-2"></td>
-                                <td class="px-4 py-2"></td>
-                                <td class="px-4 py-2"></td>
-                                <td class="px-4 py-2">Average Cost</td>
-                                <td class="px-4 py-2">0.00</td>
-                                <td class="px-4 py-2">300.00</td>
-                                <td class="px-4 py-2">100.0%</td>
-                                <td class="px-4 py-2">History</td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <div class="border-t border-x border-[#0a514a] px-6 py-6 rounded-t-xl text-white shadow-md">
+                <div class="flex items-center justify-between">
+                    <a href="https://www.jobinandjismi.com" target="_blank" rel="noopener noreferrer">
+                        <img src="https://www.jobinandjismi.com/images/secondary-logo.svg"
+                            class="w-32 sm:w-32 md:w-40 lg:w-48 xl:w-56 drop-shadow-lg" alt="Jobin And Jismi Logo" />
+                    </a>
+                    <h6 class="text-md text-[#0a514a] sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-extrabold tracking-wide leading-tight px-4"
+                        id="pageTitle">OPPORTUNITY DETAILS</h6>
                 </div>
             </div>
 
-            <!-- Relationships Tab -->
-            <div id="relationships" class="tab-content">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full border border-gray-300 rounded-lg">
-                        <thead class="bg-blue-100">
-                            <tr>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Name</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Company</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Job Title</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Phone</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Email</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Role</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr class="border-t">
-                                <td colspan="7" class="px-4 py-4 text-center text-gray-500">
-                                    No records to show.
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <div class="flex-auto px-6 lg:px-12 py-10 border border-[#0a514a] rounded-b-xl">
 
-            <!-- Accounting Tab -->
-            <div id="accounting" class="tab-content">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
-                    <p><span class="font-medium text-gray-900 font-semibold">Est. Extended Cost:</span> 0.00</p>
-                    <p><span class="font-medium text-gray-900 font-semibold">Est. Gross Profit:</span> 300.00</p>
-                    <p><span class="font-medium text-gray-900 font-semibold">Est. Gross Profit Percent:</span> 100.0%
-                    </p>
-                </div>
-            </div>
+                <!-- Primary Information Section -->
+                <section class="rounded-xl border border-[#0a514a] mb-8">
+                    <h6 class="rounded-tr-xl rounded-tl-xl text-white text-lg font-bold uppercase tracking-wider bg-[#0a514a] p-3 px-6">Primary Information</h6>
+                    <div class="flex flex-wrap border-[#abd334] shadow-md rounded-bl-xl rounded-br-xl pb-8">
 
-            <!-- Communication Tab -->
-            <div id="communication" class="tab-content">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full border border-gray-300 rounded-lg">
-                        <thead class="bg-blue-100">
-                            <tr>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">#</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">View</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Date</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Author</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Primary Recipient</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Subject</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Type</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Files</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Attachments</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Internal Only</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Remove</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr class="border-t">
-                                <td colspan="11" class="px-4 py-4 text-center text-gray-500">
-                                    No records to show.
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                        <div class="w-full lg:w-1/2 mt-6 px-6">
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Title</label>
+                            <div class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full"
+                                id="title">—</div>
+                        </div>
 
-            <!-- Sales Tab -->
-            <div id="sales" class="tab-content">
-                <!-- Top-level Sales Info -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 mb-6">
-                    <p><span class="font-medium text-gray-900 font-semibold">Lead Source:</span> —</p>
-                    <p><span class="font-medium text-gray-900 font-semibold">Solution Engineer:</span> Emma Johnson</p>
-                </div>
+                        <div class="w-full lg:w-1/2 mt-6 px-6">
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Company</label>
+                            <div class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full"
+                                id="company">—</div>
+                        </div>
 
-                <!-- Sales Team Table -->
-                <div class="overflow-x-auto">
-                    <table class="min-w-full border border-gray-300 rounded-lg">
-                        <thead class="bg-blue-100">
-                            <tr>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Sales Team</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Qualification</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Quotes</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Closed Transactions</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Employee</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Sales Role</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Primary</th>
-                                <th class="px-4 py-2 text-left text-gray-900 font-semibold">Contribution %</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr class="border-t">
-                                <td colspan="8" class="px-4 py-4 text-center text-gray-500">
-                                    No records to show.
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                        <div class="w-full mt-6 px-6">
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Details</label>
+                            <div class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full"
+                                id="details">—</div>
+                        </div>
+
+                        <div class="w-full lg:w-1/2 mt-6 px-6">
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Status</label>
+                            <div class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full"
+                                id="status">—</div>
+                        </div>
+
+                        <div class="w-full lg:w-1/2 mt-6 px-6">
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Probability (%)</label>
+                            <div class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full"
+                                id="probability">—</div>
+                        </div>
+
+                        <div class="w-full lg:w-1/2 mt-6 px-6">
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Expected Close Date</label>
+                            <div class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full"
+                                id="expectedClose">—</div>
+                        </div>
+
+                    </div>
+                </section>
+
+                <!-- Forecasting Section -->
+                <section class="rounded-xl border border-[#0a514a] mb-8">
+                    <h6 class="rounded-tr-xl rounded-tl-xl text-white text-lg font-bold uppercase tracking-wider bg-[#0a514a] p-3 px-6">Forecasting</h6>    
+                    <div class="flex flex-wrap border-[#abd334] shadow-md rounded-bl-xl rounded-br-xl pb-8">
+
+                        <div class="w-full lg:w-1/2 mt-6 px-6">
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Projected Total</label>
+                            <div class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full"
+                                id="projectedTotal">—</div>
+                        </div>
+
+                        <div class="w-full lg:w-1/2 mt-6 px-6">
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Forecast Type</label>
+                            <div class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full"
+                                id="forecastType">—</div>
+                        </div>
+
+                        <div class="w-full lg:w-1/2 mt-6 px-6">
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Range From</label>
+                            <div class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full"
+                                id="rangeFrom">—</div>
+                        </div>
+
+                        <div class="w-full lg:w-1/2 mt-6 px-6">
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Range To</label>
+                            <div class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full"
+                                id="rangeTo">—</div>
+                        </div>
+
+                    </div>
+                </section>
+
+                <!-- Classification Section -->
+                <section class="rounded-xl border border-[#0a514a] mb-8">
+                    <h6 class="rounded-tr-xl rounded-tl-xl text-white text-lg font-bold uppercase tracking-wider bg-[#0a514a] p-3 px-6">Classification</h6>
+                    <div class="flex flex-wrap border-[#abd334] shadow-md rounded-bl-xl rounded-br-xl pb-8">
+
+                        <div class="w-full lg:w-1/2 mt-6 px-6">
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Subsidiary</label>
+                            <div class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full"
+                                id="subsidiary">—</div>
+                        </div>
+
+                        <div class="w-full lg:w-1/2 mt-6 px-6">
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Department</label>
+                            <div class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full"
+                                id="department">—</div>
+                        </div>
+
+                        <div class="w-full lg:w-1/2 mt-6 px-6">
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Class</label>
+                            <div class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full"
+                                id="class">—</div>
+                        </div>
+
+                        <div class="w-full lg:w-1/2 mt-6 px-6">
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Location</label>
+                            <div class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full"
+                                id="location">—</div>
+                        </div>
+
+                        <div class="w-full lg:w-1/2 mt-6 px-6">
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Sales Type</label>
+                            <div class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full"
+                                id="salesType">—</div>
+                        </div>
+
+                    </div>
+                </section>
+
+                <!-- Line Items Section with Tabs -->
+                <section class="rounded-xl border border-[#0a514a]">
+                    <h6
+                        class="rounded-tr-xl rounded-tl-xl text-gray-700 text-lg font-bold uppercase tracking-wider border-b border-[#0a514a] p-3 px-6">
+                        Line Level Details</h6>
+                    <div class="border-[#abd334] shadow-md rounded-bl-xl rounded-br-xl p-6">
+
+                        <!-- Tabs -->
+                        <div class="flex space-x-4 mb-4 border-b border-[#0a514a]">
+                            <button class="tab-btn py-2 px-4 text-gray-700 font-semibold border-b-2 border-[#0a514a]"
+                                data-tab="items">Items</button>
+                            <button class="tab-btn py-2 px-4 text-gray-700 font-semibold border-b-2 border-transparent"
+                                data-tab="sales">Sales Team</button>
+                        </div>
+
+                        <!-- Items Tab -->
+                        <div id="items" class="tab-content tab-active">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full border border-[#95a2a0] rounded-lg">
+                                    <thead class="bg-gradient-to-r from-[#0a514a] to-[#0c6c73] text-white">
+                                        <tr>
+                                            <th class="px-4 py-3 text-left text-sm font-semibold">Item</th>
+                                            <th class="px-4 py-3 text-left text-sm font-semibold">Description</th>
+                                            <th class="px-4 py-3 text-left text-sm font-semibold">Class</th>
+                                            <th class="px-4 py-3 text-left text-sm font-semibold">Department</th>
+                                            <th class="px-4 py-3 text-left text-sm font-semibold">Quantity</th>
+                                            <th class="px-4 py-3 text-left text-sm font-semibold">Rate</th>
+                                            <th class="px-4 py-3 text-left text-sm font-semibold">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="itemsTableBody" class="bg-white">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Sales Team Tab -->
+                        <div id="sales" class="tab-content">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full border border-[#95a2a0] rounded-lg">
+                                    <thead class="bg-gradient-to-r from-[#0a514a] to-[#0c6c73] text-white">
+                                        <tr>
+                                            <th class="px-4 py-3 text-left text-sm font-semibold">Sales Role</th>
+                                            <th class="px-4 py-3 text-left text-sm font-semibold">Employee</th>
+                                            <th class="px-4 py-3 text-left text-sm font-semibold">Primary</th>
+                                            <th class="px-4 py-3 text-left text-sm font-semibold">Contribution %</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="salesTeamTableBody" class="bg-white">
+                                        <tr>
+                                            <td colspan="4" class="px-4 py-4 text-center text-gray-500">No records to
+                                                show.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+
             </div>
         </div>
-
     </div>
 
     <script>
+        const BASE_URL = "https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM";
+
+        // Tab functionality
         const tabs = document.querySelectorAll('.tab-btn');
         const tabContents = document.querySelectorAll('.tab-content');
 
         tabs.forEach(tab => {
             tab.addEventListener('click', () => {
                 tabs.forEach(t => {
-                    t.classList.remove('border-blue-800');
+                    t.classList.remove('border-[#0a514a]');
                     t.classList.add('border-transparent');
                 });
 
                 tabContents.forEach(c => c.classList.remove('tab-active'));
 
                 tab.classList.remove('border-transparent');
-                tab.classList.add('border-blue-800');
+                tab.classList.add('border-[#0a514a]');
 
                 const selected = document.getElementById(tab.dataset.tab);
                 selected.classList.add('tab-active');
             });
         });
 
-        const BASE_URL = 'https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM';
-
-        // Read URL params
+        // Fetch opportunity details
         const url = new URL(window.location.href);
-        const pageType = url.searchParams.get("type");
-        // type = estimate | opportunity | salesorder
+        const opportunityId = url.searchParams.get("opportunityId");
 
-        let recordId = '';
-        if (pageType === "estimate") recordId = url.searchParams.get("estimateId");
-        else if (pageType === "opportunity") recordId = url.searchParams.get("opportunityId");
-        else if (pageType === "salesorder") recordId = url.searchParams.get("salesOrderId");
+        if (!opportunityId) {
+            alert("No Opportunity ID provided!");
+        } else {
+            fetch(BASE_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    action: "getKanbanOpportunityDetails",
+                    opportunityId: opportunityId
+                })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.success) {
+                        console.error("Failed to load opportunity details");
+                        alert("Failed to load opportunity details: " + (data.message || "Unknown error"));
+                        return;
+                    }
 
-        // Decide Suitelet action
-        let action = "";
-        if (pageType === "estimate") action = "getKanbanEstimateDetails";
-        else if (pageType === "opportunity") action = "getKanbanOpportunityDetails";
-        else if (pageType === "salesorder") action = "getKanbanSalesOrderDetails";
+                    const { header, items } = data.data;
+                    console.log("Opportunity Header:", header);
+                    console.log("Opportunity Items:", items);
 
-        // Build fetch body
-        let fetchBody = { action };
-        if (pageType === "estimate") fetchBody.estimateId = recordId;
-        else if (pageType === "opportunity") fetchBody.opportunityId = recordId;
-        else if (pageType === "salesorder") fetchBody.salesOrderId = recordId;
+                    // Update page title
+                    document.getElementById('pageTitle').innerText = `OPPORTUNITY #${header.tranid || ""}`;
 
-        fetch(BASE_URL, {
-            method: "POST",
-            body: JSON.stringify(fetchBody)
-        })
-        .then(res => res.json())
-        .then(data => {
+                    // Populate Primary Information
+                    document.getElementById('title').innerText = header.title || "—";
+                    document.getElementById('company').innerText = header.entity || "—";
+                    document.getElementById('details').innerText = header.details || "—";
+                    document.getElementById('status').innerText = header.status || "—";
+                    document.getElementById('probability').innerText = header.probability ? header.probability + "%" : "—";
+                    document.getElementById('expectedClose').innerText = header.expectedCloseDate || "—";
 
-            if (!data.success) {
-                console.error("Failed to load details");
-                return;
-            }
+                    // Populate Forecasting
+                    document.getElementById('projectedTotal').innerText = header.projectedTotal || "—";
+                    document.getElementById('forecastType').innerText = header.forecastType || "—";
+                    document.getElementById('rangeFrom').innerText = header.rangelow || "—";
+                    document.getElementById('rangeTo').innerText = header.rangehigh || "—";
 
-            const e = data.data;
+                    // Populate Classification
+                    document.getElementById('subsidiary').innerText = header.subsidiary || "—";
+                    document.getElementById('department').innerText = header.department || "—";
+                    document.getElementById('class').innerText = header.class || "—";
+                    document.getElementById('location').innerText = header.location || "—";
+                    document.getElementById('salesType').innerText = header.salesType || "—";
 
-            // Update HTML fields
-            document.getElementById("est-quotenum").innerText = e.tranid || "";
-            document.getElementById("est-date").innerText = e.trandate || "";
-            document.getElementById("est-customer").innerText = e.entity || "";
-            document.getElementById("est-status").innerText = e.status || "";
-            document.getElementById("est-job").innerText = e.job || "";
-            document.getElementById("est-prob").innerText = e.probability ? e.probability + "%" : "";
-            document.getElementById("est-title").innerText = e.title || "";
-            document.getElementById("est-expclose").innerText = e.expectedCloseDate || "";
-            document.getElementById("est-expires").innerText = e.expirationDate || "";
-            document.getElementById("est-memo").innerText = e.memo || "";
-        })
-        .catch(err => console.error(err));
+                    // Populate Items table
+                    const itemsTableBody = document.getElementById('itemsTableBody');
+                    if (items && items.length > 0) {
+                        itemsTableBody.innerHTML = '';
+                        items.forEach(item => {
+                            const row = document.createElement('tr');
+                            row.className = 'border-t border-[#95a2a0]';
+                            row.innerHTML = `
+                            <td class="px-4 py-2 text-sm">${item.item || ""}</td>
+                            <td class="px-4 py-2 text-sm">${item.description || ""}</td>
+                            <td class="px-4 py-2 text-sm">${item.class || ""}</td>
+                            <td class="px-4 py-2 text-sm">${item.department || ""}</td>
+                            <td class="px-4 py-2 text-sm">${item.quantity || ""}</td>
+                            <td class="px-4 py-2 text-sm">${item.rate || ""}</td>
+                            <td class="px-4 py-2 text-sm">${item.amount || ""}</td>
+                        `;
+                            itemsTableBody.appendChild(row);
+                        });
+                    } else {
+                        itemsTableBody.innerHTML = '<tr><td colspan="7" class="px-4 py-4 text-center text-gray-500">No items to show.</td></tr>';
+                    }
+
+                    // Populate Sales Team table
+                    const salesTeamTableBody = document.getElementById('salesTeamTableBody');
+                    if (header.salesTeam && header.salesTeam.length > 0) {
+                        salesTeamTableBody.innerHTML = '';
+                        header.salesTeam.forEach(member => {
+                            const row = document.createElement('tr');
+                            row.className = 'border-t border-[#95a2a0]';
+                            row.innerHTML = `
+                            <td class="px-4 py-2 text-sm">${member.salesRole || ""}</td>
+                            <td class="px-4 py-2 text-sm">${member.employee || ""}</td>
+                            <td class="px-4 py-2 text-sm">${member.isPrimary ? "Yes" : "No"}</td>
+                            <td class="px-4 py-2 text-sm">${member.contribution || "0"}%</td>
+                        `;
+                            salesTeamTableBody.appendChild(row);
+                        });
+                    }
+
+                   
+                })
+        }
 
     </script>
 

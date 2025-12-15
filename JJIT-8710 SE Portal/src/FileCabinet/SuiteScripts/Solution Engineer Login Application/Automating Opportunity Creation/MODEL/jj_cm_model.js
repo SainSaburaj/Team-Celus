@@ -1541,28 +1541,54 @@ define(['N/search', 'N/query', 'N/record'],
                         return true;
                     });
 
-                    // STEP 2: For each unit type, get its subunits (only abbreviation)
+                    // STEP 2: For each unit type, get its UOMs
+                    // STEP 2: Load each unit type and extract UOMs
                     for (const [itemId, unitTypeId] of Object.entries(unitTypeMap)) {
-                        const abbreviations = [];
 
-                        search.create({
+                        const uoms = [];
+
+                        const unitTypeRec = record.load({
                             type: "unitstype",
-                            filters: [
-                                ["internalid", "anyof", unitTypeId],
-                                "AND",
-                                ["isinactive", "is", "F"]
-                            ],
-                            columns: [
-                                search.createColumn({ name: "abbreviation" })
-                            ]
-                        }).run().each(row => {
-                            const abbr = row.getValue({ name: "abbreviation" });
-                            if (abbr) abbreviations.push(abbr);
-                            return true;
+                            id: unitTypeId
                         });
 
-                        result.units[itemId] = abbreviations;
+                        const lineCount = unitTypeRec.getLineCount({ sublistId: "uom" });
+
+                        for (let i = 0; i < lineCount; i++) {
+
+                            const abbr = unitTypeRec.getSublistValue({
+                                sublistId: "uom",
+                                fieldId: "abbreviation",
+                                line: i
+                            });
+
+                            const uomId = unitTypeRec.getSublistValue({
+                                sublistId: "uom",
+                                fieldId: "internalid",
+                                line: i
+                            });
+
+                            const inUse = unitTypeRec.getSublistValue({
+                                sublistId: "uom",
+                                fieldId: "inuse",
+                                line: i
+                            });
+
+                            if (abbr && uomId) {
+                                uoms.push({
+                                    id: uomId,   // ✅ UOM internal ID
+                                    name: abbr  // EA / SET / BX
+                                });
+                            }
+
+                            log.debug("unitList", `UOM: ${uomId}: ${abbr}`);
+                        }
+
+                        result.units[itemId] = uoms;
+
+                        log.debug('Object:', result);
                     }
+
 
                 } catch (e) {
                     log.error("unitList error", e);
@@ -1947,11 +1973,6 @@ define(['N/search', 'N/query', 'N/record'],
                         resultData.selectedLeadSourceName = lookup?.title ? String(lookup.title) : "";
                     }
 
-<<<<<<< HEAD
-=======
-                    log.debug("leadSourceDetails", resultData);
-
->>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
                 } catch (err) {
                     log.error("leadSourceDetails Error", err);
                 }
@@ -2062,6 +2083,99 @@ define(['N/search', 'N/query', 'N/record'],
 
                 return resultData;
             },
+
+            getItemDetails(itemId) {
+                const result = {
+                    units: [],            // [{id, name}]
+                    defaultUnit: "",      // ✅ UOM internal ID
+                    description: "",
+                    rate: 0,
+                    classId: "",
+                    departmentId: ""
+                };
+
+                try {
+                    if (!itemId) return { success: false };
+
+                    let unitTypeId = "";
+
+                    // ----------------------------
+                    // STEP 1: ITEM DETAILS
+                    // ----------------------------
+                    search.create({
+                        type: "item",
+                        filters: [["internalid", "anyof", itemId]],
+                        columns: [
+                            "salesdescription",
+                            "baseprice",
+                            "unitstype",
+                            "class",
+                            "department"
+                        ]
+                    }).run().each(row => {
+                        unitTypeId = row.getValue("unitstype");
+                        result.description = row.getValue("salesdescription") || "";
+                        result.rate = parseFloat(row.getValue("baseprice")) || 0;
+                        result.classId = row.getValue("class") || "";
+                        result.departmentId = row.getValue("department") || "";
+                        return false;
+                    });
+
+                    if (!unitTypeId) {
+                        return { success: true, data: result };
+                    }
+
+                    // ----------------------------
+                    // STEP 2: LOAD UNIT TYPE
+                    // ----------------------------
+                    const unitTypeRec = record.load({
+                        type: "unitstype",
+                        id: unitTypeId
+                    });
+
+                    const lineCount = unitTypeRec.getLineCount({ sublistId: "uom" });
+
+                    for (let i = 0; i < lineCount; i++) {
+
+                        const abbr = unitTypeRec.getSublistValue({
+                            sublistId: "uom",
+                            fieldId: "abbreviation",
+                            line: i
+                        });
+
+                        const uomId = unitTypeRec.getSublistValue({
+                            sublistId: "uom",
+                            fieldId: "internalid",
+                            line: i
+                        });
+
+                        const baseUnit = unitTypeRec.getSublistValue({
+                            sublistId: "uom",
+                            fieldId: "baseunit",
+                            line: i
+                        });
+
+                        if (abbr && uomId) {
+                            result.units.push({
+                                id: uomId,
+                                name: abbr
+                            });
+
+                            // ✅ DEFAULT = BASE UNIT
+                            if (baseUnit === "T") {
+                                result.defaultUnit = uomId;
+                            }
+                        }
+                    }
+
+                    return { success: true, data: result };
+
+                } catch (e) {
+                    log.error("getItemDetails error", e);
+                    return { success: false };
+                }
+            }
+
 
 
 

@@ -1162,7 +1162,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             type: "transaction",
                             settings: [{ "name": "consolidationtype", "value": "ACCTTYPE" }],
                             filters:
-<<<<<<< HEAD
                                 [
                                     ["type", "anyof", "Opprtnty", "SalesOrd", "Estimate"],
                                     "AND",
@@ -1172,17 +1171,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                                     "AND",
                                     ["status", "noneof", "Opprtnty:C", "Estimate:C", "Estimate:X", "Estimate:B", "Estimate:V", "Opprtnty:D", "Opprtnty:B", "SalesOrd:G", "SalesOrd:C", "SalesOrd:H", "SalesOrd:D", "SalesOrd:F", "SalesOrd:E", "SalesOrd:B"]
                                 ],
-=======
-                            [
-                                ["type", "anyof", "Opprtnty", "SalesOrd", "Estimate"],
-                                "AND",
-                                ["mainline", "is", "T"],
-                                "AND",
-                                ["trandate", "within", formattedStartDate, formattedEndDate],
-                                "AND",
-                                    ["status", "noneof", "Opprtnty:C", "Estimate:C", "Estimate:X", "Estimate:B", "Estimate:V", "Opprtnty:D", "Opprtnty:B", "SalesOrd:G", "SalesOrd:C", "SalesOrd:H", "SalesOrd:D", "SalesOrd:F", "SalesOrd:E", "SalesOrd:B"]
-                            ],
->>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
                             columns:
                                 [
                                     search.createColumn({ name: "transactionnumber", label: "Transaction Number" }),
@@ -1650,14 +1638,37 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
 
         function approveSo(req) {
             try {
-                const { salesOrderId, salesOrderIds } = req;
+                const { salesOrderId, salesOrderIds, userId } = req;
+                log.debug('approveSo - Request received', JSON.stringify({ salesOrderId, salesOrderIds, userId }));
 
-                // Case 1: No IDs provided → return pending approval orders
+                // Case 1: No IDs provided → return pending approval orders filtered by sales team
                 if (!salesOrderId && !salesOrderIds) {
                     const salesOrders = [];
+
+                    // Get employee ID from userId (email)
+                    let employeeId = null;
+                    if (userId) {
+                        employeeId = getEmployeeIdByEmail(userId);
+                        log.debug('approveSo - Employee ID for filtering', employeeId);
+                    } else {
+                        log.debug('approveSo - No userId provided, showing all orders');
+                    }
+
+                    // Build filters - include sales team filter if employee ID exists
+                    const filters = [
+                        ['mainline', 'is', 'T'],
+                        'AND',
+                        ['status', 'anyof', 'SalesOrd:A']
+                    ];
+
+                    // Add sales team member filter if employee ID is available
+                    if (employeeId) {
+                        filters.push('AND', ['salesteammember', 'anyof', employeeId]);
+                    }
+
                     search.create({
                         type: search.Type.SALES_ORDER,
-                        filters: [['mainline', 'is', 'T'], 'AND', ['status', 'anyof', 'SalesOrd:A']],
+                        filters: filters,
                         columns: ['tranid', 'entity', 'statusref', 'trandate', 'datecreated', 'memo',
                             'salesrep', 'currency', 'terms', 'shipdate', 'location', 'department',
                             'class', 'total', 'otherrefnum']
@@ -1717,6 +1728,117 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             }
         }
 
+        /**
+         * Reject sales order(s) by closing all lines to cancel the order
+         * @param {Object} req - Request object containing salesOrderId or salesOrderIds
+         * @returns {Object} Result object with success status and message
+         */
+        function rejectSo(req) {
+            try {
+                const { salesOrderId, salesOrderIds } = req;
+
+                if (!salesOrderId && !salesOrderIds) {
+                    return { success: false, message: 'No sales order ID provided' };
+                }
+
+                // Reject given IDs by closing all lines
+                const idsToReject = salesOrderIds || [salesOrderId];
+                const results = idsToReject.map(id => {
+                    try {
+                        // Load the sales order
+                        const soRecord = record.load({
+                            type: record.Type.SALES_ORDER,
+                            id: id,
+                            isDynamic: true
+                        });
+
+                        // Close all item lines by setting isclosed to true
+                        const lineCount = soRecord.getLineCount({ sublistId: 'item' });
+                        for (let i = 0; i < lineCount; i++) {
+                            soRecord.selectLine({ sublistId: 'item', line: i });
+                            soRecord.setCurrentSublistValue({
+                                sublistId: 'item',
+                                fieldId: 'isclosed',
+                                value: true
+                            });
+                            soRecord.commitLine({ sublistId: 'item' });
+                        }
+
+                        const savedId = soRecord.save({
+                            enableSourcing: true,
+                            ignoreMandatoryFields: true
+                        });
+
+                        log.debug('Sales Order Rejected (Closed)', 'Sales Order ID: ' + savedId);
+                        return { id, success: true, message: 'Rejected (Closed)' };
+                    } catch (e) {
+                        log.error(`Error rejecting Sales Order ${id}`, e);
+                        return { id, success: false, message: e.message };
+                    }
+                });
+
+                const successCount = results.filter(r => r.success).length;
+                const failCount = results.length - successCount;
+
+                return {
+                    success: successCount > 0,
+                    message: `Rejected ${successCount} order(s). Failed: ${failCount}`,
+                    results
+                };
+
+            } catch (e) {
+                log.error('Error @ rejectSo', e);
+                return { success: false, message: 'Failed to process rejection: ' + e.message };
+            }
+        }
+
+        /**
+         * Check if an employee is a member of any pending approval sales order's sales team
+         * @param {string} userId - The email of the user
+         * @returns {Object} Result object with success status and isSalesTeamMember boolean
+         */
+        function checkIfSalesTeamMember(userId) {
+            try {
+                if (!userId) {
+                    return { success: false, isSalesTeamMember: false, message: 'No userId provided' };
+                }
+
+                // Get employee ID from email
+                const employeeId = getEmployeeIdByEmail(userId);
+                log.debug('checkIfSalesTeamMember - Employee ID', employeeId);
+
+                if (!employeeId) {
+                    return { success: false, isSalesTeamMember: false, message: 'Employee not found' };
+                }
+
+                // Search for pending approval sales orders where this employee is in the sales team
+                const soSearch = search.create({
+                    type: search.Type.SALES_ORDER,
+                    filters: [
+                        ['mainline', 'is', 'T'],
+                        'AND',
+                        ['status', 'anyof', 'SalesOrd:A'], // Pending Approval
+                        'AND',
+                        ['salesteammember', 'anyof', employeeId]
+                    ],
+                    columns: ['internalid']
+                });
+
+                const results = soSearch.run().getRange({ start: 0, end: 1 });
+                const isSalesTeamMember = results && results.length > 0;
+
+                log.debug('checkIfSalesTeamMember - Result', { employeeId, isSalesTeamMember });
+
+                return {
+                    success: true,
+                    isSalesTeamMember: isSalesTeamMember
+                };
+
+            } catch (e) {
+                log.error('Error @ checkIfSalesTeamMember', e);
+                return { success: false, isSalesTeamMember: false, message: e.message };
+            }
+        }
 
 
         function getKanbanEstimateDetails(estimateId, userEmail) {
@@ -1807,7 +1929,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                         itemId,
                         item: estimateRecord.getSublistText({ sublistId: "item", fieldId: "item", line: i }),
                         quantity: estimateRecord.getSublistValue({ sublistId: "item", fieldId: "quantity", line: i }),
-                        units: estimateRecord.getSublistText({ sublistId: "item", fieldId: "units", line: i }),
+                        units: estimateRecord.getSublistValue({ sublistId: "item", fieldId: "units", line: i }),
                         description: estimateRecord.getSublistValue({ sublistId: "item", fieldId: "description", line: i }),
                         priceLevel: estimateRecord.getSublistText({ sublistId: "item", fieldId: "price", line: i }),
                         rate: estimateRecord.getSublistValue({ sublistId: "item", fieldId: "rate", line: i }),
@@ -1880,9 +2002,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
         }
 
         function updateEstimateRecord(req) {
-<<<<<<< HEAD
-            log.debug("🔵 updateEstimateRecord() — START", req);
-
             try {
                 // -------------------------
                 // BASIC VALIDATION
@@ -1946,19 +2065,12 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 // -------------------------
                 // LOAD RECORD (dynamic)
                 // -------------------------
-=======
-            try {
-                const estimateId = req.estimateId;
-                const data = req.data;
-
->>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
                 const estRec = record.load({
                     type: record.Type.ESTIMATE,
                     id: estimateId,
                     isDynamic: true
                 });
 
-<<<<<<< HEAD
                 log.audit("✅ Record Loaded", estimateId);
 
                 // -------------------------
@@ -2051,26 +2163,80 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     estRec.selectLine({ sublistId: "item", line: i });
 
                     const itemData = itemsByLineNo[i] || items[i] || {};
-
-                    if (!itemData || Object.keys(itemData).length === 0) {
+                    if (!itemData || !itemData["Item ID"]) {
                         estRec.commitLine({ sublistId: "item" });
                         continue;
                     }
 
                     try {
-                        if (itemData.Quantity != null && itemData.Quantity !== "") safeSet(estRec, "quantity", parseFloat(itemData.Quantity));
-                        if (itemData.Rate != null && itemData.Rate !== "") safeSet(estRec, "rate", parseFloat(itemData.Rate));
-                        if (itemData.Units != null) safeSet(estRec, "units", itemData.Units);
-                        if (itemData.Description != null) safeSet(estRec, "description", itemData.Description);
-                        if (itemData.Amount != null && itemData.Amount !== "") safeSet(estRec, "amount", parseFloat(itemData.Amount));
-                        if (itemData.Class != null && itemData.Class !== "") safeSet(estRec, "class", parseInt(itemData.Class));
-                        if (itemData.Department != null && itemData.Department !== "") safeSet(estRec, "department", parseInt(itemData.Department));
+                        // 1️⃣ ITEM (FIRST)
+                        estRec.setCurrentSublistValue({
+                            sublistId: "item",
+                            fieldId: "item",
+                            value: parseInt(itemData["Item ID"], 10)
+                        });
+
+                        // 2️⃣ QUANTITY (NEVER EMPTY)
+                        const qty =
+                            itemData.Quantity !== "" && itemData.Quantity != null
+                                ? parseFloat(itemData.Quantity)
+                                : 1;
+
+                        estRec.setCurrentSublistValue({
+                            sublistId: "item",
+                            fieldId: "quantity",
+                            value: qty
+                        });
+
+                        // 3️⃣ RATE (MANDATORY)
+                        if (!itemData.Rate || Number(itemData.Rate) <= 0) {
+                            throw new Error(`Missing rate on line ${i + 1}`);
+                        }
+
+                        estRec.setCurrentSublistValue({
+                            sublistId: "item",
+                            fieldId: "rate",
+                            value: parseFloat(itemData.Rate)
+                        });
+
+                        // OPTIONAL FIELDS
+                        if (itemData.Units)
+                            estRec.setCurrentSublistValue({
+                                sublistId: "item",
+                                fieldId: "units",
+                                value: itemData.Units
+                            });
+
+                        if (itemData.Description)
+                            estRec.setCurrentSublistValue({
+                                sublistId: "item",
+                                fieldId: "description",
+                                value: itemData.Description
+                            });
+
+                        if (itemData.Class)
+                            estRec.setCurrentSublistValue({
+                                sublistId: "item",
+                                fieldId: "class",
+                                value: parseInt(itemData.Class)
+                            });
+
+                        if (itemData.Department)
+                            estRec.setCurrentSublistValue({
+                                sublistId: "item",
+                                fieldId: "department",
+                                value: parseInt(itemData.Department)
+                            });
+
                     } catch (e) {
-                        log.error(`❌ Line update failed ${i + 1}`, e);
+                        log.error(`❌ Line ${i + 1} failed`, e);
+                        throw e;
                     }
 
+                    // 4️⃣ COMMIT (NOW AMOUNT IS AUTO-CALCULATED)
                     estRec.commitLine({ sublistId: "item" });
                 }
+
 
 
                 // -------------------------
@@ -2112,73 +2278,12 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             } catch (e) {
                 log.error("❌ Update Failed", e);
                 return { success: false, message: e.message || "Error updating estimate" };
-=======
-                // -------------------------
-                // HEADER FIELDS
-                // -------------------------
-                estRec.setValue('memo', data.header.memo || "");
-                estRec.setValue('entity', data.header.customer || "");
-                estRec.setValue('location', data.header.location || "");
-                estRec.setValue('department', data.header.department || "");
-                estRec.setValue('class', data.header.class || "");
-
-                // -------------------------
-                // CLEAR EXISTING LINES
-                // -------------------------
-                const lineCount = estRec.getLineCount({ sublistId: 'item' });
-                for (let i = lineCount - 1; i >= 0; i--) {
-                    estRec.removeLine({ sublistId: 'item', line: i });
-                }
-
-                // -------------------------
-                // ADD UPDATED LINE ITEMS
-                // -------------------------
-                data.items.forEach(item => {
-                    estRec.selectNewLine({ sublistId: 'item' });
-
-                    estRec.setCurrentSublistValue({
-                        sublistId: 'item',
-                        fieldId: 'item',
-                        value: item.itemId
-                    });
-
-                    estRec.setCurrentSublistValue({
-                        sublistId: 'item',
-                        fieldId: 'quantity',
-                        value: item.quantity
-                    });
-
-                    estRec.setCurrentSublistValue({
-                        sublistId: 'item',
-                        fieldId: 'rate',
-                        value: item.rate
-                    });
-
-                    estRec.commitLine({ sublistId: 'item' });
-                });
-
-                // SAVE
-                const updatedId = estRec.save();
-
-                return {
-                    success: true,
-                    message: "Estimate updated successfully",
-                    estimateId: updatedId
-                };
-
-            } catch (e) {
-                log.error("Update Estimate Failed", e);
-                return { success: false, message: e.message };
->>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
             }
         }
 
 
-<<<<<<< HEAD
 
 
-=======
->>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
 
         function getKanbanOpportunityDetails(opportunityId) {
             try {
@@ -2430,10 +2535,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
 
                     items: [],
                     salesteam: [],
-<<<<<<< HEAD
-=======
-                    soCustomerDetails: {},
->>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
                     soClassDetails: {},
                     soDepartmentDetails: {},
                     soLocationDetails: {},
@@ -2443,11 +2544,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     soOpportunityDetails: {},
                     soItemList: {},
                     isSalesManager: checkIfSalesManager(userEmail)
-<<<<<<< HEAD
 
-=======
-        
->>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
                 };
 
 
@@ -2464,13 +2561,9 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                         amount: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'amount', line: i }),
                         location: salesOrderRecord.getSublistText({ sublistId: 'item', fieldId: 'location', line: i }),
                         classId: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'class', line: i }),
-<<<<<<< HEAD
                         departmentId: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'department', line: i }),
                         class:salesOrderRecord.getSublistText({ sublistId: 'item', fieldId: 'class', line: i }),
                         department:salesOrderRecord.getSublistText({ sublistId: 'item', fieldId: 'department', line: i }),
-=======
-                        departmentId: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'department', line: i })
->>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
                     };
                     header.items.push(lineData);
                 }
@@ -2516,12 +2609,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 });
 
                 // Update header fields if provided
-<<<<<<< HEAD
-=======
-                if (requestData.entity) {
-                    salesOrderRecord.setValue({ fieldId: 'entity', value: requestData.entity });
-                }
->>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
                 if (requestData.trandate) {
                     salesOrderRecord.setValue({ fieldId: 'trandate', value: new Date(requestData.trandate) });
                 }
@@ -2565,28 +2652,17 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 const savedId = salesOrderRecord.save();
                 log.debug("Sales Order Updated", savedId);
 
-<<<<<<< HEAD
                 return {
                     success: true,
-=======
-                return { 
-                    success: true, 
->>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
                     message: "Sales Order updated successfully.",
                     salesOrderId: savedId
                 };
 
             } catch (e) {
                 log.error("Error @ updateSalesOrder", e);
-<<<<<<< HEAD
                 return {
                     success: false,
                     message: "Failed to update sales order: " + e.message
-=======
-                return { 
-                    success: false, 
-                    message: "Failed to update sales order: " + e.message 
->>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
                 };
             }
         }
@@ -3563,7 +3639,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
         function getItemsBySubsidiary(search, subsidiaryId) {
             const items = [];
             try {
-<<<<<<< HEAD
                 const searchObj = search.create({
                     type: search.Type.INVENTORY_ITEM,
                     filters: [
@@ -3583,27 +3658,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     });
                     return true;
                 });
-=======
-                    const searchObj = search.create({
-                    type: search.Type.INVENTORY_ITEM,
-                        filters: [
-                            ['subsidiary', 'anyof', subsidiaryId],
-                            'AND',
-                            ['isinactive', 'is', 'F']
-                        ],
-                        columns: ['internalid', 'itemid', 'baseprice']
-                    });
-
-                    searchObj.run().each(result => {
-                        items.push({
-                            id: result.getValue('internalid'),
-                            name: result.getValue('itemid'),
-                            rate: parseFloat(result.getValue('baseprice')) || 0,
-                        type: 'Inventory'
-                        });
-                        return true;
-                    });
->>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
 
             } catch (e) {
                 log.error('Error in getItemsBySubsidiary', e);
@@ -3849,6 +3903,9 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                         case 'updateEstimate':
                             res = updateEstimateRecord(req);
                             break;
+                        case 'getItemDetails': 
+                            res = model.getItemDetails(req.itemId);
+                            break;
 
 
                         case 'getKanbanOpportunityDetails':
@@ -3856,10 +3913,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             break;
                         case 'getKanbanSalesOrderDetails':
                             res = getKanbanSalesOrderDetails(req.salesOrderId, req.userId);
-<<<<<<< HEAD
-=======
-                            res.data.soCustomerDetails = model.soCustomerDetails(req.salesOrderId);
->>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
                             res.data.soClassDetails = model.soClassDetails(req.salesOrderId);
                             res.data.soDepartmentDetails = model.soDepartmentDetails(req.salesOrderId);
                             res.data.soLocationDetails = model.soLocationDetails(req.salesOrderId);
@@ -3902,6 +3955,14 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
 
                         case 'approveso':
                             res = approveSo(req);
+                            break;
+
+                        case 'rejectso':
+                            res = rejectSo(req);
+                            break;
+
+                        case 'checkSalesTeamMember':
+                            res = checkIfSalesTeamMember(req.userId);
                             break;
 
                         case 'getQuoteStatuses':

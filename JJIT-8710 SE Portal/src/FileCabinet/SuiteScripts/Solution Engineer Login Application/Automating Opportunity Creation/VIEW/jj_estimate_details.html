@@ -51,11 +51,7 @@
                         </button>
 
                         <!-- New Buttons -->
-<<<<<<< HEAD
                         <div id="editActions" class="flex items-center gap-3 mt-4 float-right hidden">
-=======
-                        <div id="editActions" class="flex items-center gap-3 mt-4 hidden">
->>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
                             <button id="saveButton" type="submit"
                                 class="bg-[#0c6c73] text-white text-sm px-3 py-1 rounded-md shadow">
                                 Save
@@ -81,11 +77,7 @@
                             <div class="w-full lg:w-1/2 mt-6 px-6">
                                 <label class="block text-gray-700 text-md font-semibold">Quote #</label>
                                 <label class="est-number"></label>
-<<<<<<< HEAD
                                 <input type="hidden" id="estimateId">
-=======
-                                <input type="hidden" id="estimateId" class="est-number">
->>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
                             </div>
                             
                             <div class="w-full lg:w-1/2 mt-6 px-6">
@@ -442,10 +434,7 @@
                 });
             }
 
-<<<<<<< HEAD
 
-=======
->>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
             function populateLeadSourceDropdown(leadSources = [], selectedLeadSourceId = "") {
                 const select = document.getElementById("lead-source");
                 select.innerHTML = "";
@@ -634,7 +623,7 @@
                 return select;
             }
 
-            function createUnitDropdown(unitList = [], selectedUnit = "") {
+            function createUnitDropdown(unitList = [], selectedUnitId = "") {
                 const select = document.createElement("select");
                 select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm";
                 select.disabled = true;
@@ -642,20 +631,26 @@
                 // Blank option
                 const blank = document.createElement("option");
                 blank.value = "";
-                if (!selectedUnit) blank.selected = true;
                 select.appendChild(blank);
 
-                // unitList = ["EA", "SET", "CT"]
-                unitList.forEach(abbr => {
+                // unitList = [{ id: "1", name: "EA" }, ...]
+                unitList.forEach(uom => {
+                    if (!uom || !uom.id) return;
+
                     const opt = document.createElement("option");
-                    opt.value = abbr;
-                    opt.textContent = abbr;
-                    if (abbr === selectedUnit) opt.selected = true;
+                    opt.value = String(uom.id);        // ✅ INTERNAL ID
+                    opt.textContent = uom.name;        // EA / SET / BX
+
+                    if (String(uom.id) === String(selectedUnitId)) {
+                        opt.selected = true;           // ✅ WORKS
+                    }
+
                     select.appendChild(opt);
                 });
 
                 return select;
             }
+
 
 
             function createSalesRepDropdown(repList = [], selectedEmployeeId = "") {
@@ -739,6 +734,12 @@
                     tr.querySelector(".itemCell")
                         .appendChild(createItemDropdown(header.itemList?.items || [], row.itemId));
 
+                    const itemSelect = tr.querySelector(".itemCell select");
+                    itemSelect.addEventListener("change", () => {
+                        handleItemChange(tr, header);
+                    });
+
+
                     // Units dropdown
                     const unitOptions = header.unitDetails?.[row.itemId] || [];
                     tr.querySelector(".unitCell")
@@ -819,10 +820,19 @@
                 sel.disabled = !isEdit ? true : false;
             });
 
+            document.querySelectorAll("#itemsTableBody tr").forEach(row => {
+                const amountInput = row.querySelector("td:nth-child(6) input");
+                if (amountInput) {
+                    amountInput.readOnly = true;
+                }
+            });
+
             // Enable dynamically created selects inside sales team table
             document.querySelectorAll("#salesTeamTableBody select").forEach(sel => {
                 sel.disabled = !isEdit ? true : false;
             });
+
+
 
             // Toggle Buttons
             document.getElementById("editButton").classList.toggle("hidden", isEdit);
@@ -842,18 +852,12 @@
         function logEstimateFormData() {
             const logOutput = {};
 
-<<<<<<< HEAD
             // -----------------------------------
             // HEADER FIELDS
             // -----------------------------------
             logOutput.Header = {
                 "Quote #": document.querySelector(".est-number")?.innerText || "",
                 "Transaction Date": document.getElementById("est-date")?.value || "",
-=======
-            // HEADER FIELDS
-            logOutput.Header = {
-                "Quote #": document.querySelector(".est-number")?.innerText || "",
->>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
                 "Customer Name": document.getElementById("est-custname")?.innerText || "",
                 "Company": document.getElementById("est-name")?.innerText || "",
                 "Title": document.getElementById("est-title")?.value || "",
@@ -861,7 +865,6 @@
                 "Expected Close Date": document.getElementById("est-expclose")?.value || "",
                 "Expiration Date": document.getElementById("est-expires")?.value || "",
                 "Probability (%)": document.getElementById("est-prob")?.value || "",
-<<<<<<< HEAD
                 "Status": document.getElementById("est-status")?.value || "",
                 "Job": document.getElementById("est-job-id")?.selectedOptions?.[0]?.text || "",
                 "Class": document.getElementById("est-class")?.value || "", 
@@ -870,22 +873,11 @@
                 "Lead Source": document.getElementById("lead-source")?.value || "", 
                 "Forecast Type": document.getElementById("forecast-type")?.value || "", 
                 "Partner": document.getElementById("partner")?.value || "", 
-=======
-                "Status": document.getElementById("est-status")?.selectedOptions?.[0]?.text || "",
-                "Job": document.getElementById("est-job-id")?.selectedOptions?.[0]?.text || "",
-                "Class": document.getElementById("est-class")?.selectedOptions?.[0]?.text || "",
-                "Department": document.getElementById("est-department")?.selectedOptions?.[0]?.text || "",
-                "Location": document.getElementById("est-location")?.selectedOptions?.[0]?.text || "",
-                "Lead Source": document.getElementById("lead-source")?.selectedOptions?.[0]?.text || "",
-                "Forecast Type": document.getElementById("forecast-type")?.selectedOptions?.[0]?.text || "",
-                "Partner": document.getElementById("partner")?.selectedOptions?.[0]?.text || "",
->>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
                 "Sales Rep": document.getElementById("sales-rep")?.innerText || "",
                 "Opportunity": document.getElementById("opportunity")?.innerText || "",
                 "Subsidiary": document.getElementById("subsidiary")?.innerText || ""
             };
 
-<<<<<<< HEAD
             // -----------------------------------
             // LINE ITEMS
             // -----------------------------------
@@ -907,39 +899,10 @@
                     "Department": row.querySelector("td:nth-child(8) select")?.value || ""
                 });
 
-=======
-            // LINE ITEMS
-            const rows = document.querySelectorAll("#itemsTableBody tr");
-            const items = [];
-
-            rows.forEach((row, index) => {
-                const itemSelect = row.querySelector("td:nth-child(1) select"); // Item dropdown
-                const qtyInput = row.querySelector("td:nth-child(2) input");    // Quantity
-                const unitSelect = row.querySelector("td:nth-child(3) select"); // Units dropdown
-                const descInput = row.querySelector("td:nth-child(4) textarea"); // Description
-                const rateInput = row.querySelector("td:nth-child(5) input");   // Rate
-                const amountInput = row.querySelector("td:nth-child(6) input"); // Amount
-                const classSelect = row.querySelector("td:nth-child(7) select"); // Class
-                const deptSelect = row.querySelector("td:nth-child(8) select");  // Department
-
-                items.push({
-                    "Line #": index + 1,
-                    "Item Name": itemSelect?.selectedOptions?.[0]?.text || "",
-                    "Item ID": itemSelect?.value || "",
-                    "Quantity": qtyInput?.value || "",
-                    "Units": unitSelect?.selectedOptions?.[0]?.text || "",
-                    "Description": descInput?.value || "",
-                    "Rate": rateInput?.value || "",
-                    "Amount": amountInput?.value || "",
-                    "Class": classSelect?.selectedOptions?.[0]?.text || "",
-                    "Department": deptSelect?.selectedOptions?.[0]?.text || ""
-                });
->>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
             });
 
             logOutput.LineItems = items;
 
-<<<<<<< HEAD
             // --------------------
             // SALES TEAM
             // --------------------
@@ -984,102 +947,219 @@
         // Also store in label dataset for reference
         const estLabel = document.querySelector(".est-number");
         if (estLabel) estLabel.dataset.id = estimateIdFromUrl || "";
-              
-        async function saveToNetSuite() {
-            const estimateData = logEstimateFormData();  // Latest edited values
-            const estimateId = document.querySelector("#estimateId").dataset.id;
-=======
-            console.log("📌 ESTIMATE FORM DATA (Latest Values)", logOutput);
-            return logOutput;
-        }
 
-        
-        async function saveToNetSuite() {
-            const estimateData = logEstimateFormData();  // Latest edited values
-            const estimateId = document.querySelector(".est-number").dataset.id;
->>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
+        document.getElementById("saveButton").addEventListener("click", async () => {
 
-            const payload = {
-                action: "updateEstimate",   // 🔥 IMPORTANT
-                estimateId: estimateId,
+            // ✅ FINAL LINE VALIDATION (BEFORE SAVE)
+            if (!validateBeforeSubmit()) {
+                return;
+            }
+
+            const estimateData = logEstimateFormData();
+            const estimateId = document.querySelector("#estimateId").value;
+
+            const body = {
+                action: "updateEstimate",
+                estimateId,
                 data: estimateData
             };
 
             try {
-                const response = await fetch("/app/site/hosting/scriptlet.nl?script=95&deploy=1", {
+                const response = await fetch(BASE_URL, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify(body)
                 });
 
                 const result = await response.json();
-                console.log("Suitelet Save Response:", result);
 
-                alert("Updated successfully in NetSuite!");
-            } catch (e) {
-                console.error("Update failed:", e);
+                if (result.success) {
+                    alert("Updated successfully!");
+                    setEditMode(false);
+                } else {
+                    alert("Failed to update: " + result.message);
+                }
+            }
+            catch (e) {
+                console.error("Update failed", e);
                 alert("Update failed — check console");
             }
+            
+        });
+
+        // -------------------- LINE ITEM HELPERS --------------------
+        function recalculateAmount(row) {
+            const qty = parseFloat(row.querySelector("td:nth-child(2) input")?.value) || 0;
+            const rateInput = row.querySelector("td:nth-child(5) input");
+            const amountInput = row.querySelector("td:nth-child(6) input");
+
+            const rate = parseFloat(rateInput?.value);
+
+            if (!rate || rate <= 0) {
+                amountInput.value = "0.00";
+                row.dataset.blocked = "true";
+                return;
+            }
+
+            amountInput.value = (qty * rate).toFixed(2);
+            row.dataset.blocked = "false";
         }
 
-        document.getElementById("saveButton").addEventListener("click", async () => {
+        function validateRate(row) {
+            const rateInput = row.querySelector("td:nth-child(5) input");
+            const amountInput = row.querySelector("td:nth-child(6) input");
 
-<<<<<<< HEAD
-            const estimateData = logEstimateFormData();
-            const estimateId = document.querySelector("#estimateId").value;   // ✅ FIXED
+            if (!rateInput || Number(rateInput.value) <= 0) {
+                row.dataset.blocked = "true";
+                amountInput.value = "0.00";
+                return false;
+            }
 
-            const body = {
-                action: "updateEstimate",
-                estimateId: estimateId,  
-                data: estimateData
-            };
+            row.dataset.blocked = "false";
+            return true;
+        }
 
-            const suiteletUrl = "https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM";
+        function handleItemChange(row) {
+            const itemSelect = row.querySelector("td:nth-child(1) select");
+            const itemId = itemSelect.value;
+            if (!itemId) return;
 
-            const response = await fetch(suiteletUrl, {
-=======
-            const estimateData = logEstimateFormData();  // your function
-            const estimateId = document.querySelector(".est-number").dataset.id;
+            const prevItemId = itemSelect.dataset.prevValue || "";
 
-            const body = {
-                action: "updateEstimate",
-                estimateId: estimateId,
-                data: estimateData
-            };
+            // 🔍 DUPLICATE ITEM CHECK
+            const rows = document.querySelectorAll("#itemsTableBody tr");
+            for (const r of rows) {
+                if (r === row) continue;
 
-            const response = await fetch("/app/site/hosting/scriptlet.nl?script=95&deploy=1", {
->>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
+                const otherSelect = r.querySelector("td:nth-child(1) select");
+                if (otherSelect && otherSelect.value === itemId) {
+                    alert("This item already exists in another line.");
+
+                    // 🔁 revert to previous item
+                    itemSelect.value = prevItemId;
+                    return;
+                }
+            }
+
+            // ✅ update previous value only if valid
+            itemSelect.dataset.prevValue = itemId;
+
+            // 🔽 YOUR EXISTING BACKEND CALL (UNCHANGED)
+            fetch(BASE_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body)
-            });
+                body: JSON.stringify({
+                    action: "getItemDetails",
+                    itemId: itemId
+                })
+            })
+            .then(res => res.json())
+            .then(unitRes => {
+                if (!unitRes || unitRes.success !== true) {
+                    console.error("Invalid unit response", unitRes);
+                    return;
+                }
 
-            const result = await response.json();
 
-            if (result.success) {
-                alert("Updated successfully!");
-<<<<<<< HEAD
-                setEditMode(false);
-=======
+                const data = unitRes.data;
 
-                // 🔥 VERY IMPORTANT
-                setEditMode(false);
+                // ---------- UNITS ----------
+                const unitSelect = row.querySelector(".unitCell select");
+                unitSelect.innerHTML = "<option value=''></option>";
 
->>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
-            } else {
-                alert("Failed to update: " + result.message);
+                (data.units || []).forEach(uom => {
+                    const opt = document.createElement("option");
+                    opt.value = String(uom.id);      // ✅ INTERNAL ID
+                    opt.textContent = uom.name;      // EA / SET / BX
+                    unitSelect.appendChild(opt);
+                });
+
+                // ✅ DEFAULT UNIT (internal ID)
+                if (data.defaultUnit && unitSelect.querySelector(
+                    `option[value="${data.defaultUnit}"]`
+                )) {
+                    unitSelect.value = String(data.defaultUnit);
+                } else if (unitSelect.options.length > 1) {
+                    // ✅ fallback to first actual UOM
+                    unitSelect.selectedIndex = 1;
+                }
+
+                console.log("UOMs:", data.units);
+                console.log("Default UOM:", data.defaultUnit);
+
+                // ---------- DESCRIPTION ----------
+                row.querySelector("td:nth-child(4) textarea").value =
+                    data.description || "";
+
+                // ---------- RATE ----------
+                const rateInput = row.querySelector("td:nth-child(5) input");
+                const amountInput = row.querySelector("td:nth-child(6) input");
+
+                if (data.rate && Number(data.rate) > 0) {
+                    rateInput.value = Number(data.rate).toFixed(2);
+                    row.dataset.blocked = "false";
+                    recalculateAmount(row);
+                } else {
+                    rateInput.value = "";
+                    amountInput.value = "0.00";
+                    row.dataset.blocked = "true";
+
+                    alert("Please enter the rate for this item.");
+                }
+
+                // ---------- CLASS ----------
+                const classSelect = row.querySelector("td:nth-child(7) select");
+                classSelect.value = data.classId || "";
+
+                // ---------- DEPARTMENT ----------
+                const deptSelect = row.querySelector("td:nth-child(8) select");
+                deptSelect.value = data.departmentId || "";
+            })
+            .catch(err => console.error("Failed to fetch item details:", err));
+        }
+
+        function validateBeforeSubmit() {
+            const rows = document.querySelectorAll("#itemsTableBody tr");
+
+            for (const row of rows) {
+                const rateInput = row.querySelector("td:nth-child(5) input");
+                const rate = parseFloat(rateInput?.value);
+
+                if (!rate || rate <= 0) {
+                    alert("Please enter the rate for all items before saving.");
+
+                    // keep dataset consistent
+                    row.dataset.blocked = "true";
+
+                    // force amount reset
+                    const amountInput = row.querySelector("td:nth-child(6) input");
+                    if (amountInput) amountInput.value = "0.00";
+
+                    return false;
+                }
+
+                // valid row
+                row.dataset.blocked = "false";
+            }
+
+            return true;
+        }
+
+
+        document
+        .getElementById("itemsTableBody")
+        .addEventListener("input", function (e) {
+
+            if (
+                e.target.matches("td:nth-child(2) input") ||
+                e.target.matches("td:nth-child(5) input")
+            ) {
+                const row = e.target.closest("tr");
+                recalculateAmount(row);
             }
         });
 
 
-<<<<<<< HEAD
-=======
-
-
-
-
->>>>>>> e4cfacb61dce1e6965186b5c46786c5af601baf7
     </script>
-
 </body>
 </html>
