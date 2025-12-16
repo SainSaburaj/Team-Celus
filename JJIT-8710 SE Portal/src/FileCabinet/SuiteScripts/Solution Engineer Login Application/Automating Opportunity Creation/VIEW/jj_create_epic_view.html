@@ -146,7 +146,7 @@
 
         function getDropdownData() {
             const payload = { action: "getDropdownData" };
-
+            console.log("payload",payload)
             fetch(BASE_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -500,7 +500,7 @@
             }
         });
 
-        getDropdownData();
+       getDropdownData();
 
     </script>
 

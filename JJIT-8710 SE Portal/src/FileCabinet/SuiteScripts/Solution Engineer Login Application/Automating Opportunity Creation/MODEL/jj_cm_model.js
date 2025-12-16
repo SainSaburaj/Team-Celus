@@ -939,8 +939,6 @@ define(['N/search', 'N/query', 'N/record'],
 
                 try {
                     if (!estimateId) return resultData;
-
-                    // Load the estimate to get customer
                     const estRecord = record.load({
                         type: record.Type.ESTIMATE,
                         id: estimateId
@@ -950,7 +948,6 @@ define(['N/search', 'N/query', 'N/record'],
                     const selectedJobId = estRecord.getValue("job") || "";
                     resultData.selectedJobId = selectedJobId;
 
-                    // Search for jobs linked to this customer
                     const jobSearch = search.create({
                         type: "job",
                         filters: [
@@ -958,43 +955,39 @@ define(['N/search', 'N/query', 'N/record'],
                             "AND",
                             ["customer", "anyof", customerId]
                         ],
-                        columns: ["internalid", "altname"] // entityid is the job name
+                        columns: ["internalid", "altname"]
                     });
 
                     jobSearch.run().each(r => {
                         const jobId = r.getValue("internalid");
                         let jobName = r.getValue("altname");
-
-                        // Ensure jobName is a string (sometimes may be returned as number)
                         if (jobName !== null && jobName !== undefined) {
                             jobName = String(jobName);
-                        } else {
+                        } 
+                        else {
                             jobName = '';
                         }
 
                         resultData.jobs.push({
-                            id: jobId,   // value of <option>
-                            name: jobName // text of <option>
+                            id: jobId,
+                            name: jobName
                         });
                         return true;
                     });
 
-                    // Get selected job name
                     if (selectedJobId) {
                         const lookup = search.lookupFields({
                             type: "job",
                             id: selectedJobId,
                             columns: ["altname", "entityid"]
                         });
-
                         const selectedName = lookup?.altname || "";
                         resultData.selectedJobName = String(selectedName);
                     }
-
-                } catch (e) {
+                } 
+                catch (e) {
                     log.error("jobDetails Error", e);
                 }
-
                 return resultData;
             },
 
@@ -1012,10 +1005,8 @@ define(['N/search', 'N/query', 'N/record'],
                         type: record.Type.ESTIMATE,
                         id: estimateId
                     });
-
                     const selectedLeadSourceId = estRecord.getValue("leadsource") || "";
                     resultData.selectedLeadSourceId = selectedLeadSourceId;
-
                     const leadSourceSearch = search.create({
                         type: "campaign",
                         filters: [["isinactive", "is", "F"]],
@@ -1025,12 +1016,10 @@ define(['N/search', 'N/query', 'N/record'],
                     leadSourceSearch.run().each(r => {
                         const campaignId = r.getValue("campaignid") || r.id; // fallback to internal id
                         let title = r.getValue("title") || "";
-
                         resultData.leadSources.push({
                             id: campaignId,
                             title: String(title)
                         });
-
                         return true;
                     });
 
@@ -1042,11 +1031,10 @@ define(['N/search', 'N/query', 'N/record'],
                         });
                         resultData.selectedLeadSourceName = lookup?.title ? String(lookup.title) : "";
                     }
-
-                } catch (e) {
+                } 
+                catch (e) {
                     log.error("leadSourceDetails Error", e);
                 }
-
                 return resultData;
             },
 
@@ -1056,20 +1044,14 @@ define(['N/search', 'N/query', 'N/record'],
                     selectedPartnerId: "",
                     selectedPartnerName: ""
                 };
-
                 try {
                     if (!estimateId) return resultData;
-
-                    // Load Estimate to read selected partner
                     const estRecord = record.load({
                         type: record.Type.ESTIMATE,
                         id: estimateId
                     });
-
                     const selectedPartnerId = estRecord.getValue("partner") || "";
                     resultData.selectedPartnerId = selectedPartnerId;
-
-                    // Search all active Partners
                     const partnerSearch = search.create({
                         type: "partner",
                         filters: [["isinactive", "is", "F"]],
@@ -1084,22 +1066,18 @@ define(['N/search', 'N/query', 'N/record'],
                         return true;
                     });
 
-                    // Fetch selected partner name
                     if (selectedPartnerId) {
                         const lookup = search.lookupFields({
                             type: "partner",
                             id: selectedPartnerId,
                             columns: ["companyname"]
                         });
-
                         resultData.selectedPartnerName = lookup?.companyname || "";
                     }
-
                 }
                 catch (err) {
                     log.error("partnerDetails Error", err);
                 }
-
                 return resultData;
             },
 
@@ -1112,19 +1090,14 @@ define(['N/search', 'N/query', 'N/record'],
 
                 try {
                     if (!estimateId) return resultData;
-
-                    // Load estimate to get subsidiary + class
                     const estRecord = record.load({
                         type: record.Type.ESTIMATE,
                         id: estimateId
                     });
-
                     const subsidiaryId = estRecord.getValue("subsidiary") || "";
                     const selectedClassId = estRecord.getValue("class") || "";
-
                     resultData.selectedClassId = selectedClassId;
 
-                    // Search for all classes under this subsidiary
                     const classSearch = search.create({
                         type: "classification",
                         filters: [
@@ -1143,17 +1116,14 @@ define(['N/search', 'N/query', 'N/record'],
                         return true;
                     });
 
-                    // Lookup selected class name
                     if (selectedClassId) {
                         const lookup = search.lookupFields({
                             type: "classification",
                             id: selectedClassId,
                             columns: ["name"]
                         });
-
                         resultData.selectedClassName = lookup?.name || "";
                     }
-
                 }
                 catch (e) {
                     log.error("classDetails Error", e);
@@ -1171,8 +1141,6 @@ define(['N/search', 'N/query', 'N/record'],
 
                 try {
                     if (!estimateId) return resultData;
-
-                    // Load estimate to get subsidiary + department
                     const estRecord = record.load({
                         type: record.Type.ESTIMATE,
                         id: estimateId
@@ -1180,10 +1148,7 @@ define(['N/search', 'N/query', 'N/record'],
 
                     const subsidiaryId = estRecord.getValue("subsidiary") || "";
                     const selectedDepartmentId = estRecord.getValue("department") || "";
-
                     resultData.selectedDepartmentId = selectedDepartmentId;
-
-                    // Search all departments linked to the subsidiary
                     const depSearch = search.create({
                         type: "department",
                         filters: [
@@ -1202,21 +1167,18 @@ define(['N/search', 'N/query', 'N/record'],
                         return true;
                     });
 
-                    // Lookup selected department name
                     if (selectedDepartmentId) {
                         const lookup = search.lookupFields({
                             type: "department",
                             id: selectedDepartmentId,
                             columns: ["name"]
                         });
-
                         resultData.selectedDepartmentName = lookup?.name || "";
                     }
-
-                } catch (e) {
+                }
+                catch (e) {
                     log.error("departmentDetails Error", e);
                 }
-
                 return resultData;
             },
 
@@ -1229,8 +1191,6 @@ define(['N/search', 'N/query', 'N/record'],
 
                 try {
                     if (!estimateId) return resultData;
-
-                    // Load record to get subsidiary + location
                     const estRecord = record.load({
                         type: record.Type.ESTIMATE,
                         id: estimateId
@@ -1238,10 +1198,7 @@ define(['N/search', 'N/query', 'N/record'],
 
                     const subsidiaryId = estRecord.getValue("subsidiary") || "";
                     const selectedLocationId = estRecord.getValue("location") || "";
-
                     resultData.selectedLocationId = selectedLocationId;
-
-                    // Search all locations linked to this subsidiary
                     const locSearch = search.create({
                         type: "location",
                         filters: [
@@ -1260,21 +1217,18 @@ define(['N/search', 'N/query', 'N/record'],
                         return true;
                     });
 
-                    // Lookup selected location name
                     if (selectedLocationId) {
                         const lookup = search.lookupFields({
                             type: "location",
                             id: selectedLocationId,
                             columns: ["name"]
                         });
-
                         resultData.selectedLocationName = lookup?.name || "";
                     }
-
-                } catch (error) {
+                } 
+                catch (error) {
                     log.error("locationDetails Error", error);
                 }
-
                 return resultData;
             },
 
@@ -1282,26 +1236,21 @@ define(['N/search', 'N/query', 'N/record'],
                 const result = { items: [] };
 
                 try {
-                    // Validate input
                     if (!estimateId) {
                         log.error("itemList", "No estimateId provided");
                         return result;
                     }
 
-                    // Load estimate to get subsidiary
                     const estRecord = record.load({
                         type: record.Type.ESTIMATE,
                         id: estimateId
                     });
-
                     const subsidiaryId = estRecord.getValue("subsidiary");
-
                     if (!subsidiaryId) {
                         log.error("itemList", `No subsidiary found for estimate ${estimateId}`);
                         return result;
                     }
 
-                    // Item Search
                     const itemSearch = search.create({
                         type: search.Type.ITEM,
                         filters: [
@@ -1319,13 +1268,12 @@ define(['N/search', 'N/query', 'N/record'],
                             id: resultRow.getValue("internalid"),
                             name: resultRow.getValue("itemid")
                         });
-                        return true; // continue iteration
+                        return true;
                     });
-
-                } catch (e) {
+                } 
+                catch (e) {
                     log.error("itemList error", JSON.stringify(e));
                 }
-
                 return result;
             },
 
@@ -1352,11 +1300,10 @@ define(['N/search', 'N/query', 'N/record'],
                         });
                         return true;
                     });
-
-                } catch (e) {
+                } 
+                catch (e) {
                     log.error("salesRepList error", JSON.stringify(e));
                 }
-
                 return result;
             },
 
@@ -1365,16 +1312,13 @@ define(['N/search', 'N/query', 'N/record'],
 
                 try {
                     if (!estimateId) return result;
-
                     const estRecord = record.load({
                         type: record.Type.ESTIMATE,
                         id: estimateId
                     });
-
                     const itemCount = estRecord.getLineCount({ sublistId: "item" });
                     const itemIds = new Set();
 
-                    // Collect item internal IDs from estimate lines
                     for (let i = 0; i < itemCount; i++) {
                         const itemId = estRecord.getSublistValue({
                             sublistId: "item",
@@ -1385,10 +1329,7 @@ define(['N/search', 'N/query', 'N/record'],
                     }
 
                     if (itemIds.size === 0) return result;
-
                     const classIds = new Set();
-
-                    // Fetch class for each item
                     search.create({
                         type: "item",
                         filters: [
@@ -1403,10 +1344,8 @@ define(['N/search', 'N/query', 'N/record'],
                         if (classId) classIds.add(classId);
                         return true;
                     });
-
                     if (classIds.size === 0) return result;
 
-                    // Fetch class names for the collected classIds
                     search.create({
                         type: "classification",
                         filters: [
@@ -1420,11 +1359,10 @@ define(['N/search', 'N/query', 'N/record'],
                         });
                         return true;
                     });
-
-                } catch (e) {
+                } 
+                catch (e) {
                     log.error("classList error", e);
                 }
-
                 return result;
             },
 
@@ -1433,16 +1371,13 @@ define(['N/search', 'N/query', 'N/record'],
 
                 try {
                     if (!estimateId) return result;
-
                     const estRecord = record.load({
                         type: record.Type.ESTIMATE,
                         id: estimateId
                     });
-
                     const itemCount = estRecord.getLineCount({ sublistId: "item" });
                     const itemIds = new Set();
 
-                    // Collect item IDs from estimate lines
                     for (let i = 0; i < itemCount; i++) {
                         const itemId = estRecord.getSublistValue({
                             sublistId: "item",
@@ -1453,10 +1388,7 @@ define(['N/search', 'N/query', 'N/record'],
                     }
 
                     if (itemIds.size === 0) return result;
-
                     const deptIds = new Set();
-
-                    // Search department values for items
                     search.create({
                         type: "item",
                         filters: [
@@ -1471,10 +1403,8 @@ define(['N/search', 'N/query', 'N/record'],
                         if (deptId) deptIds.add(deptId);
                         return true;
                     });
-
                     if (deptIds.size === 0) return result;
 
-                    // Fetch department names
                     search.create({
                         type: "department",
                         filters: [
@@ -1488,29 +1418,25 @@ define(['N/search', 'N/query', 'N/record'],
                         });
                         return true;
                     });
-
-                } catch (e) {
+                } 
+                catch (e) {
                     log.error("departmentList error", e);
                 }
-
                 return result;
             },
 
             unitList(estimateId) {
-                const result = { units: {} }; // itemId → [abbreviation]
+                const result = { units: {} };
 
                 try {
                     if (!estimateId) return result;
-
                     const estRecord = record.load({
                         type: record.Type.ESTIMATE,
                         id: estimateId
                     });
-
                     const itemCount = estRecord.getLineCount({ sublistId: "item" });
                     const itemIds = new Set();
 
-                    // Collect item IDs from estimate
                     for (let i = 0; i < itemCount; i++) {
                         const itemId = estRecord.getSublistValue({
                             sublistId: "item",
@@ -1519,12 +1445,8 @@ define(['N/search', 'N/query', 'N/record'],
                         });
                         if (itemId) itemIds.add(itemId);
                     }
-
                     if (itemIds.size === 0) return result;
-
                     const unitTypeMap = {}; // itemId → unitTypeId
-
-                    // STEP 1: Get each item's unitstype
                     search.create({
                         type: "item",
                         filters: [
@@ -1541,39 +1463,30 @@ define(['N/search', 'N/query', 'N/record'],
                         return true;
                     });
 
-                    // STEP 2: For each unit type, get its UOMs
-                    // STEP 2: Load each unit type and extract UOMs
                     for (const [itemId, unitTypeId] of Object.entries(unitTypeMap)) {
-
                         const uoms = [];
-
                         const unitTypeRec = record.load({
                             type: "unitstype",
                             id: unitTypeId
                         });
-
                         const lineCount = unitTypeRec.getLineCount({ sublistId: "uom" });
 
                         for (let i = 0; i < lineCount; i++) {
-
                             const abbr = unitTypeRec.getSublistValue({
                                 sublistId: "uom",
                                 fieldId: "abbreviation",
                                 line: i
                             });
-
                             const uomId = unitTypeRec.getSublistValue({
                                 sublistId: "uom",
                                 fieldId: "internalid",
                                 line: i
                             });
-
                             const inUse = unitTypeRec.getSublistValue({
                                 sublistId: "uom",
                                 fieldId: "inuse",
                                 line: i
                             });
-
                             if (abbr && uomId) {
                                 uoms.push({
                                     id: uomId,   // ✅ UOM internal ID
@@ -1581,23 +1494,181 @@ define(['N/search', 'N/query', 'N/record'],
                                 });
                             }
                         }
-
                         result.units[itemId] = uoms;
                     }
+                } 
+                catch (e) {
+                    log.error("unitList error", e);
+                }
+                return result;
+            },
 
+           pricelevelList(estimateId) {
+                const result = { priceLevels: {} };
+
+                try {
+                    if (!estimateId) return result;
+
+                    // -----------------------------
+                    // LOAD ESTIMATE → COLLECT ITEMS
+                    // -----------------------------
+                    const estRec = record.load({
+                        type: record.Type.ESTIMATE,
+                        id: estimateId
+                    });
+
+                    const itemCount = estRec.getLineCount({ sublistId: "item" });
+                    const itemIds = new Set();
+
+                    for (let i = 0; i < itemCount; i++) {
+                        const itemId = estRec.getSublistValue({
+                            sublistId: "item",
+                            fieldId: "item",
+                            line: i
+                        });
+                        if (itemId) itemIds.add(itemId);
+                    }
+
+                    if (!itemIds.size) return result;
+
+                    // -----------------------------
+                    // FETCH ALL ACTIVE PRICE LEVELS
+                    // -----------------------------
+                    const allPriceLevelIds = [];
+
+                    search.create({
+                        type: "pricelevel",
+                        filters: [["isinactive", "is", "F"]],
+                        columns: ["internalid"]
+                    }).run().each(res => {
+                        allPriceLevelIds.push(res.getValue("internalid"));
+                        return true;
+                    });
+
+                    if (!allPriceLevelIds.length) return result;
+
+                    // -----------------------------
+                    // SEARCH ITEM PRICING
+                    // -----------------------------
+                    search.create({
+                        type: "item",
+                        filters: [
+                            ["isinactive", "is", "F"],
+                            "AND",
+                            ["internalid", "anyof", Array.from(itemIds)],
+                            "AND",
+                            ["pricing.pricelevel", "anyof", allPriceLevelIds],
+                        ],
+                        columns: [
+                            "internalid",
+                            "itemid",
+                            { name: "pricelevel", join: "pricing" }
+                        ]
+                    }).run().each(res => {
+                        const itemId = res.getValue("internalid");
+
+                        if (!result.priceLevels[itemId]) {
+                            result.priceLevels[itemId] = [];
+                        }
+
+                        result.priceLevels[itemId].push({
+                            id: res.getValue({ name: "pricelevel", join: "pricing" }),
+                            name: res.getText({ name: "pricelevel", join: "pricing" }),
+                        });
+
+                        return true;
+                    });
+
+                    log.debug("pricelevelList result", JSON.stringify(result));
 
                 } catch (e) {
-                    log.error("unitList error", e);
+                    log.error("pricelevelList error", e);
                 }
 
                 return result;
             },
 
-            salesRoleList() {
-                const result = { salesRoles: [] };
+
+            getItemDetails(itemId) {
+                const result = {
+                    units: [],
+                    defaultUnit: "",
+                    description: "",
+                    rate: 0,
+                    classId: "",
+                    departmentId: ""
+                };
 
                 try {
-                    // Search all active Sales Roles
+                    if (!itemId) return { success: false };
+                    let unitTypeId = "";
+                    search.create({
+                        type: "item",
+                        filters: [["internalid", "anyof", itemId]],
+                        columns: [
+                            "salesdescription",
+                            "baseprice",
+                            "unitstype",
+                            "class",
+                            "department"
+                        ]
+                    }).run().each(row => {
+                        unitTypeId = row.getValue("unitstype");
+                        result.description = row.getValue("salesdescription") || "";
+                        result.rate = parseFloat(row.getValue("baseprice")) || 0;
+                        result.classId = row.getValue("class") || "";
+                        result.departmentId = row.getValue("department") || "";
+                        return false;
+                    });
+
+                    if (!unitTypeId) {
+                        return { success: true, data: result };
+                    }
+
+                    const unitTypeRec = record.load({
+                        type: "unitstype",
+                        id: unitTypeId
+                    });
+                    const lineCount = unitTypeRec.getLineCount({ sublistId: "uom" });
+                    for (let i = 0; i < lineCount; i++) {
+                        const abbr = unitTypeRec.getSublistValue({
+                            sublistId: "uom",
+                            fieldId: "abbreviation",
+                            line: i
+                        });
+                        const uomId = unitTypeRec.getSublistValue({
+                            sublistId: "uom",
+                            fieldId: "internalid",
+                            line: i
+                        });
+                        const baseUnit = unitTypeRec.getSublistValue({
+                            sublistId: "uom",
+                            fieldId: "baseunit",
+                            line: i
+                        });
+                        if (abbr && uomId) {
+                            result.units.push({
+                                id: uomId,
+                                name: abbr
+                            });
+                            if (baseUnit === "T") {
+                                result.defaultUnit = uomId;
+                            }
+                        }
+                    }
+                    return { success: true, data: result };
+
+                }
+                catch (e) {
+                    log.error("getItemDetails error", e);
+                    return { success: false };
+                }
+            },
+
+
+            salesRoleList() {
+                const result = { salesRoles: [] };
+                try {
                     search.create({
                         type: "salesrole",
                         filters: [
@@ -1608,18 +1679,18 @@ define(['N/search', 'N/query', 'N/record'],
                             search.createColumn({ name: "name" })
                         ]
                     })
-                        .run()
-                        .each(role => {
-                            result.salesRoles.push({
-                                id: role.getValue({ name: "internalid" }),
-                                name: role.getValue({ name: "name" })
-                            });
-                            return true;
+                    .run()
+                    .each(role => {
+                        result.salesRoles.push({
+                            id: role.getValue({ name: "internalid" }),
+                            name: role.getValue({ name: "name" })
                         });
-                } catch (e) {
+                        return true;
+                    });
+                } 
+                catch (e) {
                     log.error("salesRoleList error", e);
                 }
-
                 return result;
             },
 
@@ -1632,19 +1703,13 @@ define(['N/search', 'N/query', 'N/record'],
 
                 try {
                     if (!salesOrderId) return resultData;
-
-                    // Load estimate to get subsidiary + class
                     const soRecord = record.load({
                         type: record.Type.SALES_ORDER,
                         id: salesOrderId
                     });
-
                     const subsidiaryId = soRecord.getValue("subsidiary") || "";
                     const selectedClassId = soRecord.getValue("class") || "";
-
                     resultData.selectedClassId = selectedClassId;
-
-                    // Search for all classes under this subsidiary
                     const classSearch = search.create({
                         type: "classification",
                         filters: [
@@ -1663,22 +1728,18 @@ define(['N/search', 'N/query', 'N/record'],
                         return true;
                     });
 
-                    // Lookup selected class name
                     if (selectedClassId) {
                         const lookup = search.lookupFields({
                             type: "classification",
                             id: selectedClassId,
                             columns: ["name"]
                         });
-
                         resultData.selectedClassName = lookup?.name || "";
                     }
-
                 } 
                 catch (e) {
                     log.error("classDetails Error", e);
                 }
-
                 return resultData;
             },
 
@@ -2180,103 +2241,5 @@ define(['N/search', 'N/query', 'N/record'],
 
                 return result;
             },
-
-            getItemDetails(itemId) {
-                const result = {
-                    units: [],            // [{id, name}]
-                    defaultUnit: "",      // ✅ UOM internal ID
-                    description: "",
-                    rate: 0,
-                    classId: "",
-                    departmentId: ""
-                };
-
-                try {
-                    if (!itemId) return { success: false };
-
-                    let unitTypeId = "";
-
-                    // ----------------------------
-                    // STEP 1: ITEM DETAILS
-                    // ----------------------------
-                    search.create({
-                        type: "item",
-                        filters: [["internalid", "anyof", itemId]],
-                        columns: [
-                            "salesdescription",
-                            "baseprice",
-                            "unitstype",
-                            "class",
-                            "department"
-                        ]
-                    }).run().each(row => {
-                        unitTypeId = row.getValue("unitstype");
-                        result.description = row.getValue("salesdescription") || "";
-                        result.rate = parseFloat(row.getValue("baseprice")) || 0;
-                        result.classId = row.getValue("class") || "";
-                        result.departmentId = row.getValue("department") || "";
-                        return false;
-                    });
-
-                    if (!unitTypeId) {
-                        return { success: true, data: result };
-                    }
-
-                    // ----------------------------
-                    // STEP 2: LOAD UNIT TYPE
-                    // ----------------------------
-                    const unitTypeRec = record.load({
-                        type: "unitstype",
-                        id: unitTypeId
-                    });
-
-                    const lineCount = unitTypeRec.getLineCount({ sublistId: "uom" });
-
-                    for (let i = 0; i < lineCount; i++) {
-
-                        const abbr = unitTypeRec.getSublistValue({
-                            sublistId: "uom",
-                            fieldId: "abbreviation",
-                            line: i
-                        });
-
-                        const uomId = unitTypeRec.getSublistValue({
-                            sublistId: "uom",
-                            fieldId: "internalid",
-                            line: i
-                        });
-
-                        const baseUnit = unitTypeRec.getSublistValue({
-                            sublistId: "uom",
-                            fieldId: "baseunit",
-                            line: i
-                        });
-
-                        if (abbr && uomId) {
-                            result.units.push({
-                                id: uomId,
-                                name: abbr
-                            });
-
-                            // ✅ DEFAULT = BASE UNIT
-                            if (baseUnit === "T") {
-                                result.defaultUnit = uomId;
-                            }
-                        }
-                    }
-
-                    return { success: true, data: result };
-
-                } catch (e) {
-                    log.error("getItemDetails error", e);
-                    return { success: false };
-                }
-            }
-
-
-
-
-
         }
-
     });

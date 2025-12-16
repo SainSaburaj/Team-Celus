@@ -29,6 +29,13 @@
 </head>
 
 <body class="bg-gray-100 font-montserrat px-3 py-10">
+    <div id="pageLoader"
+        class="fixed inset-0 flex items-center justify-center z-50 bg-white/70 backdrop-blur-sm">
+        <div class="flex flex-col items-center gap-3">
+            <div class="loader"></div>
+            <span class="text-sm text-gray-600">Loading…</span>
+        </div>
+    </div>
 
     <div id="mainContent" class="w-full px-1 md:px-4 lg:px-8 xl:px-12 2xl:px-16 mx-auto">
         <div class="relative flex flex-col min-w-0 break-words w-full mb-10 shadow-2xl bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl">
@@ -44,32 +51,17 @@
                                 class="bg-[#0a514a] text-white px-2 py-1 text-sm text-center mr-4 rounded-sm font-semibold shadow capitalize mx-auto block w-fit"></span>
                             <h1 class="text-3xl font-bold text-[#0a514a]" id="est-custname"></h1>
                         </div>
-
-                        <button type="button" id="editButton"
-                            class="mt-4 mr-0 ml-auto block border border-[#0c6c73] text-[#0c6c73] text-sm px-3 py-1 rounded-md shadow active:bg-gray-200">
-                            Edit Record
-                        </button>
-
-                        <!-- New Buttons -->
+                        <button type="button" id="editButton" class="mt-4 mr-0 ml-auto block border border-[#0c6c73] text-[#0c6c73] text-sm px-3 py-1 rounded-md shadow active:bg-gray-200">Edit Record</button>
                         <div id="editActions" class="flex items-center gap-3 mt-4 float-right hidden">
-                            <button id="saveButton" type="submit"
-                                class="bg-[#0c6c73] text-white text-sm px-3 py-1 rounded-md shadow">
-                                Save
-                            </button>
-                            <button id="cancelButton"
-                                class="block border border-[#0c6c73] text-[#0c6c73] text-sm px-3 py-1 rounded-md shadow">
-                                Cancel
-                            </button>
+                            <button id="saveButton" type="submit" class="bg-[#0c6c73] text-white text-sm px-3 py-1 rounded-md shadow">Save</button>
+                            <button id="cancelButton" class="block border border-[#0c6c73] text-[#0c6c73] text-sm px-3 py-1 rounded-md shadow">Cancel</button>
                         </div>
-
                     </div>
                 </div>
             </div>
 
-
             <div class="flex-auto px-5 lg:px-12 py-10 border border-[#0a514a] rounded-b-xl">
                 <form>
-                <!-- Primary Information Section -->
                     <section class="rounded-xl border border-[#0a514a] mb-8">
                         <h6 class="rounded-tr-xl rounded-tl-xl text-white text-lg font-bold uppercase tracking-wider bg-[#0a514a] p-3 px-6">Primary Information</h6>
                         
@@ -89,7 +81,6 @@
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Date</label>
                                 <input type="date" id="est-date" class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full" disabled/>
                             </div>
-
 
                             <div class="w-full lg:w-1/2 mt-6 px-6">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Job</label>
@@ -124,27 +115,22 @@
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Memo</label>
                                 <textarea id="est-memo" class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full" rows="1" disabled></textarea>
                             </div>
-
                         </div>
                     </section>
                     
                     <section class="rounded-xl border border-[#0a514a] mb-8">
                         <h6 class="rounded-tr-xl rounded-tl-xl text-white text-lg font-bold uppercase tracking-wider bg-[#0a514a] p-3 px-6">Sales Information</h6>
-
                         <div class="flex flex-wrap border-[#abd334] shadow-md rounded-bl-xl rounded-br-xl pb-8">
-                            <!-- Sales Rep -->
                             <div class="w-full lg:w-1/2 mt-6 px-6">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Sales Rep</label>
                                 <label id="sales-rep" class=""></label>
                             </div>
                             
-                            <!-- Opportunity -->
                             <div class="w-full lg:w-1/2 mt-6 px-6">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Opportunity</label>
                                 <label id="opportunity" class=""></label>
                             </div>
                             
-                            <!-- Forecast Type -->
                             <div class="w-full lg:w-1/2 mt-6 px-6">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Forecast Type</label>
                                 <select id="forecast-type" class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full" disabled>
@@ -152,8 +138,6 @@
                                 </select>
                             </div>
                             
-                            
-                            <!-- Lead Source -->
                             <div class="w-full lg:w-1/2 mt-6 px-6">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Lead Source</label>
                                 <select id="lead-source" class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full" disabled>
@@ -161,19 +145,15 @@
                                 </select>
                             </div>
 
-                            <!-- Partner -->
                             <div class="w-full lg:w-1/2 mt-6 px-6">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Partner</label>
                                 <select id="partner" class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full" disabled>
                                     <option selected hidden>Select Partner</option>
                                 </select>
                             </div>
-
                         </div>
                     </section>
 
-
-                    <!-- Classification Section -->
                     <section class="rounded-xl border border-[#0a514a] mb-8">
                         <h6 class="rounded-tr-xl rounded-tl-xl text-white text-lg font-bold uppercase tracking-wider bg-[#0a514a] p-3 px-6">Classification</h6>
                         <div class="flex flex-wrap border-[#abd334] shadow-md rounded-bl-xl rounded-br-xl pb-8">
@@ -203,16 +183,13 @@
                                     <option selected hidden>Select Location</option>
                                 </select>
                             </div>
-
                         </div>
                     </section>
 
-                    <!-- Line Items Section with Tabs -->
                     <section class="rounded-xl border border-[#0a514a]">
                         <h6 class="rounded-tr-xl rounded-tl-xl text-white text-lg font-bold uppercase tracking-wider bg-[#0a514a] p-3 px-6">Line Level Details</h6>
                         <div class="border-[#abd334] shadow-md rounded-bl-xl rounded-br-xl p-6">
                             
-                            <!-- Tabs -->
                             <div class="flex space-x-4 mb-4 border-b border-[#0a514a]">
                                 <button type="button" class="tab-btn py-2 px-4 text-gray-700 font-semibold border-b-2 border-[#0a514a]" data-tab="items">
                                     Items
@@ -222,8 +199,6 @@
                                 </button>
                             </div>
 
-
-                            <!-- Items Tab -->
                             <div id="items" class="tab-content tab-active">
                                 <div class="overflow-x-auto">
                                     <table class="min-w-full border border-[#95a2a0] rounded-lg">
@@ -233,6 +208,7 @@
                                                 <th class="px-4 py-3 text-left text-sm font-semibold">Quantity</th>
                                                 <th class="px-4 py-3 text-left text-sm font-semibold">Units</th>
                                                 <th class="px-4 py-3 text-left text-sm font-semibold">Description</th>
+                                                <th id="th-pricelevel" class="px-4 py-3 text-left text-sm font-semibold">Price Level</th>
                                                 <th id="th-rate" class="px-4 py-3 text-left text-sm font-semibold">Rate</th>
                                                 <th id="th-amount" class="px-4 py-3 text-left text-sm font-semibold ">Amount</th>
                                                 <th class="px-4 py-3 text-left text-sm font-semibold">Class</th>
@@ -245,7 +221,6 @@
                                 </div>
                             </div>
 
-                            <!-- Sales team Tab -->
                             <div id="sales-team" class="tab-content">
                                 <div class="overflow-x-auto">
                                     <table class="min-w-full border border-[#95a2a0] rounded-lg">
@@ -268,7 +243,6 @@
             </div>
         </div>
     </div>
-    
 
     <script>
         const tabs = document.querySelectorAll('.tab-btn');
@@ -284,11 +258,33 @@
 
                 tabContents.forEach(c => c.classList.remove('tab-active'));
                 tab.classList.remove('border-transparent');
-                tab.classList.add('border-[#0a514a]'); // highlight active tab
+                tab.classList.add('border-[#0a514a]');
                 const selectedTab = document.getElementById(tab.dataset.tab);
                 selectedTab.classList.add('tab-active');
             });
         });
+
+        function showLoader(text = "Loading…") {
+            const loader = document.getElementById("pageLoader");
+            if (!loader) return;
+
+            loader.querySelector("span").innerText = text;
+            loader.classList.remove("hidden");
+            loader.classList.add("flex");
+        }
+
+        function hideLoader() {
+            const loader = document.getElementById("pageLoader");
+            const content = document.getElementById("mainContent");
+
+            if (loader) {
+                loader.classList.add("hidden");
+                loader.classList.remove("flex");
+            }
+            if (content) {
+                content.classList.remove("hidden");
+            }
+        }
 
         function formatDateForInput(nsDate) {
             if (!nsDate) return "";
@@ -300,30 +296,24 @@
             return `${year}-${month}-${day}`;
         }
 
-
         const BASE_URL = 'https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM';
 
         const loggedInUserId = "{{USER_ID}}";
         
-        // Read URL params
         const url = new URL(window.location.href);
         const pageType = url.searchParams.get("type");
-        // type = estimate | opportunity | salesorder
 
         let recordId = '';
         if (pageType === "estimate") recordId = url.searchParams.get("estimateId");
         else if (pageType === "opportunity") recordId = url.searchParams.get("opportunityId");
         else if (pageType === "salesorder") recordId = url.searchParams.get("salesOrderId");
 
-        // Decide Suitelet action
         let action = "";
         if (pageType === "estimate") action = "getKanbanEstimateDetails";
         else if (pageType === "opportunity") action = "getKanbanOpportunityDetails";
         else if (pageType === "salesorder") action = "getKanbanSalesOrderDetails";
 
-        // Build fetch body
-        const userId = localStorage.getItem("userId");   // or however you store the logged-in email
-
+        const userId = localStorage.getItem("userId");
         let fetchBody = { 
             action: "getKanbanEstimateDetails",
             estimateId: recordId,
@@ -347,13 +337,10 @@
                 return;
             }
 
-            // Extract required data including sales manager
             const { header, items, salesTeam, repList, isSalesManager } = data.data;
             const salesManager = (isSalesManager === true || isSalesManager === "true" || isSalesManager === "T");
-
             console.log("Is Sales Manager?", salesManager);
 
-            // Hide Rate & Amount headers if not sales manager
             if (!salesManager) {
                 const rateHeader = document.getElementById("th-rate");
                 const amountHeader = document.getElementById("th-amount");
@@ -362,8 +349,6 @@
                 if (amountHeader) amountHeader.style.display = "none";
             }
 
-
-            // Main header fields
             document.querySelectorAll(".est-number").forEach(el => el.innerText = header.tranid || "");
             document.getElementById("est-custname").innerText = header.entity || "";
             document.getElementById("est-statusref").innerText = header.statusRef || "";
@@ -383,7 +368,6 @@
             function populateJobDropdown(jobs = [], selectedJobId = "") {
                 const select = document.getElementById("est-job-id");
                 select.innerHTML = "";
-
                 const blank = document.createElement("option");
                 blank.value = "";
                 select.appendChild(blank);
@@ -392,9 +376,7 @@
                     const opt = document.createElement("option");
                     opt.value = job.id;
                     opt.textContent = job.name;
-
                     if (String(job.id) === String(selectedJobId)) opt.selected = true;
-
                     select.appendChild(opt);
                 });
             }
@@ -409,48 +391,37 @@
                     { id: 11, text: "In Negotiation" },
                     { id: 12, text: "Purchasing" }
                 ];
-
                 const select = document.getElementById("est-status");
                 select.innerHTML = "";
 
                 statuses.forEach(status => {
                     const opt = document.createElement("option");
-                    opt.value = status.id;           // internal ID in value
-                    opt.textContent = status.text;   // label shown to user
-
-                    // SELECT item by comparing text (since UI sends selectedStatus as text)
+                    opt.value = status.id;
+                    opt.textContent = status.text;
                     if (selectedStatus.trim().toLowerCase() === status.text.trim().toLowerCase()) {
                         opt.selected = true;
                     }
-
                     select.appendChild(opt);
                 });
             }
 
-
             function populateLeadSourceDropdown(leadSources = [], selectedLeadSourceId = "") {
                 const select = document.getElementById("lead-source");
                 select.innerHTML = "";
-
-                // Add a blank option at the top
                 const blank = document.createElement("option");
                 blank.value = "";
                 select.appendChild(blank);
 
-                // Populate lead sources
                 leadSources.forEach(source => {
                     const opt = document.createElement("option");
-                    opt.value = source.id;      // use internal id from NetSuite
+                    opt.value = source.id;
                     opt.textContent = source.title;
-
                     if (String(source.id) === String(selectedLeadSourceId)) {
                         opt.selected = true;
                     }
-
                     select.appendChild(opt);
                 });
-
-                select.disabled = false; // enable dropdown
+                select.disabled = false;
             }
 
 
@@ -461,20 +432,16 @@
                     { id: 2, text: "Most Likely" },
                     { id: 3, text: "Upside" }
                 ];
-
                 const select = document.getElementById("forecast-type");
                 select.innerHTML = "";
-
+                
                 forecastTypes.forEach(type => {
                     const opt = document.createElement("option");
-                    opt.value = type.id;        // store internal ID
+                    opt.value = type.id;
                     opt.textContent = type.text;
-
-                    // select using TEXT (NetSuite returns text)
                     if (selectedForecast.trim().toLowerCase() === type.text.trim().toLowerCase()) {
                         opt.selected = true;
                     }
-
                     select.appendChild(opt);
                 });
             }
@@ -482,7 +449,6 @@
             function populatePartnerDropdown(partners = [], selectedPartnerId = "") {
                 const select = document.getElementById("partner");
                 select.innerHTML = "";
-
                 const blank = document.createElement("option");
                 blank.value = "";
                 select.appendChild(blank);
@@ -499,7 +465,6 @@
             function populateClassDropdown(classData = {}) {
                 const select = document.getElementById("est-class");
                 select.innerHTML = "";
-
                 const blank = document.createElement("option");
                 blank.value = "";
                 if (!classData.selectedClassId) blank.selected = true;
@@ -517,7 +482,6 @@
             function populateDepartmentDropdown(departmentData = {}) {
                 const select = document.getElementById("est-department");
                 select.innerHTML = "";
-
                 const blank = document.createElement("option");
                 blank.value = "";
                 if (!departmentData.selectedDepartmentId) blank.selected = true;
@@ -535,7 +499,6 @@
             function populateLocationDropdown(locationData = {}) {
                 const select = document.getElementById("est-location");
                 select.innerHTML = "";
-
                 const blank = document.createElement("option");
                 blank.value = "";
                 if (!locationData.selectedLocationId) blank.selected = true;
@@ -550,14 +513,10 @@
                 });
             }
 
-
-
-            // -------------------- LINE ITEM DROPDOWNS --------------------
             function createItemDropdown(itemList = [], selectedItemId = "") {
                 const select = document.createElement("select");
                 select.className = "line-item-select border border-[#95a2a0] p-1 rounded w-full text-xsm";
                 select.disabled = true;
-
                 const blank = document.createElement("option");
                 blank.value = "";
                 if (!selectedItemId) blank.selected = true;
@@ -570,7 +529,6 @@
                     if (String(item.id) === String(selectedItemId)) opt.selected = true;
                     select.appendChild(opt);
                 });
-
                 return select;
             }
 
@@ -578,7 +536,6 @@
                 const select = document.createElement("select");
                 select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm";
                 select.disabled = true;
-
                 const blank = document.createElement("option");
                 blank.value = "";
                 if (!selectedClassId) blank.selected = true;
@@ -591,7 +548,6 @@
                     if (String(cls.id) === String(selectedClassId)) opt.selected = true;
                     select.appendChild(opt);
                 });
-
                 return select;
             }
 
@@ -599,7 +555,6 @@
                 const select = document.createElement("select");
                 select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm";
                 select.disabled = true;
-
                 const blank = document.createElement("option");
                 blank.value = "";
                 if (!selectedDeptId) blank.selected = true;
@@ -612,7 +567,6 @@
                     if (String(dep.id) === String(selectedDeptId)) opt.selected = true;
                     select.appendChild(opt);
                 });
-
                 return select;
             }
 
@@ -620,37 +574,55 @@
                 const select = document.createElement("select");
                 select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm";
                 select.disabled = true;
-
-                // Blank option
                 const blank = document.createElement("option");
                 blank.value = "";
                 select.appendChild(blank);
 
-                // unitList = [{ id: "1", name: "EA" }, ...]
                 unitList.forEach(uom => {
                     if (!uom || !uom.id) return;
-
                     const opt = document.createElement("option");
-                    opt.value = String(uom.id);        // ✅ INTERNAL ID
-                    opt.textContent = uom.name;        // EA / SET / BX
-
+                    opt.value = String(uom.id);
+                    opt.textContent = uom.name;
                     if (String(uom.id) === String(selectedUnitId)) {
-                        opt.selected = true;           // ✅ WORKS
+                        opt.selected = true;
                     }
+                    select.appendChild(opt);
+                });
+                return select;
+            }
 
+            function createPriceLevelDropdown(priceLevels = [], selectedPriceLevelId = "") {
+                const select = document.createElement("select");
+                select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm";
+                select.disabled = true;
+
+                // ---- Custom Price (NetSuite standard) ----
+                const customOpt = document.createElement("option");
+                customOpt.value = "-1";           // ✅ NetSuite Custom Price
+                customOpt.textContent = "Custom";
+                if (String(selectedPriceLevelId) === "-1") {
+                    customOpt.selected = true;
+                }
+                select.appendChild(customOpt);
+
+                // ---- Other price levels ----
+                priceLevels.forEach(pl => {
+                    const opt = document.createElement("option");
+                    opt.value = String(pl.id);
+                    opt.textContent = pl.name;
+                    if (String(pl.id) === String(selectedPriceLevelId)) {
+                        opt.selected = true;
+                    }
                     select.appendChild(opt);
                 });
 
                 return select;
             }
 
-
-
             function createSalesRepDropdown(repList = [], selectedEmployeeId = "") {
                 const select = document.createElement("select");
                 select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm";
                 select.disabled = true;
-
                 const blank = document.createElement("option");
                 blank.value = "";
                 if (!selectedEmployeeId) blank.selected = true;
@@ -663,7 +635,6 @@
                     if (String(rep.id) === String(selectedEmployeeId)) opt.selected = true;
                     select.appendChild(opt);
                 });
-
                 return select;
             }
 
@@ -671,8 +642,6 @@
                 const select = document.createElement("select");
                 select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm";
                 select.disabled = true;
-
-                // blank
                 const blank = document.createElement("option");
                 blank.value = "";
                 if (!selectedRoleId) blank.selected = true;
@@ -682,12 +651,9 @@
                     const opt = document.createElement("option");
                     opt.value = role.id;
                     opt.textContent = role.name;
-
                     if (String(role.id) === String(selectedRoleId)) opt.selected = true;
-
                     select.appendChild(opt);
                 });
-
                 return select;
             }
 
@@ -701,7 +667,6 @@
             populateDepartmentDropdown(header.departmentDetails);
             populateLocationDropdown(header.locationDetails);
 
-            // -------------------- RENDER ITEMS --------------------
             const tbody = document.getElementById("itemsTableBody");
             tbody.innerHTML = "";
 
@@ -711,19 +676,17 @@
             else {
                 items.forEach(row => {
                     const tr = document.createElement("tr");
-
                     tr.innerHTML = `
                         <td class="itemCell px-3 py-2 text-sm"></td>
                         <td class="px-3 py-2 text-sm"><input type="number" value="${row.quantity || ''}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
                         <td class="unitCell px-3 py-2 text-sm"></td>
                         <td class="px-3 py-2 text-sm"><textarea disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" rows="1">${row.description || ''}</textarea></td>
+                        <td class="pricelevelCell px-3 py-2 text-sm"></td>
                         <td class="rateCell px-3 py-2 text-sm"><input type="number" value="${row.rate != null ? row.rate.toFixed(2) : ''}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
                         <td class="amountCell px-3 py-2 text-sm"><input type="number" value="${row.amount != null ? row.amount.toFixed(2) : ''}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
                         <td class="classCell px-3 py-2 text-sm"></td>
                         <td class="deptCell px-3 py-2 text-sm"></td>
                     `;
-
-                    // Item dropdown
                     tr.querySelector(".itemCell")
                         .appendChild(createItemDropdown(header.itemList?.items || [], row.itemId));
 
@@ -732,32 +695,49 @@
                         handleItemChange(tr, header);
                     });
 
-
-                    // Units dropdown
                     const unitOptions = header.unitDetails?.[row.itemId] || [];
                     tr.querySelector(".unitCell")
                         .appendChild(createUnitDropdown(unitOptions, row.units));
 
-                    // Class dropdown
                     tr.querySelector(".classCell")
                         .appendChild(createClassDropdown(header.classDetails?.classes || [], row.classId));
 
-                    // Department dropdown
                     tr.querySelector(".deptCell")
                         .appendChild(createDepartmentDropdown(header.departmentDetails?.departments || [], row.departmentId));
 
-                    // Hide Rate & Amount if user is not sales manager
+                    tr.querySelector(".pricelevelCell")
+                        .appendChild(createPriceLevelDropdown(header.priceLevelList?.priceLevels?.[row.itemId] || [], row.priceLevelId || ""));
+
+                    const priceSelect = tr.querySelector(".pricelevelCell select");
+                    const rateInput = tr.querySelector(".rateCell input");
+
+                    // 🔹 Initialize rate readonly based on selected price level
+                    if (priceSelect.value === "-1") {
+                        rateInput.removeAttribute("readonly"); // Custom -> editable
+                    } else {
+                        rateInput.setAttribute("readonly", true); // Other price level -> readonly
+                    }
+
+                    // 🔹 Update rate when user changes price level
+                    priceSelect.addEventListener("change", () => {
+                        if (priceSelect.value === "-1") {
+                            rateInput.removeAttribute("readonly");
+                            rateInput.value = ""; // optional: clear value for Custom
+                        } else {
+                            rateInput.setAttribute("readonly", true);
+                            rateInput.value = priceSelect.selectedOptions[0].dataset.rate || "";
+                        }
+                    });
+
+                    
                     if (!salesManager) {
                         tr.querySelector(".rateCell").style.display = "none";
                         tr.querySelector(".amountCell").style.display = "none";
                     }
-
                     tbody.appendChild(tr);
                 });
             }
 
-
-            // -------------------- RENDER SALES TEAM --------------------
             const salesBody = document.getElementById("salesTeamTableBody");
             salesBody.innerHTML = "";
 
@@ -770,68 +750,46 @@
                     tr.innerHTML = `
                         <td class="px-3 py-2 text-sm"></td>
                         <td class="roleCell px-3 py-2 text-sm"></td>  
-
                         <td class="primaryCell px-3 py-2 text-sm">
-                            <input type="checkbox" 
-                                class="primaryCheckbox h-5 w-5 ml-2 accent-[#007065]" 
-                                ${row.primary ? "checked" : ""} 
-                                disabled />
+                            <input type="checkbox" class="primaryCheckbox h-5 w-5 ml-2 accent-[#007065]" ${row.primary ? "checked" : ""} disabled />
                         </td>
-
                         <td class="px-3 py-2 text-sm">
-                            <input type="number" 
-                                value="${row.contribution.toFixed(1)}" 
-                                disabled 
-                                class="contributionInput w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" />
+                            <input type="number" value="${row.contribution.toFixed(1)}" disabled class="contributionInput w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" />
                         </td>
                     `;
-
-                    // Employee dropdown
                     tr.children[0].appendChild(createSalesRepDropdown(repList, row.employeeId));
 
-                    // 🌟 NEW: Sales Role dropdown
                     tr.querySelector(".roleCell")
                         .appendChild(createSalesRoleDropdown(header.salesRoles, row.salesRoleId));
 
                     salesBody.appendChild(tr);
                 });
             }
-
+            hideLoader();
         })
         .catch(err => console.error(err));
-
-        // PAGE EDIT
 
         function setEditMode(isEdit) {
             const editableFields = document.querySelectorAll("input, select, textarea");
             editableFields.forEach(field => {
                 field.disabled = !isEdit;
             });
-
-            // Enable dynamically created selects inside line items
             document.querySelectorAll("#itemsTableBody select").forEach(sel => {
                 sel.disabled = !isEdit ? true : false;
             });
-
             document.querySelectorAll("#itemsTableBody tr").forEach(row => {
-                const amountInput = row.querySelector("td:nth-child(6) input");
+                const amountInput = row.querySelector("td:nth-child(7) input");
                 if (amountInput) {
                     amountInput.readOnly = true;
                 }
             });
-
-            // Enable dynamically created selects inside sales team table
             document.querySelectorAll("#salesTeamTableBody select").forEach(sel => {
                 sel.disabled = !isEdit ? true : false;
             });
 
-
-
-            // Toggle Buttons
             document.getElementById("editButton").classList.toggle("hidden", isEdit);
             document.getElementById("editActions").classList.toggle("hidden", !isEdit);
         }
-
 
         document.getElementById("editButton").addEventListener("click", () => {
             setEditMode(true);
@@ -841,13 +799,8 @@
             setEditMode(false);
         });
 
-
         function logEstimateFormData() {
             const logOutput = {};
-
-            // -----------------------------------
-            // HEADER FIELDS
-            // -----------------------------------
             logOutput.Header = {
                 "Quote #": document.querySelector(".est-number")?.innerText || "",
                 "Transaction Date": document.getElementById("est-date")?.value || "",
@@ -870,12 +823,8 @@
                 "Subsidiary": document.getElementById("subsidiary")?.innerText || ""
             };
 
-            // -----------------------------------
-            // LINE ITEMS
-            // -----------------------------------
             const itemRows = document.querySelectorAll("#itemsTableBody tr");
             const items = [];
-
             itemRows.forEach((row, index) => {
                 items.push({
                     "Line #": index + 1,
@@ -885,22 +834,18 @@
                     "Quantity": row.querySelector("td:nth-child(2) input")?.value || "",
                     "Units": row.querySelector("td:nth-child(3) select")?.value || "",
                     "Description": row.querySelector("td:nth-child(4) textarea")?.value || "",
-                    "Rate": row.querySelector("td:nth-child(5) input")?.value || "",
-                    "Amount": row.querySelector("td:nth-child(6) input")?.value || "",
-                    "Class": row.querySelector("td:nth-child(7) select")?.value || "",
-                    "Department": row.querySelector("td:nth-child(8) select")?.value || ""
+                    "Rate": row.querySelector(".rateCell input")?.value || "",
+                    "Amount": row.querySelector(".amountCell input")?.value || "",
+                    "Class": row.querySelector(".classCell select")?.value || "",
+                    "Department": row.querySelector(".deptCell select")?.value || ""
+
                 });
 
             });
-
             logOutput.LineItems = items;
 
-            // --------------------
-            // SALES TEAM
-            // --------------------
             const salesRows = document.querySelectorAll("#salesTeamTableBody tr");
             const salesTeam = [];
-
             salesRows.forEach((row, index) => {
                 const empSelect = row.querySelector("td:nth-child(1) select");
                 const roleSelect = row.querySelector("td:nth-child(2) select");
@@ -917,13 +862,7 @@
                     "Contribution %": contributionInput?.value || ""
                 });
             });
-
             logOutput.SalesTeam = salesTeam;
-
-
-            // -----------------------------------
-            // LOG FINAL OUTPUT
-            // -----------------------------------
             console.log("📌 ESTIMATE FORM DATA (LATEST)", logOutput);
             return logOutput;
         }
@@ -931,25 +870,19 @@
 
         const urlParams = new URLSearchParams(window.location.search);
         const estimateIdFromUrl = urlParams.get("estimateId");
-
-        // Set hidden input value
         const estimateInput = document.querySelector("#estimateId");
         if (estimateInput) estimateInput.value = estimateIdFromUrl || "";
-
-        // Also store in label dataset for reference
         const estLabel = document.querySelector(".est-number");
         if (estLabel) estLabel.dataset.id = estimateIdFromUrl || "";
 
         document.getElementById("saveButton").addEventListener("click", async () => {
-
-            // ✅ FINAL LINE VALIDATION (BEFORE SAVE)
             if (!validateBeforeSubmit()) {
                 return;
             }
 
+            showLoader();
             const estimateData = logEstimateFormData();
             const estimateId = document.querySelector("#estimateId").value;
-
             const body = {
                 action: "updateEstimate",
                 estimateId,
@@ -962,29 +895,27 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(body)
                 });
-
                 const result = await response.json();
-
+                hideLoader();
                 if (result.success) {
                     alert("Updated successfully!");
                     setEditMode(false);
-                } else {
+                }
+                else {
                     alert("Failed to update: " + result.message);
                 }
             }
             catch (e) {
+                hideLoader();
                 console.error("Update failed", e);
                 alert("Update failed — check console");
             }
-            
         });
 
-        // -------------------- LINE ITEM HELPERS --------------------
         function recalculateAmount(row) {
             const qty = parseFloat(row.querySelector("td:nth-child(2) input")?.value) || 0;
-            const rateInput = row.querySelector("td:nth-child(5) input");
-            const amountInput = row.querySelector("td:nth-child(6) input");
-
+            const rateInput = row.querySelector(".rateCell input");
+            const amountInput = row.querySelector(".amountCell input");
             const rate = parseFloat(rateInput?.value);
 
             if (!rate || rate <= 0) {
@@ -992,7 +923,6 @@
                 row.dataset.blocked = "true";
                 return;
             }
-
             amountInput.value = (qty * rate).toFixed(2);
             row.dataset.blocked = "false";
         }
@@ -1006,7 +936,6 @@
                 amountInput.value = "0.00";
                 return false;
             }
-
             row.dataset.blocked = "false";
             return true;
         }
@@ -1015,28 +944,21 @@
             const itemSelect = row.querySelector("td:nth-child(1) select");
             const itemId = itemSelect.value;
             if (!itemId) return;
-
             const prevItemId = itemSelect.dataset.prevValue || "";
 
-            // 🔍 DUPLICATE ITEM CHECK
             const rows = document.querySelectorAll("#itemsTableBody tr");
             for (const r of rows) {
                 if (r === row) continue;
-
                 const otherSelect = r.querySelector("td:nth-child(1) select");
                 if (otherSelect && otherSelect.value === itemId) {
                     alert("This item already exists in another line.");
-
-                    // 🔁 revert to previous item
                     itemSelect.value = prevItemId;
                     return;
                 }
             }
 
-            // ✅ update previous value only if valid
             itemSelect.dataset.prevValue = itemId;
 
-            // 🔽 YOUR EXISTING BACKEND CALL (UNCHANGED)
             fetch(BASE_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -1051,58 +973,52 @@
                     console.error("Invalid unit response", unitRes);
                     return;
                 }
-
-
                 const data = unitRes.data;
 
-                // ---------- UNITS ----------
                 const unitSelect = row.querySelector(".unitCell select");
                 unitSelect.innerHTML = "<option value=''></option>";
 
                 (data.units || []).forEach(uom => {
                     const opt = document.createElement("option");
-                    opt.value = String(uom.id);      // ✅ INTERNAL ID
-                    opt.textContent = uom.name;      // EA / SET / BX
+                    opt.value = String(uom.id);
+                    opt.textContent = uom.name;
                     unitSelect.appendChild(opt);
                 });
 
-                // ✅ DEFAULT UNIT (internal ID)
-                if (data.defaultUnit && unitSelect.querySelector(
-                    `option[value="${data.defaultUnit}"]`
-                )) {
+                if (data.defaultUnit && unitSelect.querySelector(`option[value="${data.defaultUnit}"]`)) {
                     unitSelect.value = String(data.defaultUnit);
-                } else if (unitSelect.options.length > 1) {
-                    // ✅ fallback to first actual UOM
+                } 
+                else if (unitSelect.options.length > 1) {
                     unitSelect.selectedIndex = 1;
                 }
+                row.querySelector("textarea").value = data.description || "";
 
-                // ---------- DESCRIPTION ----------
-                row.querySelector("td:nth-child(4) textarea").value =
-                    data.description || "";
-
-                // ---------- RATE ----------
-                const rateInput = row.querySelector("td:nth-child(5) input");
-                const amountInput = row.querySelector("td:nth-child(6) input");
+                const rateInput = row.querySelector(".rateCell input");
+                const amountInput = row.querySelector(".amountCell input");
 
                 if (data.rate && Number(data.rate) > 0) {
                     rateInput.value = Number(data.rate).toFixed(2);
                     row.dataset.blocked = "false";
                     recalculateAmount(row);
-                } else {
+                }
+                else {
                     rateInput.value = "";
                     amountInput.value = "0.00";
                     row.dataset.blocked = "true";
-
                     alert("Please enter the rate for this item.");
                 }
 
-                // ---------- CLASS ----------
-                const classSelect = row.querySelector("td:nth-child(7) select");
-                classSelect.value = data.classId || "";
+                const classSelect = row.querySelector(".classCell select");
+                if (classSelect) {
+                    classSelect.value = String(data.classId || "");
+                }
 
-                // ---------- DEPARTMENT ----------
-                const deptSelect = row.querySelector("td:nth-child(8) select");
-                deptSelect.value = data.departmentId || "";
+                const deptSelect = row.querySelector(".deptCell select");
+                if (deptSelect) {
+                    deptSelect.value = String(data.departmentId || "");
+                }
+
+
             })
             .catch(err => console.error("Failed to fetch item details:", err));
         }
@@ -1113,24 +1029,15 @@
             for (const row of rows) {
                 const rateInput = row.querySelector("td:nth-child(5) input");
                 const rate = parseFloat(rateInput?.value);
-
                 if (!rate || rate <= 0) {
                     alert("Please enter the rate for all items before saving.");
-
-                    // keep dataset consistent
                     row.dataset.blocked = "true";
-
-                    // force amount reset
                     const amountInput = row.querySelector("td:nth-child(6) input");
                     if (amountInput) amountInput.value = "0.00";
-
                     return false;
                 }
-
-                // valid row
                 row.dataset.blocked = "false";
             }
-
             return true;
         }
 
@@ -1138,7 +1045,6 @@
         document
         .getElementById("itemsTableBody")
         .addEventListener("input", function (e) {
-
             if (
                 e.target.matches("td:nth-child(2) input") ||
                 e.target.matches("td:nth-child(5) input")
@@ -1148,7 +1054,7 @@
             }
         });
 
-
     </script>
+
 </body>
 </html>
