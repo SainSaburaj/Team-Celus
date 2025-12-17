@@ -1113,18 +1113,25 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
         /**
          * Fetches Kanban dashboard data including transaction records and summary totals.
          *
+         * @function fetchKanbanData
          * @param {string} startDate - The start date for filtering records (ISO format or NetSuite-compatible).
          * @param {string} endDate - The end date for filtering records (ISO format or NetSuite-compatible).
-         * @returns {Object} An object containing:
-         * @property {Array} data - List of filtered transaction records for the Kanban board.
+         * @param {string|number} userId - The unique identifier of the user requesting the data.
+         * @returns {KanbanData|undefined} An object containing transaction records and summary totals,
+         *                                or `undefined` if an error occurs.
+         *
+         * @typedef {Object} KanbanData
+         * @property {Array<Object>} data - List of filtered transaction records for the Kanban board.
          * @property {Object|null} recordTypeTotal - Summary totals by record type (opportunity, estimate, salesorder),
-         *                                           or null if the user is not authorized to view totals.
+         *                                           or `null` if the user is not authorized to view totals.
+         *
+         * @throws {Error} Logs an error if fetching data fails.
          */
-        function fetchKanbanData(startDate, endDate) {
+        function fetchKanbanData(startDate, endDate, userId) {
             try {
                 return {
-                    data: getRecords(startDate, endDate),
-                    recordTypeTotal: salesSummaryByType(startDate, endDate),
+                    data: getRecords(startDate, endDate, userId),
+                    recordTypeTotal: salesSummaryByType(startDate, endDate, userId),
                 };
             } catch (error) {
                 log.error('Error @ fetchKanbanData', error);
@@ -1132,128 +1139,223 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
         }
 
         /**
-         * Fetches transaction records (Opportunity, Sales Order, Estimate) within a given date range.
+         * Fetches transaction records (Opportunity, Sales Order, Estimate) within a date range.
          *
-         * @param {Date|string} startDate - The start date for the search range.
-         * @param {Date|string} endDate - The end date for the search range.
-         * @returns {Array<Object>} An array of transaction objects containing:
-         *   - id {string} Internal ID
-         *   - transactionNumber {string} Transaction Number
-         *   - stage {string} Derived stage/type
-         *   - date {string} Transaction date
-         *   - desc {string|null} Memo
-         *   - status {string} Status reference
-         *   - entity {string} Customer/Entity name
-         *   - amount {string|number} Transaction amount
-         *   - probability {string|number} Probability
-         *   - entityStatus {string} Entity status
-         *   - currency {string} Currency name
+         * @param {Date|string} startDate - Start date for the search.
+         * @param {Date|string} endDate - End date for the search.
+         * @param {string} [userId] - User identifier for filtering by sales team member.
+         * @returns {Object[]} Array of transaction records with id, transactionNumber, stage, date,
+         *                     desc, status, entity, amount, probability, entityStatus, and currency.
          */
-        function getRecords(startDate, endDate) {
+        function getRecords(startDate, endDate, userId) {
+
             const resultRow = [];
+
             try {
+
                 let formattedStartDate = '';
+
                 let formattedEndDate = '';
-                if (startDate && endDate) {
-                    formattedStartDate = dateFormatter(startDate);
-                    formattedEndDate = dateFormatter(endDate);
-                    if (formattedStartDate && formattedEndDate) {
-                        const transactionSearchObj = search.create({
-                            type: "transaction",
-                            settings: [{ "name": "consolidationtype", "value": "ACCTTYPE" }],
-                            filters:
-                                [
-                                    ["type", "anyof", "Opprtnty", "SalesOrd", "Estimate"],
-                                    "AND",
-                                    ["mainline", "is", "T"],
-                                    "AND",
-                                    ["trandate", "within", formattedStartDate, formattedEndDate],
-                                    "AND",
-                                    ["status", "anyof", "Opprtnty:C", "Estimate:C", "Estimate:X", "Estimate:B", "Estimate:V", "Opprtnty:D", "Opprtnty:B", "SalesOrd:G", "SalesOrd:C", "SalesOrd:H", "SalesOrd:D", "SalesOrd:F", "SalesOrd:E", "SalesOrd:B"]
-                                ],
-                            columns:
-                                [
-                                    search.createColumn({ name: "transactionnumber", label: "Transaction Number" }),
-                                    search.createColumn({ name: "internalid", label: "Internal ID" }),
-                                    search.createColumn({ name: "recordtype", label: "Record Type" }),
-                                    search.createColumn({ name: "trandate", label: "Date" }),
-                                    search.createColumn({ name: "memomain", label: "Memo (Main)" }),
-                                    search.createColumn({ name: "type", label: "Type" }),
-                                    search.createColumn({
-                                        name: "formulatext",
-                                        formula: "CASE WHEN {type}='Opportunity' THEN 'opportunity' WHEN {type}='Sales Order' THEN 'salesorder' WHEN {type}='Quote' THEN 'estimate' ELSE {recordtype} END",
-                                        label: "Formula (Text)"
-                                    }),
-                                    search.createColumn({
-                                        name: "formulatext",
-                                        formula: "NVL({title}, {tranid})",
-                                        label: "Formula (Text)"
-                                    }),
-                                    search.createColumn({ name: "statusref", label: "Status" }),
-                                    search.createColumn({
-                                        name: "formulatext",
-                                        formula: "{entitystatus}",
-                                        label: "Formula (Text)"
-                                    }),
-                                    search.createColumn({ name: "entity", label: "Name" }),
-                                    search.createColumn({ name: "amount", label: "Amount" }),
-                                    search.createColumn({ name: "probability", label: "Probability" }),
-                                    search.createColumn({ name: "currency", label: "Currency" })
-                                ]
-                        });
-                        const pagedSearchData = transactionSearchObj.runPaged({
-                            pagesize: 1000
-                        });
-                        pagedSearchData.pageRanges.forEach(function (pageRange) {
-                            const currentPage = pagedSearchData.fetch({ index: pageRange.index });
-                            currentPage.data.forEach(function (result) {
-                                resultRow.push({
-                                    id: result.getValue('internalid'),
-                                    transactionNumber: result.getValue('transactionnumber'),
-                                    stage: result.getValue(result.columns[6]), // Custom formula column for stage
-                                    date: result.getValue('trandate'),
-                                    desc: result.getValue('memomain'),
-                                    status: result.getValue({ name: "statusref", label: "Status" }),
-                                    entity: result.getText('entity'),
-                                    amount: result.getValue('amount'),
-                                    probability: result.getValue('probability'),
-                                    entityStatus: result.getValue({
-                                        name: "formulatext",
-                                        formula: "{entitystatus}",
-                                        label: "Formula (Text)"
-                                    }),
-                                    currency: result.getText('currency')
-                                });
-                            })
-                        });
-                        return resultRow;
-                    } else {
-                        log.debug('Formatted date is not available in the getRecord search');
-                        return [];
-                    }
+                if (userId) {
+                    employeeId = getEmployeeIdByEmail(userId);
+                    log.debug('kanban - Employee ID for filtering', employeeId);
                 } else {
-                    log.debug('Start date or end date did not available in getRecord');
-                    return [];
+                    log.debug('kanban - No userId available, returning all pending approval orders');
                 }
+
+                if (startDate && endDate) {
+
+                    formattedStartDate = dateFormatter(startDate);
+
+                    formattedEndDate = dateFormatter(endDate);
+
+                    if (formattedStartDate && formattedEndDate) {
+
+                        const filters = [
+
+                            ["type", "anyof", "Opprtnty", "SalesOrd", "Estimate"],
+
+                            "AND",
+
+                            ["mainline", "is", "T"],
+
+                            "AND",
+
+                            ["trandate", "within", formattedStartDate, formattedEndDate],
+
+                            "AND",
+
+                            ["status", "noneof", "Opprtnty:C", "Estimate:C", "Estimate:X", "Estimate:B", "Estimate:V", "Opprtnty:D", "Opprtnty:B", "SalesOrd:G", "SalesOrd:C", "SalesOrd:H", "SalesOrd:D", "SalesOrd:F", "SalesOrd:E", "SalesOrd:B"]
+
+                        ]
+                        if (employeeId) {
+                            filters.push("AND", ["salesteammember", "anyof", employeeId]);
+                        }
+
+                        const transactionSearchObj = search.create({
+
+                            type: "transaction",
+
+                            settings: [{ "name": "consolidationtype", "value": "ACCTTYPE" }],
+
+                            filters: filters,
+
+                            columns:
+
+                                [
+
+                                    search.createColumn({ name: "transactionnumber", label: "Transaction Number" }),
+
+                                    search.createColumn({ name: "internalid", label: "Internal ID" }),
+
+                                    search.createColumn({ name: "recordtype", label: "Record Type" }),
+
+                                    search.createColumn({ name: "trandate", label: "Date" }),
+
+                                    search.createColumn({ name: "memomain", label: "Memo (Main)" }),
+
+                                    search.createColumn({ name: "type", label: "Type" }),
+
+                                    search.createColumn({
+
+                                        name: "formulatext",
+
+                                        formula: "CASE WHEN {type}='Opportunity' THEN 'opportunity' WHEN {type}='Sales Order' THEN 'salesorder' WHEN {type}='Quote' THEN 'estimate' ELSE {recordtype} END",
+
+                                        label: "Formula (Text)"
+
+                                    }),
+
+                                    search.createColumn({
+
+                                        name: "formulatext",
+
+                                        formula: "NVL({title}, {tranid})",
+
+                                        label: "Formula (Text)"
+
+                                    }),
+
+                                    search.createColumn({ name: "statusref", label: "Status" }),
+
+                                    search.createColumn({
+
+                                        name: "formulatext",
+
+                                        formula: "{entitystatus}",
+
+                                        label: "Formula (Text)"
+
+                                    }),
+
+                                    search.createColumn({ name: "entity", label: "Name" }),
+
+                                    search.createColumn({ name: "amount", label: "Amount" }),
+
+                                    search.createColumn({ name: "probability", label: "Probability" }),
+
+                                    search.createColumn({ name: "currency", label: "Currency" })
+
+                                ]
+
+                        });
+
+                        const pagedSearchData = transactionSearchObj.runPaged({
+
+                            pagesize: 1000
+
+                        });
+
+                        pagedSearchData.pageRanges.forEach(function (pageRange) {
+
+                            const currentPage = pagedSearchData.fetch({ index: pageRange.index });
+
+                            currentPage.data.forEach(function (result) {
+
+                                resultRow.push({
+
+                                    id: result.getValue('internalid'),
+
+                                    transactionNumber: result.getValue('transactionnumber'),
+
+                                    stage: result.getValue(result.columns[6]), // Custom formula column for stage
+
+                                    date: result.getValue('trandate'),
+
+                                    desc: result.getValue('memomain'),
+
+                                    status: result.getValue({ name: "statusref", label: "Status" }),
+
+                                    entity: result.getText('entity'),
+
+                                    amount: result.getValue('amount'),
+
+                                    probability: result.getValue('probability'),
+
+                                    entityStatus: result.getValue({
+
+                                        name: "formulatext",
+
+                                        formula: "{entitystatus}",
+
+                                        label: "Formula (Text)"
+
+                                    }),
+
+                                    currency: result.getText('currency')
+
+                                });
+
+                            })
+
+                        });
+
+                        return resultRow;
+
+                    } else {
+
+                        log.debug('Formatted date is not available in the getRecord search');
+
+                        return [];
+
+                    }
+
+                } else {
+
+                    log.debug('Start date or end date did not available in getRecord');
+
+                    return [];
+
+                }
+
             } catch (e) {
+
                 log.error('Error @ getRecords', e);
+
                 return []
+
             }
+
         }
 
-     
+
+
+
 
 
         /**
          * Calculates total amounts for Sales Orders, Estimates (Quotes), and Opportunities
          * within a specified date range using a NetSuite transaction search.
          *
-         * @param {Date|string} startDate - The start date for the search range.
-         * @param {Date|string} endDate - The end date for the search range.
-         * @returns {{salesorderTotal: number, estimateTotal: number, opportunityTotal: number}} 
-         *          An object containing summed totals for each transaction type.
+         * @function salesSummaryByType
+         * @param {Date|string} startDate - Start date for the search range.
+         * @param {Date|string} endDate - End date for the search range.
+         * @param {string} [userId] - Optional user identifier for filtering by sales team member.
+         * @returns {{salesorderTotal: number, estimateTotal: number, opportunityTotal: number}|undefined}
+         *          Object with summed totals for each transaction type, or `undefined` if an error occurs.
+         * @throws {Error} Logs an error if the search fails.
          */
-        function salesSummaryByType(startDate, endDate) {
+        function salesSummaryByType(startDate, endDate, userId) {
             try {
                 const totals = {
                     salesorderTotal: 0,
@@ -1265,23 +1367,38 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 if (startDate && endDate) {
                     formattedStartDate = dateFormatter(startDate);
                     formattedEndDate = dateFormatter(endDate);
+                    if (userId) {
+                        employeeId = getEmployeeIdByEmail(userId);
+                        log.debug('kanban - Employee ID for filtering', employeeId);
+                    } else {
+                        log.debug('kanban - No userId available, returning all pending approval orders');
+                    }
 
                     if (formattedStartDate && formattedEndDate) {
+                        const filters = [
+
+                            ["type", "anyof", "Opprtnty", "SalesOrd", "Estimate"],
+
+                            "AND",
+
+                            ["mainline", "is", "T"],
+
+                            "AND",
+
+                            ["trandate", "within", formattedStartDate, formattedEndDate],
+
+                            "AND",
+
+                            ["status", "noneof", "Opprtnty:C", "Estimate:C", "Estimate:X", "Estimate:B", "Estimate:V", "Opprtnty:D", "Opprtnty:B", "SalesOrd:G", "SalesOrd:C", "SalesOrd:H", "SalesOrd:D", "SalesOrd:F", "SalesOrd:E", "SalesOrd:B"]
+
+                        ]
+                        if (employeeId) {
+                            filters.push("AND", ["salesteammember", "anyof", employeeId]);
+                        }
                         const searchTotal = search.create({
                             type: "transaction",
                             settings: [{ "name": "consolidationtype", "value": "ACCTTYPE" }],
-                            filters:
-                                [
-                                    ["type", "anyof", "Estimate", "SalesOrd", "Opprtnty"],
-                                    "AND",
-                                    ["memorized", "is", "F"],
-                                    "AND",
-                                    ["mainline", "is", "T"],
-                                    "AND",
-                                    ["trandate", "within", formattedStartDate, formattedEndDate],
-                                    "AND",
-                                    ["status", "noneof", "Opprtnty:C", "Opprtnty:B", "Opprtnty:D", "Estimate:C", "Estimate:X", "Estimate:B", "Estimate:V"]
-                                ],
+                            filters: filters,
                             columns:
                                 [
                                     search.createColumn({
@@ -2521,47 +2638,69 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 }
 
                 if (itemIds.size === 0) {
-                    // ✅ Still add "Custom" option even if no items
-                    result.priceLevels.push({ id: "custom", name: "Custom" });
+                    result.priceLevels.push({ id: "custom", name: "Custom", rates: [] });
                     return result;
                 }
 
-                // Search for pricing records to find which price levels have pricing set for these items
-                const priceLevelIds = new Set();
-
-                search.create({
+                // Step 1: Search pricing records for all items
+                const pricingSearch = search.create({
                     type: "pricing",
                     filters: [
                         ["item", "anyof", Array.from(itemIds)]
                     ],
-                    columns: ["pricelevel"]
-                }).run().each(row => {
+                    columns: [
+                        "pricelevel",
+                        "item",
+                        "unitprice"
+                    ]
+                });
+
+                const priceLevelMap = {};
+                // { priceLevelId: { itemId: rate } }
+
+                pricingSearch.run().each(row => {
                     const priceLevelId = row.getValue("pricelevel");
-                    if (priceLevelId) priceLevelIds.add(priceLevelId);
+                    const itemId = row.getValue("item");
+                    const rate = row.getValue("unitprice");
+
+                    if (priceLevelId && itemId) {
+                        if (!priceLevelMap[priceLevelId]) {
+                            priceLevelMap[priceLevelId] = {};
+                        }
+                        priceLevelMap[priceLevelId][itemId] = rate;
+                    }
                     return true;
                 });
 
-                // Get the price level names for the ones that have pricing
-                if (priceLevelIds.size > 0) {
+                const priceLevelIds = Object.keys(priceLevelMap);
+                if (priceLevelIds.length > 0) {
+                    // Step 2: Fetch price level names
                     search.create({
                         type: "pricelevel",
                         filters: [
-                            ["internalid", "anyof", Array.from(priceLevelIds)]
+                            ["internalid", "anyof", priceLevelIds]
                         ],
                         columns: ["internalid", "name"]
                     }).run().each(row => {
+                        const id = row.getValue("internalid");
                         result.priceLevels.push({
-                            id: row.getValue("internalid"),
-                            name: row.getValue("name")
+                            id,
+                            name: row.getValue("name"),
+                            rates: priceLevelMap[id] || {}
                         });
                         return true;
                     });
                 }
 
-                // ✅ Always add "Custom" option at the end
-                result.priceLevels.push({ id: "-1", name: "Custom" });
+                // Always add Custom option
+                result.priceLevels.push({
+                    id: "-1",
+                    name: "Custom",
+                    rates: {}
+                });
 
-                log.debug("getSalesOrderPriceLevels", `Fetched ${result.priceLevels.length} price levels with pricing for items (including Custom)`);
+                log.debug("getSalesOrderPriceLevels",
+                    `Fetched ${result.priceLevels.length} price levels with rates for items (including Custom)`);
 
             } catch (e) {
                 log.error("getSalesOrderPriceLevels error", e);
@@ -2570,11 +2709,12 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             return result;
         }
 
+
         /**
-        * Update Sales Order with new values
-        * @param {Object} requestData - Request data containing salesOrderId and field values
-        * @returns {Object} Success/failure response
-        */
+         * Update Sales Order with new values
+         * @param {Object} requestData - Request data containing salesOrderId and field values
+ * @returns {Object} Success/failure response
+ */
         function updateSalesOrder(requestData) {
             try {
                 if (!requestData.salesOrderId) {
@@ -2651,15 +2791,23 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                         if (line.quantity) {
                             salesOrderRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'quantity', value: parseFloat(line.quantity) });
                         }
-                        if (line.priceLevelId) {
+
+                        // Handle price level vs custom
+                        if (line.priceLevelId && line.priceLevelId !== "-1") {
+                            // Standard price level: set the price level
+                            log.debug("Setting standard price level", { itemId: line.itemId, priceLevelId: line.priceLevelId });
                             salesOrderRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'price', value: line.priceLevelId });
-                        }
-                        if (line.rate) {
+                        } else if (line.rate) {
+                            // Custom price level: set price level to Custom (-1) first, then set rate and amount
+                            log.debug("Setting custom price level", { itemId: line.itemId, rate: line.rate, amount: line.amount });
+                            salesOrderRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'price', value: -1 });
                             salesOrderRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'rate', value: parseFloat(line.rate) });
-                        }
+                            // NetSuite requires amount to be set explicitly for custom price level
                         if (line.amount) {
                             salesOrderRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'amount', value: parseFloat(line.amount) });
                         }
+                        }
+
                         if (line.description) {
                             salesOrderRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'description', value: line.description });
                         }
@@ -2736,6 +2884,63 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 return { success: false, message: "Failed to load opportunity form data." };
             }
         }
+        function getItemPriceLevelsUsingSearch(itemId) {
+            const result = { priceLevels: [] };
+            try {
+                if (!itemId) return result;
+                const pricingSearch = search.create({
+                    type: "pricing",
+                    filters: [
+                        ["item", "anyof", itemId]
+                    ],
+                    columns: [
+                        "pricelevel",
+                        "unitprice"
+                    ]
+                });
+                const priceLevelMap = {};
+                pricingSearch.run().each(row => {
+                    const priceLevelId = row.getValue("pricelevel");
+                    const rate = row.getValue("unitprice");
+                    if (priceLevelId) {
+                        priceLevelMap[priceLevelId] = rate;
+                    }
+                    return true;
+                });
+                const priceLevelIds = Object.keys(priceLevelMap);
+                if (priceLevelIds.length === 0) return result;
+                search.create({
+                    type: "pricelevel",
+                    filters: [
+                        ["internalid", "anyof", priceLevelIds]
+                    ],
+                    columns: ["internalid", "name"]
+                }).run().each(row => {
+                    const id = row.getValue("internalid");
+                    result.priceLevels.push({
+                        id,
+                        name: row.getValue("name"),
+                        rate: priceLevelMap[id] || null
+                    });
+                    return true;
+                });
+                result.priceLevels.push({
+                    id: "custom",
+                    name: "Custom",
+                    rate: null
+                });
+
+                log.debug("getItemPriceLevelsUsingSearch",
+                    `Fetched ${result.priceLevels.length} price levels for item ${itemId}`);
+
+            } catch (e) {
+                log.error("getItemPriceLevelsUsingSearch error", e);
+            }
+
+            return result;
+        }
+
+
         /**
              * Handles dropdown data request
              * @param {Object} response - The response object
@@ -2751,7 +2956,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 const locations = getActiveLocations(search);
                 const salesTypes = getActiveSalesTypes();
                 const forms = getOpportunityForms();
-                const priceLevels = getPriceLevels();
                 const employees = getActiveEmployees(search);
                 const salesRoles = getActiveSalesRoles(search);
 
@@ -2765,7 +2969,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     locations,
                     salesTypes,
                     forms,
-                    priceLevels,
                     employees,
                     salesRoles
                 };
@@ -2775,30 +2978,15 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             }
         }
 
-        function getPriceLevels() {
-            const priceLevels = [];
-            const searchResults = search.create({
-                type: 'pricelevel',
-                columns: ['internalid', 'name']
-            }).run().getRange({ start: 0, end: 100 });
-            searchResults.forEach(r => {
-                priceLevels.push({
-                    id: r.getValue('internalid'),
-                    name: r.getValue('name')
-                });
-            });
-            return priceLevels;
-        }
-
 
         /**
- * Retrieves dependent records for a given subsidiary.
- *
- * @param {Object} search - The N/search module reference.
- * @param {number|string} subsidiaryId - Internal ID of the subsidiary.
- * @returns {Object} An object containing departments, locations, classes, and items,
- * or an error object on failure.
- */
+         * Retrieves dependent records for a given subsidiary.
+         *
+         * @param {Object} search - The N/search module reference.
+         * @param {number|string} subsidiaryId - Internal ID of the subsidiary.
+         * @returns {Object} An object containing departments, locations, classes, and items,
+         * or an error object on failure.
+         */
         function getSubsidiaryDependents(search, subsidiaryId) {
             try {
                 return {
@@ -2814,13 +3002,13 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
         }
 
         /**
- * Loads an Opportunity record and returns all header, line, and sales team data.
- *
- * @param {number|string} opportunityId - Internal ID of the Opportunity to load.
- * @param {Object} response - Suitelet response object used to write JSON output.
- * @param {Object} record - N/record module reference.
- * @returns {void} Writes JSON directly to the response object.
- */
+         * Loads an Opportunity record and returns all header, line, and sales team data.
+         *
+         * @param {number|string} opportunityId - Internal ID of the Opportunity to load.
+         * @param {Object} response - Suitelet response object used to write JSON output.
+         * @param {Object} record - N/record module reference.
+         * @returns {void} Writes JSON directly to the response object.
+         */
         function loadOpportunityForEdit(opportunityId, response, record) {
             try {
                 if (!opportunityId) {
@@ -2865,6 +3053,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                         qty: opportunityRecord.getSublistValue({ sublistId: 'item', fieldId: 'quantity', line: lineIndex }),
                         rate: opportunityRecord.getSublistValue({ sublistId: 'item', fieldId: 'rate', line: lineIndex }),
                         amount: opportunityRecord.getSublistValue({ sublistId: 'item', fieldId: 'amount', line: lineIndex }),
+                        priceLevelId: opportunityRecord.getSublistValue({ sublistId: 'item', fieldId: 'price', line: lineIndex }),
                         classId: opportunityRecord.getSublistValue({
                             sublistId: 'item',
                             fieldId: 'class',
@@ -2988,12 +3177,16 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 const projectedTotal = request.parameters.projectedTotal ? String(request.parameters.projectedTotal).trim() : '';
                 const subsidiary = request.parameters.subsidiary ? String(request.parameters.subsidiary).trim() : '';
                 const expectedCloseParam = request.parameters.expectedClose ? String(request.parameters.expectedClose).trim() : '';
+
+                // Check required fields
                 if (!company) throw new Error('Company is required');
                 if (!status) throw new Error('Status is required');
                 if (!probability) throw new Error('Probability is required');
                 if (!projectedTotal) throw new Error('Projected Total is required');
                 if (!subsidiary) throw new Error('Subsidiary is required');
                 if (!expectedCloseParam) throw new Error('Expected Close Date is required');
+
+                // Set Opportunity record values
                 opportunityRecord.setValue({ fieldId: 'entity', value: company });
                 opportunityRecord.setValue({ fieldId: 'entitystatus', value: status });
                 opportunityRecord.setValue({ fieldId: 'probability', value: parseFloat(probability) });
@@ -3023,6 +3216,8 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     const descVal = line.desc || '';
                     const classVal = line.classId || '';
                     const departmentVal = line.departmentId || '';
+                    const priceLevelVal = line.priceLevel || '';  // Get Price Level value from the form
+
                     opportunityRecord.selectNewLine({ sublistId: 'item' });
                     opportunityRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'item', value: itemId });
                     opportunityRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'class', value: classVal || '' });
@@ -3031,12 +3226,48 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     opportunityRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'rate', value: rateVal });
                     opportunityRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'amount', value: amtVal });
                     opportunityRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'description', value: descVal });
+
+                    if (String(priceLevelVal).toLowerCase() === 'custom' || priceLevelVal == -1) {
+
+                        opportunityRecord.setCurrentSublistValue({
+                            sublistId: 'item',
+                            fieldId: 'price',
+                            value: -1
+                        });
+                        opportunityRecord.setCurrentSublistValue({
+                            sublistId: 'item',
+                            fieldId: 'rate',
+                            value: rateVal
+                        });
+
+                    } else {
+
+                        opportunityRecord.setCurrentSublistValue({
+                            sublistId: 'item',
+                            fieldId: 'price',
+                            value: priceLevelVal
+                        });
+
+                        opportunityRecord.setCurrentSublistValue({
+                            sublistId: 'item',
+                            fieldId: 'rate',
+                            value: rateVal
+                        });
+                    }
+
+                    opportunityRecord.setCurrentSublistValue({
+                        sublistId: 'item',
+                        fieldId: 'amount',
+                        value: amtVal
+                    });
+
                     try {
                         opportunityRecord.commitLine({ sublistId: 'item' });
                     } catch (commitErr) {
-                        log.error("Error committing line " + itemId + ", continuing with next line", commitErr);
+                        log.error("Error committing line " + itemId, commitErr);
                     }
                 });
+
                 let salesTeam = [];
                 try {
                     if (request.parameters.salesTeam) {
@@ -3179,6 +3410,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 const originalCompany = oppRecord.getValue({ fieldId: 'entity' });
                 setHeaderFieldsForUpdate(oppRecord, request);
                 setOptionalOpportunityFields(oppRecord, request);
+                ensureCompanyOnRecord(oppRecord, request, originalCompany);
                 let items = [];
                 try {
                     if (request.parameters.items) {
@@ -3198,24 +3430,38 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 }
                 items.forEach(line => {
                     if (!line.id) return;
+
                     const itemId = line.id;
                     const qtyVal = parseFloat(line.qty) || 1;
                     const rateVal = parseFloat(line.rate) || 0;
                     const amtVal = (line.amount !== undefined && line.amount !== null && line.amount !== '')
                         ? parseFloat(line.amount)
                         : parseFloat((qtyVal * rateVal).toFixed(2));
+
                     const descVal = line.desc || '';
                     const classVal = line.classId || '';
                     const departmentVal = line.departmentId || '';
+                    const priceLevelVal = line.priceLevel || '';
+
                     try {
                         oppRecord.selectNewLine({ sublistId: 'item' });
+
                         oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'item', value: parseInt(itemId, 10) });
-                        oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'class', value: classVal || '' });
-                        oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'department', value: departmentVal || '' });
+                        oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'class', value: classVal });
+                        oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'department', value: departmentVal });
                         oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'quantity', value: qtyVal });
-                        oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'rate', value: rateVal });
-                        oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'amount', value: amtVal });
                         oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'description', value: descVal });
+
+                        if (String(priceLevelVal).toLowerCase() === 'custom' || priceLevelVal == -1) {
+                            oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'price', value: -1 });
+                            oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'rate', value: rateVal });
+                        } else {
+                            oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'price', value: priceLevelVal });
+                            oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'rate', value: rateVal });
+                        }
+
+                        oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'amount', value: amtVal });
+
                         oppRecord.commitLine({ sublistId: 'item' });
                         log.debug('Re-added item line (update)', { item: itemId, qty: qtyVal, rate: rateVal, amount: amtVal });
                     } catch (addErr) {
@@ -3224,7 +3470,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 });
                 let salesTeamCount = oppRecord.getLineCount({ sublistId: 'salesteam' });
                 log.debug('Existing sales team line count before update', salesTeamCount);
-                ensureCompanyOnRecord(oppRecord, request, originalCompany);
                 updateSalesTeamLines(oppRecord, request);
                 const savedId = oppRecord.save();
                 return {
@@ -3883,9 +4128,14 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                         JSON.parse(request.body).action === 'kanbanBoard'
                     ) {
                         let reqBody = JSON.parse(request.body);
-                        res = fetchKanbanData(reqBody.startDate, reqBody.endDate);
+                        res = fetchKanbanData(reqBody.startDate, reqBody.endDate, reqBody.userId);
 
                     }
+                    // else if (request.body.action === 'kanbanBoard') {
+                    //     let reqBody = JSON.parse(request.body);
+                    //     console.log('Kanban Board Request Body:', reqBody);
+                    //     res = fetchKanbanData(reqBody.startDate, reqBody.endDate, reqBody.userId);
+                    // }
                     else if (action === 'updateOpportunity') {
                         req = request.parameters;
                     }
@@ -3925,6 +4175,9 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             break;
                         case 'opportunityform':
                             res = getOpportunityFormData(req);
+                            break;
+                        case 'getItemPriceLevels':
+                            res = getItemPriceLevelsUsingSearch(req.itemId);
                             break;
                         case 'opportunitydropdowns':
                             res = getOpportunityDropdowns();
@@ -3967,7 +4220,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             res = getReportData(req)
                             break;
                         case 'fetchRecords':
-                            res = fetchKanbanData(req.startDate, req.endDate);
+                            res = fetchKanbanData(req.startDate, req.endDate, req.userId);
                             break;
                         case 'updateStage':
                             res = { success: updateRecordStage(req.fromRecordType, req.toRecordType, req.fromId) };

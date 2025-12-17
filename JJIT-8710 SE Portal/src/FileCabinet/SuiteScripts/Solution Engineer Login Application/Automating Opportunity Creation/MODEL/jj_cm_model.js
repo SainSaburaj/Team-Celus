@@ -1503,7 +1503,7 @@ define(['N/search', 'N/query', 'N/record'],
                 return result;
             },
 
-           pricelevelList(estimateId) {
+            pricelevelList(estimateId) {
                 const result = { priceLevels: {} };
 
                 try {
@@ -1548,7 +1548,7 @@ define(['N/search', 'N/query', 'N/record'],
                     if (!allPriceLevelIds.length) return result;
 
                     // -----------------------------
-                    // SEARCH ITEM PRICING
+                    // SEARCH ITEM PRICING (WITH RATE)
                     // -----------------------------
                     search.create({
                         type: "item",
@@ -1557,12 +1557,12 @@ define(['N/search', 'N/query', 'N/record'],
                             "AND",
                             ["internalid", "anyof", Array.from(itemIds)],
                             "AND",
-                            ["pricing.pricelevel", "anyof", allPriceLevelIds],
+                            ["pricing.pricelevel", "anyof", allPriceLevelIds]
                         ],
                         columns: [
                             "internalid",
-                            "itemid",
-                            { name: "pricelevel", join: "pricing" }
+                            { name: "pricelevel", join: "pricing" },
+                            { name: "unitprice", join: "pricing" }
                         ]
                     }).run().each(res => {
                         const itemId = res.getValue("internalid");
@@ -1574,6 +1574,7 @@ define(['N/search', 'N/query', 'N/record'],
                         result.priceLevels[itemId].push({
                             id: res.getValue({ name: "pricelevel", join: "pricing" }),
                             name: res.getText({ name: "pricelevel", join: "pricing" }),
+                            rate: res.getValue({ name: "unitprice", join: "pricing" }) || "0"
                         });
 
                         return true;
@@ -1594,20 +1595,24 @@ define(['N/search', 'N/query', 'N/record'],
                     units: [],
                     defaultUnit: "",
                     description: "",
-                    rate: 0,
                     classId: "",
-                    departmentId: ""
+                    departmentId: "",
+                    priceLevels: []   // ⭐ ONLY from item pricing
                 };
 
                 try {
                     if (!itemId) return { success: false };
+
                     let unitTypeId = "";
+
+                    // ---------------------------------
+                    // ITEM METADATA (NO PRICING)
+                    // ---------------------------------
                     search.create({
                         type: "item",
                         filters: [["internalid", "anyof", itemId]],
                         columns: [
                             "salesdescription",
-                            "baseprice",
                             "unitstype",
                             "class",
                             "department"
@@ -1615,51 +1620,80 @@ define(['N/search', 'N/query', 'N/record'],
                     }).run().each(row => {
                         unitTypeId = row.getValue("unitstype");
                         result.description = row.getValue("salesdescription") || "";
-                        result.rate = parseFloat(row.getValue("baseprice")) || 0;
                         result.classId = row.getValue("class") || "";
                         result.departmentId = row.getValue("department") || "";
-                        return false;
+                        return false; // single item
                     });
 
-                    if (!unitTypeId) {
-                        return { success: true, data: result };
-                    }
+                    // ---------------------------------
+                    // PRICE LEVELS (EXACTLY LIKE UNITS)
+                    // ---------------------------------
+                    search.create({
+                        type: "item",
+                        filters: [
+                            ["internalid", "anyof", itemId],
+                            "AND",
+                            ["pricing.pricelevel", "noneof", "@NONE@"]
+                        ],
+                        columns: [
+                            { name: "pricelevel", join: "pricing" },
+                            { name: "unitprice", join: "pricing" }
+                        ]
+                    }).run().each(row => {
+                        const priceLevelId = row.getValue({ name: "pricelevel", join: "pricing" });
+                        const priceLevelName = row.getText({ name: "pricelevel", join: "pricing" });
+                        const unitPrice = row.getValue({ name: "unitprice", join: "pricing" });
 
-                    const unitTypeRec = record.load({
-                        type: "unitstype",
-                        id: unitTypeId
-                    });
-                    const lineCount = unitTypeRec.getLineCount({ sublistId: "uom" });
-                    for (let i = 0; i < lineCount; i++) {
-                        const abbr = unitTypeRec.getSublistValue({
-                            sublistId: "uom",
-                            fieldId: "abbreviation",
-                            line: i
-                        });
-                        const uomId = unitTypeRec.getSublistValue({
-                            sublistId: "uom",
-                            fieldId: "internalid",
-                            line: i
-                        });
-                        const baseUnit = unitTypeRec.getSublistValue({
-                            sublistId: "uom",
-                            fieldId: "baseunit",
-                            line: i
-                        });
-                        if (abbr && uomId) {
-                            result.units.push({
-                                id: uomId,
-                                name: abbr
+                        if (priceLevelId) {
+                            result.priceLevels.push({
+                                id: priceLevelId,
+                                name: priceLevelName,               // ⭐ dropdown label
+                                rate: unitPrice ? parseFloat(unitPrice) : 0
                             });
-                            if (baseUnit === "T") {
-                                result.defaultUnit = uomId;
+                        }
+                        return true;
+                    });
+
+                    // ---------------------------------
+                    // UNITS (UNCHANGED)
+                    // ---------------------------------
+                    if (unitTypeId) {
+                        const unitTypeRec = record.load({
+                            type: "unitstype",
+                            id: unitTypeId
+                        });
+
+                        const lineCount = unitTypeRec.getLineCount({ sublistId: "uom" });
+
+                        for (let i = 0; i < lineCount; i++) {
+                            const uomId = unitTypeRec.getSublistValue({
+                                sublistId: "uom",
+                                fieldId: "internalid",
+                                line: i
+                            });
+                            const abbr = unitTypeRec.getSublistValue({
+                                sublistId: "uom",
+                                fieldId: "abbreviation",
+                                line: i
+                            });
+                            const baseUnit = unitTypeRec.getSublistValue({
+                                sublistId: "uom",
+                                fieldId: "baseunit",
+                                line: i
+                            });
+
+                            if (uomId && abbr) {
+                                result.units.push({ id: uomId, name: abbr });
+                                if (baseUnit === "T") {
+                                    result.defaultUnit = uomId;
+                                }
                             }
                         }
                     }
+
                     return { success: true, data: result };
 
-                }
-                catch (e) {
+                } catch (e) {
                     log.error("getItemDetails error", e);
                     return { success: false };
                 }
