@@ -1597,7 +1597,7 @@ define(['N/search', 'N/query', 'N/record'],
                     description: "",
                     classId: "",
                     departmentId: "",
-                    priceLevels: []   // ⭐ ONLY from item pricing
+                    priceLevels: []   // Price levels for dropdown
                 };
 
                 try {
@@ -1622,11 +1622,11 @@ define(['N/search', 'N/query', 'N/record'],
                         result.description = row.getValue("salesdescription") || "";
                         result.classId = row.getValue("class") || "";
                         result.departmentId = row.getValue("department") || "";
-                        return false; // single item
+                        return false; // stop after single item
                     });
 
                     // ---------------------------------
-                    // PRICE LEVELS (EXACTLY LIKE UNITS)
+                    // PRICE LEVELS
                     // ---------------------------------
                     search.create({
                         type: "item",
@@ -1641,21 +1641,22 @@ define(['N/search', 'N/query', 'N/record'],
                         ]
                     }).run().each(row => {
                         const priceLevelId = row.getValue({ name: "pricelevel", join: "pricing" });
-                        const priceLevelName = row.getText({ name: "pricelevel", join: "pricing" });
+                        // Use getText to get display name, fallback to "Price Level ID" if empty
+                        const priceLevelName = row.getText({ name: "pricelevel", join: "pricing" }) || `Price Level ${priceLevelId}`;
                         const unitPrice = row.getValue({ name: "unitprice", join: "pricing" });
 
                         if (priceLevelId) {
                             result.priceLevels.push({
                                 id: priceLevelId,
-                                name: priceLevelName,               // ⭐ dropdown label
+                                name: priceLevelName,          // ✅ ensures name always visible
                                 rate: unitPrice ? parseFloat(unitPrice) : 0
                             });
                         }
-                        return true;
+                        return true; // continue
                     });
 
                     // ---------------------------------
-                    // UNITS (UNCHANGED)
+                    // UNITS
                     // ---------------------------------
                     if (unitTypeId) {
                         const unitTypeRec = record.load({

@@ -41,8 +41,15 @@
 </head>
 
 <body class="bg-gray-100 font-montserrat px-3 py-10">
-
-    <div id="mainContent" class="w-full px-1 md:px-4 lg:px-8 xl:px-12 2xl:px-16 mx-auto">
+<script
+        src="https://td3047046.app.netsuite.com/core/media/media.nl?id=1438&c=TD3047046&h=joIRhuH4ppMYUlBARn7IrK5s0HNwF_X-sAEmWtYyc7TN2Kg2&_xt=.js"></script>
+    <div id="sessionExpired" style="display:none; text-align:center;">
+        <h1>Session Expired</h1>
+        <p>Your session has expired. Please <a
+                href="https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM">log
+                in</a> again.</p>
+    </div>
+    <div id="mainContainer" class="w-full px-1 md:px-4 lg:px-8 xl:px-12 2xl:px-16 mx-auto">
         <div
             class="relative flex flex-col min-w-0 break-words w-full mb-10 shadow-2xl bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl">
 
@@ -149,7 +156,7 @@
 
                             <div class="w-full lg:w-1/2 mt-6 px-6">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Total</label>
-                                <label id="so-total" class=""></label> <!-- ✅ innerText -->
+                                <label id="so-total" class=""></label>
                             </div>
 
                             <div class="w-full lg:w-1/2 mt-6 px-6">
@@ -225,7 +232,8 @@
                             </div>
 
                             <div class="w-full lg:w-1/2 mt-6 px-6">
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Class</label>
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Class<span
+                                        class="text-red-500">*</span></label>
                                 <label id="so-class-label" class="view-only"></label>
                                 <select id="so-class"
                                     class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full edit-only hidden"
@@ -235,23 +243,32 @@
                             </div>
 
                             <div class="w-full lg:w-1/2 mt-6 px-6">
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Department</label>
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Department<span
+                                        class="text-red-500">*</span></label>
                                 <label id="so-department-label" class="view-only"></label>
                                 <select id="so-department"
                                     class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full edit-only hidden"
-                                    disabled>
+                                    required>
                                     <option selected hidden>Select Department</option>
                                 </select>
                             </div>
 
                             <div class="w-full lg:w-1/2 mt-6 px-6">
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Location</label>
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Location<span
+                                        class="text-red-500">*</span></label>
                                 <label id="so-location-label" class="view-only"></label>
                                 <select id="so-location"
                                     class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full edit-only hidden"
-                                    disabled>
+                                    required>
                                     <option selected hidden>Select Location</option>
                                 </select>
+                            </div>
+
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Project Summary</label>
+                                <textarea id="so-projectsummary"
+                                    class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full"
+                                    rows="2" disabled></textarea>
                             </div>
 
                         </div>
@@ -271,7 +288,7 @@
                                     data-tab="items">
                                     Items
                                 </button>
-                                <button type="button"
+                                <button type="button" id="sales-team-tab-btn"
                                     class="tab-btn py-2 px-4 text-gray-700 font-semibold border-b-2 border-transparent"
                                     data-tab="sales-team">
                                     Sales Team
@@ -289,6 +306,7 @@
                                                 <th class="px-4 py-3 text-left text-sm font-semibold">Quantity</th>
                                                 <th class="px-4 py-3 text-left text-sm font-semibold">Units</th>
                                                 <th class="px-4 py-3 text-left text-sm font-semibold">Description</th>
+                                                <th class="px-4 py-3 text-left text-sm font-semibold">Price Level</th>
                                                 <th id="th-rate" class="px-4 py-3 text-left text-sm font-semibold">Rate
                                                 </th>
                                                 <th id="th-amount" class="px-4 py-3 text-left text-sm font-semibold">
@@ -350,6 +368,34 @@
             });
         });
 
+        function recalculateAmount(row) {
+            const qty = parseFloat(row.querySelector("td:nth-child(2) input")?.value) || 0;
+            const rateInput = row.querySelector("td:nth-child(6) input");
+            const amountInput = row.querySelector("td:nth-child(7) span");
+
+            const rate = parseFloat(rateInput?.value);
+
+            // If the rate is valid, calculate the amount
+            if (rate && rate > 0) {
+                amountInput.textContent = (qty * rate).toFixed(2); // Set the amount as rate * quantity
+                row.dataset.blocked = "false"; // Allow saving the row
+            } else {
+                amountInput.textContent = "0.00"; // Reset to zero if rate is invalid
+                row.dataset.blocked = "true"; // Block saving
+            }
+        }
+
+        document.getElementById("itemsTableBody").addEventListener("input", function (e) {
+            // Triggered when quantity or rate changes
+            if (
+                e.target.matches("td:nth-child(2) input") || // Quantity input
+                e.target.matches("td:nth-child(6) input") // Rate input
+            ) {
+                const row = e.target.closest("tr");
+                recalculateAmount(row); // Recalculate the amount when either quantity or rate changes
+            }
+        });
+
         let originalData = null; // Store original data for cancel
 
         function setEditMode(isEdit) {
@@ -385,12 +431,34 @@
                 el.classList.toggle("hidden", isEdit);
             });
 
+            if (isEdit) {
+                document.querySelectorAll("#itemsTableBody tr").forEach(row => {
+                    const priceLevelSelect = row.querySelector(".priceLevelCell select");
+                    const rateInput = row.querySelector(".rateCell input");
+
+                    if (priceLevelSelect && rateInput) {
+                        const selectedId = priceLevelSelect.value;
+                        const isCustom = selectedId === "-1" ||
+                            priceLevelSelect.selectedOptions[0]?.text?.toLowerCase().includes("custom");
+
+                        if (!isCustom) {
+                            rateInput.disabled = true;
+                            rateInput.classList.remove("bg-white");
+                            rateInput.classList.add("bg-gray-100");
+                        } else {
+                            rateInput.disabled = false;
+                            rateInput.classList.remove("bg-gray-100");
+                            rateInput.classList.add("bg-white");
+                        }
+                    }
+                });
+            }
+
             document.getElementById("editButton").classList.toggle("hidden", isEdit);
             document.getElementById("editActions").classList.toggle("hidden", !isEdit);
         }
 
         document.getElementById("editButton").addEventListener("click", () => {
-            // Store original data before editing
             originalData = {
                 date: document.getElementById("so-date").value,
                 startdate: document.getElementById("so-startdate").value,
@@ -401,15 +469,15 @@
                 saleseffectivedate: document.getElementById("so-saleseffectivedate").value,
                 leadsource: document.getElementById("lead-source").value,
                 partner: document.getElementById("so-partner").value,
-                class: document.getElementById("so-class").value,
-                department: document.getElementById("so-department").value,
-                location: document.getElementById("so-location").value
+                class: document.getElementById("so-class").value || null,
+                department: document.getElementById("so-department").value || null,
+                location: document.getElementById("so-location").value || null,
+                projectsummary: document.getElementById("so-projectsummary").value
             };
             setEditMode(true);
         });
 
         document.getElementById("cancelButton").addEventListener("click", () => {
-            // Restore original data
             if (originalData) {
                 document.getElementById("so-date").value = originalData.date;
                 document.getElementById("so-startdate").value = originalData.startdate;
@@ -423,26 +491,49 @@
                 document.getElementById("so-class").value = originalData.class;
                 document.getElementById("so-department").value = originalData.department;
                 document.getElementById("so-location").value = originalData.location;
+                document.getElementById("so-projectsummary").value = originalData.projectsummary;
             }
             setEditMode(false);
         });
 
         document.getElementById("saveButton").addEventListener("click", () => {
-            console.log("Saving changes...");
-
-            // Show loading state
+            
+            function validateClassification() {
+                const classField = document.getElementById("so-class") || null;
+                const deptField = document.getElementById("so-department") || null;
+                const locationField = document.getElementById("so-location") || null;
+                let isValid = true;
+                let missingFields = [];
+                if (!classField.value) {
+                    isValid = false;
+                    missingFields.push("Class");
+                }
+                if (!deptField.value) {
+                    isValid = false;
+                    missingFields.push("Department");
+                }
+                if (!locationField.value) {
+                    isValid = false;
+                    missingFields.push("Location");
+                }
+                if (!isValid) {
+                    alert("Please fill in the following mandatory fields: " + missingFields.join(", "));
+                }
+                return isValid;
+            }
+            if (!validateClassification()) {
+                return;
+            }
             const saveButton = document.getElementById("saveButton");
             const saveButtonText = document.getElementById("saveButtonText");
             const saveSpinner = document.getElementById("saveSpinner");
-
             saveButton.disabled = true;
             saveButtonText.textContent = "Saving...";
             saveSpinner.classList.remove("hidden");
-
-            // Collect updated data (excluding customer as it cannot be changed)
             const updatedData = {
                 action: "updateSalesOrder",
                 salesOrderId: recordId,
+                // ---------------- HEADER FIELDS ----------------
                 trandate: document.getElementById("so-date").value,
                 startdate: document.getElementById("so-startdate").value,
                 enddate: document.getElementById("so-enddate").value,
@@ -452,23 +543,73 @@
                 saleseffectivedate: document.getElementById("so-saleseffectivedate").value,
                 leadsource: document.getElementById("lead-source").value,
                 partner: document.getElementById("so-partner").value,
-                class: document.getElementById("so-class").value,
-                department: document.getElementById("so-department").value,
-                location: document.getElementById("so-location").value
+                class: document.getElementById("so-class").value || null,
+                department: document.getElementById("so-department").value || null,
+                location: document.getElementById("so-location").value || null,
+                projectsummary: document.getElementById("so-projectsummary").value,
+                // ---------------- LINE ITEMS ----------------
+                lineItems: [],
+                // ---------------- SALES TEAM ----------------
+                salesTeam: []
             };
 
-            console.log("Data to save:", updatedData);
+            // Collect line items from the Items table
+            document.querySelectorAll("#itemsTableBody tr").forEach(row => {
+                const itemSelect = row.querySelector(".itemCell select");
+                const unitSelect = row.querySelector(".unitCell select");
+                const priceLevelSelect = row.querySelector(".priceLevelCell select");
+                const classSelect = row.querySelector(".classCell select");
+                const deptSelect = row.querySelector(".deptCell select");
+                const quantity = parseFloat(row.querySelector("td:nth-child(2) input")?.value || 0);
+                const rate = parseFloat(row.querySelector(".rateCell input")?.value || 0);
+                const priceLevelId = priceLevelSelect?.value || "";
 
-            // Send update request
+                const lineItem = {
+                    itemId: itemSelect?.value || "",
+                    itemName: itemSelect?.selectedOptions[0]?.text || "",
+                    quantity,
+                    description: row.querySelector("td:nth-child(4) input")?.value || "",
+                    rate,
+                    amount: (quantity * rate).toFixed(2),
+                    unitId: unitSelect?.value || "",
+                    classId: classSelect?.value || "",
+                    departmentId: deptSelect?.value || ""
+                };
+
+                if (priceLevelId && priceLevelId !== "-1") {
+                    lineItem.priceLevelId = priceLevelId;
+                } else {
+                    console.log(`Line item ${lineItem.itemName}: Using custom rate ${rate} (price level: ${priceLevelId})`);
+                }
+
+                updatedData.lineItems.push(lineItem);
+            });
+
+            document.querySelectorAll("#salesTeamTableBody tr").forEach(row => {
+                const repSelect = row.querySelector(".empCell select");
+                const roleSelect = row.querySelector(".roleCell select");
+                const primaryCheckbox = row.querySelector(".primaryCheckbox");
+                const contributionInput = row.querySelector(".contributionInput");
+
+                const member = {
+                    employeeId: repSelect?.value || "",
+                    employeeName: repSelect?.selectedOptions[0]?.text || "",
+                    salesRole: roleSelect?.value || "",
+                    primary: primaryCheckbox?.checked || false,
+                    contribution: contributionInput?.value || 0
+                };
+
+                updatedData.salesTeam.push(member);
+            });
+
+    
+
             fetch(BASE_URL, {
                 method: "POST",
                 body: JSON.stringify(updatedData)
             })
                 .then(res => res.json())
                 .then(response => {
-                    console.log("Save response:", response);
-
-                    // Hide loading state
                     saveButton.disabled = false;
                     saveButtonText.textContent = "Save";
                     saveSpinner.classList.add("hidden");
@@ -476,7 +617,6 @@
                     if (response.success) {
                         alert("Sales Order updated successfully!");
                         setEditMode(false);
-                        // Reload the page to show updated data
                         location.reload();
                     } else {
                         alert("Failed to update: " + (response.message || "Unknown error"));
@@ -484,8 +624,6 @@
                 })
                 .catch(err => {
                     console.error("Save error:", err);
-
-                    // Hide loading state
                     saveButton.disabled = false;
                     saveButtonText.textContent = "Save";
                     saveSpinner.classList.add("hidden");
@@ -506,29 +644,23 @@
         }
 
 
-        const BASE_URL = 'https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM';
 
-        // Read URL params
+
         const url = new URL(window.location.href);
         const currentURL = window.location.href;
         const urlParams = new URLSearchParams(new URL(currentURL).search);
         const encodedUserId = urlParams.get("userId");
         const pageType = url.searchParams.get("type");
-        // type = estimate | opportunity | salesorder
 
         let recordId = '';
         if (pageType === "estimate") recordId = url.searchParams.get("estimateId");
         else if (pageType === "opportunity") recordId = url.searchParams.get("opportunityId");
         else if (pageType === "salesorder") recordId = url.searchParams.get("salesOrderId");
 
-        // Decide Suitelet action
         let action = "";
         if (pageType === "estimate") action = "getKanbanEstimateDetails";
         else if (pageType === "opportunity") action = "getKanbanOpportunityDetails";
         else if (pageType === "salesorder") action = "getKanbanSalesOrderDetails";
-
-        // Build fetch body
-        //const userId = localStorage.getItem("userId");   // or however you store the logged-in email
 
         let fetchBody = {
             action,
@@ -545,35 +677,17 @@
             .then(res => res.json())
             .then(data => {
 
-                console.log("➡️ Fetched Data:", data);
-
                 if (!data.success) {
                     console.error("Failed to load details:", data.message || "Unknown error");
                     alert("Failed to load sales order details: " + (data.message || "Unknown error"));
                     return;
                 }
-
-                // Extract required data including sales manager
                 const header = data.data;
                 const isSalesManager = data.data;
                 const items = header.items || [];
                 const salesTeam = header.salesteam || [];
                 const salesManager = header.isSalesManager;
 
-                console.log("=== DATA EXTRACTION ===");
-                console.log("Full data object:", data);
-                console.log("Header object:", header);
-                console.log("Items array:", items);
-                console.log("Items length:", items.length);
-                console.log("Sales Team array:", salesTeam);
-                console.log("Sales Team length:", salesTeam.length);
-                console.log("Is Sales Manager?", salesManager);
-                console.log("soItemList:", header.soItemList);
-                console.log("soClassDetails:", header.soClassDetails);
-                console.log("soDepartmentDetails:", header.soDepartmentDetails);
-                console.log("soEmployeeList:", header.soEmployeeList);
-
-                // Hide Rate & Amount headers if not sales manager
                 if (!salesManager) {
                     const rateHeader = document.getElementById("th-rate");
                     const amountHeader = document.getElementById("th-amount");
@@ -582,8 +696,14 @@
                     if (amountHeader) amountHeader.style.display = "none";
                 }
 
+                if (!salesManager) {
+                    const salesTeamTabBtn = document.getElementById("sales-team-tab-btn");
+                    const salesTeamTabContent = document.getElementById("sales-team");
 
+                    if (salesTeamTabBtn) salesTeamTabBtn.style.display = "none";
+                    if (salesTeamTabContent) salesTeamTabContent.style.display = "none";
 
+                }
                 // Main header fields
                 document.querySelectorAll(".so-number").forEach(el => el.innerText = header.tranid || "");
                 document.getElementById("so-custname").innerText = header.entity || "";
@@ -592,73 +712,54 @@
                 function populateHeaderFields(header) {
                     // Customer
                     document.getElementById("so-customer").innerText = header.entity || "";
-
                     // Dates
                     document.getElementById("so-date").value = formatDateForInput(header.trandate) || "";
                     document.getElementById("so-startdate").value = formatDateForInput(header.startdate) || "";
                     document.getElementById("so-enddate").value = formatDateForInput(header.enddate) || "";
-
                     // PO & Job
                     document.getElementById("so-po").value = header.po || "";
-
                     // Job - populate both label and dropdown
                     document.getElementById("so-job-label").innerText = header.job || "";
-
                     // Total → label
                     document.getElementById("so-total").innerText = header.total || "";
-
                     // Memo
                     document.getElementById("so-memo").value = header.memo || "";
-
                     // Sales Information
                     document.getElementById("so-salesrep").innerText = header.salesrep || "";
                     document.getElementById("so-saleseffectivedate").value = formatDateForInput(header.saleseffectivedate) || "";
-
                     // Lead Source, Opportunity, Partner - populate labels
                     document.getElementById("lead-source-label").innerText = header.leadsource || "";
                     document.getElementById("so-oppurtunity-label").innerText = header.opportunity || "";
                     document.getElementById("so-partner-label").innerText = header.partner || "";
-
                     // Classification - populate labels
                     document.getElementById("so-subsidiary").innerText = header.subsidiary || "";
                     document.getElementById("so-class-label").innerText = header.class || "";
                     document.getElementById("so-location-label").innerText = header.location || "";
                     document.getElementById("so-department-label").innerText = header.department || "";
+                    document.getElementById("so-projectsummary").value = header.projectsummary || "";
                 }
-
-
-
-
-
                 function populateJobDropdown(jobs = [], selectedJobId = "") {
                     const select = document.getElementById("so-job-id");
                     select.innerHTML = "";
-
                     const blank = document.createElement("option");
                     blank.value = "";
                     select.appendChild(blank);
-
                     jobs.forEach(job => {
                         const opt = document.createElement("option");
                         opt.value = job.id;
                         opt.textContent = job.name;
-
                         if (String(job.id) === String(selectedJobId)) opt.selected = true;
-
                         select.appendChild(opt);
                     });
                 }
 
-
                 function populateLeadSourceDropdown(leadSources = [], selectedLeadSourceId = "") {
                     const select = document.getElementById("lead-source");
                     select.innerHTML = "";
-
                     // Add a blank option at the top
                     const blank = document.createElement("option");
                     blank.value = "";
                     select.appendChild(blank);
-
                     // Populate lead sources
                     leadSources.forEach(source => {
                         const opt = document.createElement("option");
@@ -668,14 +769,11 @@
                         if (String(source.id) === String(selectedLeadSourceId)) {
                             opt.selected = true;
                         }
-
                         select.appendChild(opt);
                     });
 
                     select.disabled = false; // enable dropdown
                 }
-
-
 
                 function populatePartnerDropdown(partners = [], selectedPartnerId = "") {
                     const select = document.getElementById("so-partner");
@@ -694,8 +792,6 @@
                     });
                 }
 
-                
-
                 function populateClassDropdown(classData = {}) {
                     const select = document.getElementById("so-class");
                     select.innerHTML = "";
@@ -713,7 +809,6 @@
                         select.appendChild(opt);
                     });
                 }
-
                 function populateDepartmentDropdown(departmentData = {}) {
                     const select = document.getElementById("so-department");
                     select.innerHTML = "";
@@ -784,7 +879,6 @@
 
                 function createClassDropdown(classList = [], selectedClassId = "", selectedClassText = "") {
                     const container = document.createElement("div");
-
                     // Create label for view mode
                     const label = document.createElement("label");
                     label.className = "view-only";
@@ -844,16 +938,40 @@
                     return container;
                 }
 
+                function createUnitDropdown(unitList = [], selectedUnitId = "") {
+                    const select = document.createElement("select");
+                    select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm";
+                    select.disabled = true;
+
+                    const blank = document.createElement("option");
+                    blank.value = "";
+                    select.appendChild(blank);
+
+                    unitList.forEach(uom => {
+                        if (!uom || !uom.id) return;
+
+                        const opt = document.createElement("option");
+                        opt.value = String(uom.id);
+                        opt.textContent = uom.name;
+
+                        if (String(uom.id) === String(selectedUnitId)) {
+                            opt.selected = true;
+                        }
+
+                        select.appendChild(opt);
+                    });
+
+                    return select;
+                }
+
                 function createSalesRepDropdown(repList = [], selectedEmployeeId = "", selectedEmployeeText = "") {
                     const container = document.createElement("div");
 
-                    // Create label for view mode
                     const label = document.createElement("label");
                     label.className = "view-only";
                     label.textContent = selectedEmployeeText || "";
                     container.appendChild(label);
 
-                    // Create select for edit mode
                     const select = document.createElement("select");
                     select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm edit-only hidden";
                     select.disabled = true;
@@ -875,10 +993,72 @@
                     return container;
                 }
 
+                function createSalesRoleDropdown(roleList = [], selectedRoleId = "", selectedRoleText = "") {
+                    const container = document.createElement("div");
+
+                    const label = document.createElement("label");
+                    label.className = "view-only";
+                    label.textContent = selectedRoleText || "";
+                    container.appendChild(label);
+
+                    const select = document.createElement("select");
+                    select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm edit-only hidden";
+                    select.disabled = true;
+
+                    const blank = document.createElement("option");
+                    blank.value = "";
+                    if (!selectedRoleId) blank.selected = true;
+                    select.appendChild(blank);
+
+                    roleList.forEach(role => {
+                        const opt = document.createElement("option");
+                        opt.value = role.id;
+                        opt.textContent = role.name;
+                        if (String(role.id) === String(selectedRoleId)) opt.selected = true;
+                        select.appendChild(opt);
+                    });
+
+                    container.appendChild(select);
+                    return container;
+                }
+
+
+
+                function createPriceLevelDropdown(priceLevelList = [], selectedPriceLevelId = "", selectedPriceLevelText = "") {
+                    const container = document.createElement("div");
+
+                    const label = document.createElement("label");
+                    label.className = "view-only";
+
+                    if (selectedPriceLevelText) {
+                        label.textContent = selectedPriceLevelText;
+                    } else {
+                        const selectedObj = priceLevelList.find(pl => String(pl.id) === String(selectedPriceLevelId));
+                        label.textContent = selectedObj ? selectedObj.name : "";
+                    }
+                    container.appendChild(label);
+
+                    const select = document.createElement("select");
+                    select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm edit-only hidden";
+                    select.disabled = true;
+
+                    priceLevelList.forEach(priceLevel => {
+                        const opt = document.createElement("option");
+                        opt.value = priceLevel.id;
+                        opt.textContent = priceLevel.name;
+                        if (String(priceLevel.id) === String(selectedPriceLevelId)) {
+                            opt.selected = true;
+                        }
+                        select.appendChild(opt);
+                    });
+
+                    container.appendChild(select);
+                    return container;
+                }
+
                 populateHeaderFields(header);
                 populateJobDropdown(header.soJobDetails?.jobs || [], header.soJobDetails?.selectedJobId || "");
                 populateLeadSourceDropdown(header.soLeadSourceDetails?.leadSources || [], header.soLeadSourceDetails?.selectedLeadSourceId || "");
-               // populateOpportunityDropdown(header.soOpportunityDetails?.opportunities || [], header.soOpportunityDetails?.selectedOpportunityId || "");
                 populatePartnerDropdown(header.soPartnerDetails?.partners || [], header.soPartnerDetails?.selectedPartnerId || "");
                 populateClassDropdown(header.soClassDetails);
                 populateDepartmentDropdown(header.soDepartmentDetails);
@@ -888,59 +1068,105 @@
                 const tbody = document.getElementById("itemsTableBody");
                 tbody.innerHTML = "";
 
-                console.log("=== ITEMS RENDERING ===");
-                console.log("Items data:", items);
-                console.log("Items length:", items ? items.length : 0);
-                console.log("soItemList:", header.soItemList);
-                console.log("soClassDetails:", header.soClassDetails);
-                console.log("soDepartmentDetails:", header.soDepartmentDetails);
-
                 if (!items || items.length === 0) {
                     console.warn("No items to display");
                     tbody.innerHTML = `<tr><td class="text-sm px-3 py-2 text-gray-500 text-center" colspan="6">No items found</td></tr>`;
                 }
                 else {
-                    console.log("✅ Rendering", items.length, "items");
                     items.forEach((row, index) => {
-                        console.log(`Item ${index}:`, row);
                         try {
                             const tr = document.createElement("tr");
                             tr.className = "border-b border-gray-200";
 
-                            // Format rate and amount safely
                             const rateValue = row.rate != null ? (typeof row.rate === 'number' ? row.rate.toFixed(2) : parseFloat(row.rate).toFixed(2)) : '';
                             const amountValue = row.amount != null ? (typeof row.amount === 'number' ? row.amount.toFixed(2) : parseFloat(row.amount).toFixed(2)) : '';
 
                             tr.innerHTML = `
                             <td class="itemCell px-3 py-2 text-sm"></td>
                             <td class="px-3 py-2 text-sm"><input type="text" value="${row.quantity || ''}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
-                            <td class="px-3 py-2 text-sm"><input type="text" value="${row.units || ''}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
+                             
+                            <td class="unitCell px-3 py-2 text-sm"></td>
                             <td class="px-3 py-2 text-sm"><input type="text" value="${row.description || ''}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
+                            <td class="priceLevelCell px-3 py-2 text-sm"></td>
                             <td class="rateCell px-3 py-2 text-sm"><input type="text" value="${rateValue}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
-                            <td class="amountCell px-3 py-2 text-sm"><input type="text" value="${amountValue}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
+                            <td class="amountCell px-3 py-2 text-sm"><span class="text-gray-800">${amountValue}</span></td>
                             <td class="classCell px-3 py-2 text-sm"></td>
                             <td class="deptCell px-3 py-2 text-sm"></td>
                         `;
 
-                            // Insert item dropdown with text
                             const itemCell = tr.querySelector(".itemCell");
                             if (itemCell) {
                                 itemCell.appendChild(createItemDropdown(header.soItemList?.items || [], row.itemId, row.item));
                             }
+
+                            const unitOptions = header.soUnitList.units?.[row.itemId] || [];
+                            tr.querySelector(".unitCell")
+                                .appendChild(createUnitDropdown(unitOptions, row.units));
+
+
+                            const priceLevelCell = tr.querySelector(".priceLevelCell");
+                            if (priceLevelCell) {
+                                const dropdown = createPriceLevelDropdown(
+                                    header.soPriceLevelList?.priceLevels || [],
+                                    row.priceLevelId,
+                                    row.priceLevel
+                                );
+                                priceLevelCell.appendChild(dropdown);
+
+                                const select = dropdown.querySelector("select");
+                                const rateInput = tr.querySelector(".rateCell input");
+                                const amountSpan = tr.querySelector(".amountCell span");
+
+                                if (select && rateInput) {
+                                    const handlePriceLevelChange = () => {
+                                        const selectedId = select.value;
+
+                                        const selectedPriceLevel = (header.soPriceLevelList?.priceLevels || [])
+                                            .find(pl => String(pl.id) === String(selectedId));
+                                        const isCustom = selectedId === "-1" ||
+                                            (selectedPriceLevel && selectedPriceLevel.name &&
+                                                selectedPriceLevel.name.toLowerCase().includes("custom"));
+                                        if (isCustom) {
+                                            rateInput.disabled = false;
+                                            rateInput.classList.remove("bg-gray-100");
+                                            rateInput.classList.add("bg-white");
+                                            if (!rateInput.value || rateInput.value === "0.00") {
+                                                rateInput.value = "";
+                                            }
+                                        } else {
+                                            rateInput.disabled = true;
+                                            rateInput.classList.remove("bg-white");
+                                            rateInput.classList.add("bg-gray-100");
+
+                                            if (selectedPriceLevel) {
+                                                const itemRate = selectedPriceLevel.rates?.[row.itemId];
+
+                                                if (itemRate) {
+                                                    rateInput.value = itemRate;
+                                                } else {
+                                                    rateInput.value = "0.00";
+                                                }
+                                            }
+                                        }
+                                        recalculateAmount(tr);
+                                        if (amountSpan) {
+                                            amountSpan.textContent = (
+                                                parseFloat(row.quantity || 0) * parseFloat(rateInput.value || 0)
+                                            ).toFixed(2);
+                                        }
+                                    };
+                                    select.addEventListener("change", handlePriceLevelChange);
+                                    handlePriceLevelChange();
+                                }
+                            }
                             const classCell = tr.querySelector(".classCell");
-                            if (classCell){
+                            if (classCell) {
                                 classCell.appendChild(createClassDropdown(header.soClassDetails?.classes || [], row.classId, row.class));
                             }
-                                
-
-                            // Department dropdown
                             const deptCell = tr.querySelector(".deptCell");
-                            if (deptCell){
+                            if (deptCell) {
                                 deptCell.appendChild(createDepartmentDropdown(header.soDepartmentDetails?.departments || [], row.departmentId, row.department));
                             }
-                                
-
-                            // Rate & Amount toggled only for sales manager
                             if (!salesManager) {
                                 const rateCell = tr.querySelector(".rateCell");
                                 const amountCell = tr.querySelector(".amountCell");
@@ -949,33 +1175,143 @@
                             }
 
                             tbody.appendChild(tr);
-                            console.log(`✅ Item ${index} rendered successfully`);
                         } catch (error) {
                             console.error(`Error rendering item ${index}:`, error);
                         }
                     });
-                    console.log("✅ All items rendered");
                 }
 
                 // -------------------- RENDER SALES TEAM --------------------
                 const salesBody = document.getElementById("salesTeamTableBody");
                 salesBody.innerHTML = "";
 
-                console.log("=== SALES TEAM RENDERING ===");
-                console.log("Sales Team data:", salesTeam);
-                console.log("Sales Team length:", salesTeam ? salesTeam.length : 0);
-                console.log("soEmployeeList:", header.soEmployeeList);
+                document.getElementById("itemsTableBody").addEventListener("change", async function (e) {
+                    if (e.target.tagName === "SELECT" && e.target.closest(".itemCell")) {
+                        const row = e.target.closest("tr");
+                        const selectedItemId = e.target.value;
 
+                        if (selectedItemId) {
+                            await replaceRowWithItemDetails(row, selectedItemId);
+                        }
+                    }
+                });
+
+                async function fetchItemDetails(itemId) {
+                    const body = {
+                        action: "getItemDetails",
+                        itemId: itemId
+                    };
+
+                    const res = await fetch(BASE_URL, {
+                        method: "POST",
+                        body: JSON.stringify(body)
+                    });
+
+                    const data = await res.json();
+                    return data.success ? data.data : null;
+                }
+
+
+                async function replaceRowWithItemDetails(row, itemId) {
+                    const details = await fetchItemDetails(itemId);
+                    if (!details) {
+                        console.warn("No details found for item:", itemId);
+                        return;
+                    }
+
+                    const rate = (typeof details.rate === "number" && !isNaN(details.rate))
+                        ? details.rate
+                        : parseFloat(details.rate) || 0;
+                    const qty = 1;
+                    const qtyInput = row.querySelector("td:nth-child(2) input");
+                    if (qtyInput) qtyInput.value = qty;
+
+                    const descInput = row.querySelector("td:nth-child(4) input");
+                    if (descInput) descInput.value = details.description || "";
+
+                    const rateInput = row.querySelector(".rateCell input");
+                    if (rateInput) rateInput.value = rate.toFixed(2);
+
+                    const amountSpan = row.querySelector(".amountCell span");
+                    if (amountSpan) amountSpan.textContent = (qty * rate).toFixed(2);
+
+                    const unitCell = row.querySelector(".unitCell");
+                    if (unitCell) {
+                        unitCell.innerHTML = "";
+                        unitCell.appendChild(
+                            createUnitDropdown(details.units || [], details.defaultUnit)
+                        );
+                    }
+
+                   
+                    const priceSelect = row.querySelector("td:nth-child(5) select");
+                    if (priceSelect) {
+                        // Clear existing options and add Custom
+                        priceSelect.innerHTML = "";
+                        const customOpt = document.createElement("option");
+                        customOpt.value = "-1";
+                        customOpt.textContent = "Custom";
+                        priceSelect.appendChild(customOpt);
+
+                        let basePriceLevelId = "";
+
+                        // Populate item-specific price levels
+                        (details.priceLevels || []).forEach(pl => {
+                            const opt = document.createElement("option");
+                            opt.value = String(pl.id);
+                            // Ensure name is displayed
+                            opt.textContent = (pl.name && pl.name.trim()) || (pl.displayName && pl.displayName.trim()) || `Price Level ${pl.id}`;
+                            opt.dataset.rate = pl.rate || 0;
+
+                            if (pl.name && pl.name.toLowerCase() === "base price") {
+                                basePriceLevelId = String(pl.id);
+                            }
+
+                            priceSelect.appendChild(opt);
+                        });
+
+                        // Default selection logic
+                        if (basePriceLevelId) {
+                            priceSelect.value = basePriceLevelId;
+                        } else {
+                            priceSelect.value = "-1"; // Custom
+                        }
+                    }
+
+                    const classCell = row.querySelector(".classCell");
+                    if (classCell) {
+                        classCell.innerHTML = "";
+                        classCell.appendChild(
+                            createClassDropdown(
+                                header.soClassDetails?.classes || [],
+                                details.classId,
+                                ""
+                            )
+                        );
+                    }
+                    const deptCell = row.querySelector(".deptCell");
+                    if (deptCell) {
+                        deptCell.innerHTML = "";
+                        deptCell.appendChild(
+                            createDepartmentDropdown(
+                                header.soDepartmentDetails?.departments || [],
+                                details.departmentId,
+                                ""
+                            )
+                        );
+                    }
+
+                    if (rateInput) {
+                        rateInput.disabled = details.isRateLocked || false;
+                    }
+                }
                 if (!salesTeam || salesTeam.length === 0) {
                     console.warn("No sales team to display");
                     salesBody.innerHTML = `<tr><td colspan="4" class="text-sm px-3 py-2 text-gray-500 text-center">No sales team found</td></tr>`;
                 }
                 else {
-                    console.log("✅ Rendering", salesTeam.length, "sales team members");
                     salesTeam.forEach((row, index) => {
-                        console.log(`Sales team member ${index}:`, row);
                         try {
-                            // Format contribution safely
                             const contributionValue = row.contribution != null ?
                                 (typeof row.contribution === 'number' ? row.contribution.toFixed(1) : parseFloat(row.contribution).toFixed(1)) : '0.0';
 
@@ -983,24 +1319,26 @@
                             tr.className = "border-b border-gray-200";
                             tr.innerHTML = `
                             <td class="empCell px-3 py-2 text-sm"></td>
-                            <td class="px-3 py-2 text-sm"><input value="${row.salesRole || ''}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
-                            <td class="px-3 py-2 text-sm">${row.primary ? "Yes" : "No"}</td>
+                            <td class="roleCell px-3 py-2 text-sm"></td>
+                            <td class="px-3 py-2 text-sm text-center"><input type="checkbox" ${row.primary ? 'checked' : ''} disabled class="primaryCheckbox w-4 h-4" /></td>
                             <td class="px-3 py-2 text-sm"><input type="number" value="${contributionValue}" disabled class="contributionInput w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
                         `;
 
-                            // Use the employee list from the backend with employee text
                             const empCell = tr.querySelector(".empCell");
                             if (empCell) {
                                 empCell.appendChild(createSalesRepDropdown(header.soEmployeeList?.reps || [], row.employeeId, row.employee));
                             }
 
+                            const roleCell = tr.querySelector(".roleCell");
+                            if (roleCell) {
+                                roleCell.appendChild(createSalesRoleDropdown(header.soSalesRoleList?.salesRoles || [], row.salesRoleId, row.salesRole));
+                            }
+
                             salesBody.appendChild(tr);
-                            console.log(`✅ Sales team member ${index} rendered successfully`);
                         } catch (error) {
                             console.error(`Error rendering sales team member ${index}:`, error);
                         }
                     });
-                    console.log("✅ All sales team members rendered");
                 }
             })
             .catch(err => console.error(err));
