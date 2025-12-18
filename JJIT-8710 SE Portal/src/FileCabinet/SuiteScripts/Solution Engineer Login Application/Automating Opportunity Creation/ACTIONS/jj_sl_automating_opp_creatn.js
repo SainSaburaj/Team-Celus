@@ -1164,162 +1164,86 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 } else {
                     log.debug('kanban - No userId available, returning all pending approval orders');
                 }
-
                 if (startDate && endDate) {
-
                     formattedStartDate = dateFormatter(startDate);
-
                     formattedEndDate = dateFormatter(endDate);
-
                     if (formattedStartDate && formattedEndDate) {
-
                         const filters = [
-
                             ["type", "anyof", "Opprtnty", "SalesOrd", "Estimate"],
-
                             "AND",
-
                             ["mainline", "is", "T"],
-
                             "AND",
-
                             ["trandate", "within", formattedStartDate, formattedEndDate],
-
                             "AND",
-
                             ["status", "noneof", "Opprtnty:C", "Estimate:C", "Estimate:X", "Estimate:B", "Estimate:V", "Opprtnty:D", "Opprtnty:B", "SalesOrd:G", "SalesOrd:C", "SalesOrd:H", "SalesOrd:D", "SalesOrd:F", "SalesOrd:E", "SalesOrd:B"]
-
                         ]
                         if (employeeId) {
                             filters.push("AND", ["salesteammember", "anyof", employeeId]);
                         }
-
                         const transactionSearchObj = search.create({
-
                             type: "transaction",
-
                             settings: [{ "name": "consolidationtype", "value": "ACCTTYPE" }],
-
                             filters: filters,
-
                             columns:
-
                                 [
-
                                     search.createColumn({ name: "transactionnumber", label: "Transaction Number" }),
-
                                     search.createColumn({ name: "internalid", label: "Internal ID" }),
-
                                     search.createColumn({ name: "recordtype", label: "Record Type" }),
-
                                     search.createColumn({ name: "trandate", label: "Date" }),
-
                                     search.createColumn({ name: "memomain", label: "Memo (Main)" }),
-
                                     search.createColumn({ name: "type", label: "Type" }),
-
                                     search.createColumn({
-
                                         name: "formulatext",
-
                                         formula: "CASE WHEN {type}='Opportunity' THEN 'opportunity' WHEN {type}='Sales Order' THEN 'salesorder' WHEN {type}='Quote' THEN 'estimate' ELSE {recordtype} END",
-
                                         label: "Formula (Text)"
-
                                     }),
-
                                     search.createColumn({
-
                                         name: "formulatext",
-
                                         formula: "NVL({title}, {tranid})",
-
                                         label: "Formula (Text)"
-
                                     }),
-
                                     search.createColumn({ name: "statusref", label: "Status" }),
-
                                     search.createColumn({
-
                                         name: "formulatext",
-
                                         formula: "{entitystatus}",
-
                                         label: "Formula (Text)"
-
                                     }),
-
                                     search.createColumn({ name: "entity", label: "Name" }),
-
                                     search.createColumn({ name: "amount", label: "Amount" }),
-
                                     search.createColumn({ name: "probability", label: "Probability" }),
-
                                     search.createColumn({ name: "currency", label: "Currency" })
-
                                 ]
 
                         });
-
                         const pagedSearchData = transactionSearchObj.runPaged({
-
                             pagesize: 1000
-
                         });
-
                         pagedSearchData.pageRanges.forEach(function (pageRange) {
-
                             const currentPage = pagedSearchData.fetch({ index: pageRange.index });
-
                             currentPage.data.forEach(function (result) {
-
                                 resultRow.push({
-
                                     id: result.getValue('internalid'),
-
                                     transactionNumber: result.getValue('transactionnumber'),
-
                                     stage: result.getValue(result.columns[6]), // Custom formula column for stage
-
                                     date: result.getValue('trandate'),
-
                                     desc: result.getValue('memomain'),
-
                                     status: result.getValue({ name: "statusref", label: "Status" }),
-
                                     entity: result.getText('entity'),
-
                                     amount: result.getValue('amount'),
-
                                     probability: result.getValue('probability'),
-
                                     entityStatus: result.getValue({
-
                                         name: "formulatext",
-
                                         formula: "{entitystatus}",
-
                                         label: "Formula (Text)"
-
                                     }),
-
                                     currency: result.getText('currency')
-
                                 });
-
                             })
-
                         });
-
                         return resultRow;
-
                     } else {
-
                         log.debug('Formatted date is not available in the getRecord search');
-
                         return [];
-
                     }
 
                 } else {
@@ -1339,10 +1263,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             }
 
         }
-
-
-
-
 
 
         /**
@@ -1378,21 +1298,13 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
 
                     if (formattedStartDate && formattedEndDate) {
                         const filters = [
-
                             ["type", "anyof", "Opprtnty", "SalesOrd", "Estimate"],
-
                             "AND",
-
                             ["mainline", "is", "T"],
-
                             "AND",
-
                             ["trandate", "within", formattedStartDate, formattedEndDate],
-
                             "AND",
-
                             ["status", "noneof", "Opprtnty:C", "Estimate:C", "Estimate:X", "Estimate:B", "Estimate:V", "Opprtnty:D", "Opprtnty:B", "SalesOrd:G", "SalesOrd:C", "SalesOrd:H", "SalesOrd:D", "SalesOrd:F", "SalesOrd:E", "SalesOrd:B"]
-
                         ]
                         if (employeeId) {
                             filters.push("AND", ["salesteammember", "anyof", employeeId]);
@@ -2041,6 +1953,8 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 header.salesRoles = model.salesRoleList().salesRoles || [];
                 const isSalesManager = checkIfSalesManager(userEmail);
 
+                log.debug("Sales manager", isSalesManager );
+
                 return {
                     success: true,
                     data: {
@@ -2061,10 +1975,8 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
         function updateEstimateRecord(req) {
             try {
                 if (!req || !req.estimateId || !req.data) {
-                    log.error("❌ Invalid Request Data", req);
                     return { success: false, message: "Invalid request data received." };
                 }
-
                 const estimateId = req.estimateId;
                 const data = req.data;
                 const header = data.Header || {};
@@ -2081,7 +1993,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                         if (isDate && value) {
                             finalValue = new Date(value);
                             if (isNaN(finalValue.getTime())) {
-                                log.debug(`⚠ Invalid date for ${fieldId}: ${value}`);
                                 return;
                             }
                         }
@@ -2090,7 +2001,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             finalValue = null;
                         }
                         else if (value === undefined || value === null || value === "") {
-                            log.debug(`⚠ Skipping empty field: ${fieldId}`);
                             return;
                         }
 
@@ -2172,9 +2082,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 safeSet(estRec, "expectedclosedate", header["Expected Close Date"], true);
                 safeSet(estRec, "duedate", header["Expiration Date"], true);
 
-                // ------------------------------------
-                // CLEAR EXISTING ITEM LINES
-                // ------------------------------------
                 const existingLineCount = estRec.getLineCount({ sublistId: "item" });
                 for (let i = existingLineCount - 1; i >= 0; i--) {
                     estRec.removeLine({
@@ -2184,9 +2091,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     });
                 }
 
-                // ------------------------------------
-                // ADD ITEM LINES (SALES ORDER STYLE)
-                // ------------------------------------
                 items.forEach((line, idx) => {
                     try {
                         estRec.selectNewLine({ sublistId: "item" });
@@ -2194,20 +2098,17 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                         const itemId = parseInt(line["Item ID"], 10);
                         const qtyVal = parseFloat(line.Quantity) || 1;
                         const rateVal = parseFloat(line.Rate) || 0;
-
                         const amountVal =
                             line.Amount !== undefined && line.Amount !== null && line.Amount !== ""
                                 ? parseFloat(line.Amount)
                                 : parseFloat((qtyVal * rateVal).toFixed(2));
 
-                        // ITEM
                         estRec.setCurrentSublistValue({
                             sublistId: "item",
                             fieldId: "item",
                             value: itemId
                         });
 
-                        // QUANTITY
                         estRec.setCurrentSublistValue({
                             sublistId: "item",
                             fieldId: "quantity",
@@ -2230,7 +2131,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                         });
                         }
 
-                        // PRICE LEVEL / CUSTOM
                         if (line.PriceLevel && String(line.PriceLevel) !== "-1") {
                             // Standard price level
                             estRec.setCurrentSublistValue({
@@ -2240,7 +2140,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             });
                         } 
                         else {
-                            // Custom pricing
                             estRec.setCurrentSublistValue({
                                 sublistId: "item",
                                 fieldId: "price",
@@ -2248,26 +2147,20 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             });
                         }
 
-                            estRec.setCurrentSublistValue({
-                                sublistId: "item",
+                        estRec.setCurrentSublistValue({
+                            sublistId: "item",
                             fieldId: "rate",
                             value: rateVal
                         });
-
                         
-                        // ✅ REQUIRED FOR ESTIMATE
                         estRec.setCurrentSublistValue({
                             sublistId: "item",
                             fieldId: "amount",
                             value: amountVal
                         });
                         
-                        // ------------------------------------
-                        // UPDATE ITEM MASTER (CLASS / DEPARTMENT)
-                        // ------------------------------------
                         if (line.Class || line.Department) {
                             try {
-                                // Get item record type dynamically
                                 const itemLookup = search.lookupFields({
                                     type: search.Type.ITEM,
                                     id: itemId,
@@ -2296,45 +2189,23 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                                             value: parseInt(line.Department, 10)
                                         });
                                     }
-
                                     itemRec.save();
-
-                                    log.debug("✅ Item updated", {
-                                        itemId,
-                                        itemType,
-                                        class: line.Class,
-                                        department: line.Department
-                                    });
                                 }
-                            } catch (itemErr) {
+                            } 
+                            catch (itemErr) {
                                 log.error("❌ Item update failed", {
                                     itemId,
                                     error: itemErr
                                 });
                             }
                         }
-
-
-
                         estRec.commitLine({ sublistId: "item" });
-
-                        log.debug("✅ Estimate line added", {
-                            line: idx + 1,
-                            item: itemId,
-                            qty: qtyVal,
-                            rate: rateVal,
-                            amount: amountVal
-                        });
-
-                    } catch (e) {
+                    }
+                    catch (e) {
                         log.error(`❌ Failed adding estimate line ${idx + 1}`, e);
                         throw e;
                     }
                 });
-
-
-
-
 
                 const stCount = estRec.getLineCount({ sublistId: "salesteam" });
 
@@ -2379,20 +2250,16 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             value: isPrimary
                         });
                     }
-
                     estRec.commitLine({ sublistId: "salesteam" });
                 }
-
                 const updatedId = estRec.save();
                 return { success: true, message: "Estimate updated successfully", estimateId: updatedId };
-
             }
             catch (e) {
                 log.error("Update Failed", e);
                 return { success: false, message: e.message || "Error updating estimate" };
             }
         }
-
 
         function getKanbanOpportunityDetails(opportunityId) {
             try {
@@ -3085,13 +2952,13 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
 
 
         /**
-         * Retrieves dependent records for a given subsidiary.
-         *
-         * @param {Object} search - The N/search module reference.
-         * @param {number|string} subsidiaryId - Internal ID of the subsidiary.
-         * @returns {Object} An object containing departments, locations, classes, and items,
-         * or an error object on failure.
-         */
+ * Retrieves dependent records for a given subsidiary.
+ *
+ * @param {Object} search - The N/search module reference.
+ * @param {number|string} subsidiaryId - Internal ID of the subsidiary.
+ * @returns {Object} An object containing departments, locations, classes, and items,
+ * or an error object on failure.
+ */
         function getSubsidiaryDependents(search, subsidiaryId) {
             try {
                 return {
@@ -3107,13 +2974,13 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
         }
 
         /**
-         * Loads an Opportunity record and returns all header, line, and sales team data.
-         *
-         * @param {number|string} opportunityId - Internal ID of the Opportunity to load.
-         * @param {Object} response - Suitelet response object used to write JSON output.
-         * @param {Object} record - N/record module reference.
-         * @returns {void} Writes JSON directly to the response object.
-         */
+ * Loads an Opportunity record and returns all header, line, and sales team data.
+ *
+ * @param {number|string} opportunityId - Internal ID of the Opportunity to load.
+ * @param {Object} response - Suitelet response object used to write JSON output.
+ * @param {Object} record - N/record module reference.
+ * @returns {void} Writes JSON directly to the response object.
+ */
         function loadOpportunityForEdit(opportunityId, response, record) {
             try {
                 if (!opportunityId) {
@@ -3323,6 +3190,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     const departmentVal = line.departmentId || '';
                     const priceLevelVal = line.priceLevel || '';  // Get Price Level value from the form
 
+                    // Add item to Opportunity
                     opportunityRecord.selectNewLine({ sublistId: 'item' });
                     opportunityRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'item', value: itemId });
                     opportunityRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'class', value: classVal || '' });
@@ -3559,7 +3427,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
 
                         if (String(priceLevelVal).toLowerCase() === 'custom' || priceLevelVal == -1) {
                             oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'price', value: -1 });
-                            oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'rate', value: rateVal });
+                        oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'rate', value: rateVal });
                         } else {
                             oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'price', value: priceLevelVal });
                             oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'rate', value: rateVal });
@@ -4411,11 +4279,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                         case 'approveso':
                             res = approveSo(req);
                             break;
-
-                        case 'rejectso':
-                            res = rejectSo(req);
-                            break;
-
 
 
                         case 'getQuoteStatuses':
