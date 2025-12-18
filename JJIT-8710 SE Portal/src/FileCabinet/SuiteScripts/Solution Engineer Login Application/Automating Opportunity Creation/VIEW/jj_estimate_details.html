@@ -124,6 +124,11 @@
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Memo</label>
                                 <textarea id="est-memo" class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full" rows="1" disabled></textarea>
                             </div>
+                            
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Project Summary</label>  
+                                <input type="text" id="est-project-summary" class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full" placeholder="Project Summary" disabled/>
+                            </div>
                         </div>
                     </section>
                     
@@ -384,6 +389,7 @@
                 document.getElementById("est-expires").value = formatDateForInput(header.expirationDate) || "";
                 document.getElementById("est-expclose").value = formatDateForInput(header.expectedCloseDate) || "";
                 document.getElementById("est-memo").value = header.memo || "";
+                document.getElementById("est-project-summary").value = header.projectSummary || "";
                 document.getElementById("sales-rep").innerText = header.salesRep || "";
                 document.getElementById("opportunity").innerText = header.opportunity || "";
                 document.getElementById("subsidiary").innerText = header.subsidiary || "";
@@ -833,6 +839,7 @@
                 "Company": document.getElementById("est-name")?.innerText || "",
                 "Title": document.getElementById("est-title")?.value || "",
                 "Memo": document.getElementById("est-memo")?.value || "",
+                "Project Summary": document.getElementById("est-project-summary")?.value || "",
                 "Expected Close Date": document.getElementById("est-expclose")?.value || "",
                 "Expiration Date": document.getElementById("est-expires")?.value || "",
                 "Status": document.getElementById("est-status")?.value || "",

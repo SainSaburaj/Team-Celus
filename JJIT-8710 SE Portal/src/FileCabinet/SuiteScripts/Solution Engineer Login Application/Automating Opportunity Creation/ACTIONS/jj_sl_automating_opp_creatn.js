@@ -848,8 +848,8 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     return '../VIEW/jj_home_page.html';
                 case 'home':
                     return '../VIEW/jj_home_page.html';
-                case 'opportunityform':
-                    return '../VIEW/jj_opportunity_layouts.html';
+                // case 'opportunityform':
+                //     return '../VIEW/jj_home_page.html';
                 case 'editopp':
                     return '../VIEW/jj_home_page.html';
                 case 'help':
@@ -860,6 +860,8 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     return '../VIEW/jj_add_imp_details.html';
                 case 'leaddetails':
                     return '../VIEW/jj_home_page.html';
+                case 'opportunityform':
+                    return '../VIEW/jj_opportunity_layouts.html';
                 case 'kanbanBoard':
                     return '../VIEW/jj_sales_process_kanban_board.html';
 
@@ -1162,86 +1164,162 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 } else {
                     log.debug('kanban - No userId available, returning all pending approval orders');
                 }
+
                 if (startDate && endDate) {
+
                     formattedStartDate = dateFormatter(startDate);
+
                     formattedEndDate = dateFormatter(endDate);
+
                     if (formattedStartDate && formattedEndDate) {
+
                         const filters = [
+
                             ["type", "anyof", "Opprtnty", "SalesOrd", "Estimate"],
+
                             "AND",
+
                             ["mainline", "is", "T"],
+
                             "AND",
+
                             ["trandate", "within", formattedStartDate, formattedEndDate],
+
                             "AND",
+
                             ["status", "noneof", "Opprtnty:C", "Estimate:C", "Estimate:X", "Estimate:B", "Estimate:V", "Opprtnty:D", "Opprtnty:B", "SalesOrd:G", "SalesOrd:C", "SalesOrd:H", "SalesOrd:D", "SalesOrd:F", "SalesOrd:E", "SalesOrd:B"]
+
                         ]
                         if (employeeId) {
                             filters.push("AND", ["salesteammember", "anyof", employeeId]);
                         }
+
                         const transactionSearchObj = search.create({
+
                             type: "transaction",
+
                             settings: [{ "name": "consolidationtype", "value": "ACCTTYPE" }],
+
                             filters: filters,
+
                             columns:
+
                                 [
+
                                     search.createColumn({ name: "transactionnumber", label: "Transaction Number" }),
+
                                     search.createColumn({ name: "internalid", label: "Internal ID" }),
+
                                     search.createColumn({ name: "recordtype", label: "Record Type" }),
+
                                     search.createColumn({ name: "trandate", label: "Date" }),
+
                                     search.createColumn({ name: "memomain", label: "Memo (Main)" }),
+
                                     search.createColumn({ name: "type", label: "Type" }),
+
                                     search.createColumn({
+
                                         name: "formulatext",
+
                                         formula: "CASE WHEN {type}='Opportunity' THEN 'opportunity' WHEN {type}='Sales Order' THEN 'salesorder' WHEN {type}='Quote' THEN 'estimate' ELSE {recordtype} END",
+
                                         label: "Formula (Text)"
+
                                     }),
+
                                     search.createColumn({
+
                                         name: "formulatext",
+
                                         formula: "NVL({title}, {tranid})",
+
                                         label: "Formula (Text)"
+
                                     }),
+
                                     search.createColumn({ name: "statusref", label: "Status" }),
+
                                     search.createColumn({
+
                                         name: "formulatext",
+
                                         formula: "{entitystatus}",
+
                                         label: "Formula (Text)"
+
                                     }),
+
                                     search.createColumn({ name: "entity", label: "Name" }),
+
                                     search.createColumn({ name: "amount", label: "Amount" }),
+
                                     search.createColumn({ name: "probability", label: "Probability" }),
+
                                     search.createColumn({ name: "currency", label: "Currency" })
+
                                 ]
 
                         });
+
                         const pagedSearchData = transactionSearchObj.runPaged({
+
                             pagesize: 1000
+
                         });
+
                         pagedSearchData.pageRanges.forEach(function (pageRange) {
+
                             const currentPage = pagedSearchData.fetch({ index: pageRange.index });
+
                             currentPage.data.forEach(function (result) {
+
                                 resultRow.push({
+
                                     id: result.getValue('internalid'),
+
                                     transactionNumber: result.getValue('transactionnumber'),
+
                                     stage: result.getValue(result.columns[6]), // Custom formula column for stage
+
                                     date: result.getValue('trandate'),
+
                                     desc: result.getValue('memomain'),
+
                                     status: result.getValue({ name: "statusref", label: "Status" }),
+
                                     entity: result.getText('entity'),
+
                                     amount: result.getValue('amount'),
+
                                     probability: result.getValue('probability'),
+
                                     entityStatus: result.getValue({
+
                                         name: "formulatext",
+
                                         formula: "{entitystatus}",
+
                                         label: "Formula (Text)"
+
                                     }),
+
                                     currency: result.getText('currency')
+
                                 });
+
                             })
+
                         });
+
                         return resultRow;
+
                     } else {
+
                         log.debug('Formatted date is not available in the getRecord search');
+
                         return [];
+
                     }
 
                 } else {
@@ -1300,13 +1378,21 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
 
                     if (formattedStartDate && formattedEndDate) {
                         const filters = [
+
                             ["type", "anyof", "Opprtnty", "SalesOrd", "Estimate"],
+
                             "AND",
+
                             ["mainline", "is", "T"],
+
                             "AND",
+
                             ["trandate", "within", formattedStartDate, formattedEndDate],
+
                             "AND",
+
                             ["status", "noneof", "Opprtnty:C", "Estimate:C", "Estimate:X", "Estimate:B", "Estimate:V", "Opprtnty:D", "Opprtnty:B", "SalesOrd:G", "SalesOrd:C", "SalesOrd:H", "SalesOrd:D", "SalesOrd:F", "SalesOrd:E", "SalesOrd:B"]
+
                         ]
                         if (employeeId) {
                             filters.push("AND", ["salesteammember", "anyof", employeeId]);
@@ -1868,6 +1954,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     expectedCloseDate: estimateRecord.getText("expectedclosedate"),
                     expirationDate: estimateRecord.getText("duedate"),
                     memo: estimateRecord.getValue("memo"),
+                    projectSummary: estimateRecord.getValue("custbody_jj_project_summary_invo"),
                     salesRep: estimateRecord.getText("salesrep"),
                     salesRepId: estimateRecord.getValue("salesrep"),
                     opportunity: estimateRecord.getText("opportunity"),
@@ -1953,6 +2040,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 header.priceLevelList = model.pricelevelList(estimateId);
                 header.salesRoles = model.salesRoleList().salesRoles || [];
                 const isSalesManager = checkIfSalesManager(userEmail);
+
                 return {
                     success: true,
                     data: {
@@ -2030,6 +2118,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 });
 
                 safeSet(estRec, "memo", header.Memo);
+                safeSet(estRec, "custbody_jj_project_summary_invo", header["Project Summary"]);
                 safeSet(estRec, "title", header.Title);
 
                 if (header.Status) {
@@ -2083,6 +2172,9 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 safeSet(estRec, "expectedclosedate", header["Expected Close Date"], true);
                 safeSet(estRec, "duedate", header["Expiration Date"], true);
 
+                // ------------------------------------
+                // CLEAR EXISTING ITEM LINES
+                // ------------------------------------
                 const existingLineCount = estRec.getLineCount({ sublistId: "item" });
                 for (let i = existingLineCount - 1; i >= 0; i--) {
                     estRec.removeLine({
@@ -2092,6 +2184,9 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     });
                 }
 
+                // ------------------------------------
+                // ADD ITEM LINES (SALES ORDER STYLE)
+                // ------------------------------------
                 items.forEach((line, idx) => {
                     try {
                         estRec.selectNewLine({ sublistId: "item" });
@@ -2105,18 +2200,20 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                                 ? parseFloat(line.Amount)
                                 : parseFloat((qtyVal * rateVal).toFixed(2));
 
+                        // ITEM
                         estRec.setCurrentSublistValue({
                             sublistId: "item",
                             fieldId: "item",
                             value: itemId
                         });
 
+                        // QUANTITY
                         estRec.setCurrentSublistValue({
                             sublistId: "item",
                             fieldId: "quantity",
                             value: qtyVal
                         });
-                        
+
                         if (line.Units) {
                             estRec.setCurrentSublistValue({
                                 sublistId: "item",
@@ -2126,14 +2223,16 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                         }
 
                         if (line.Description) {
-                            estRec.setCurrentSublistValue({
-                                sublistId: "item",
+                        estRec.setCurrentSublistValue({
+                            sublistId: "item",
                                 fieldId: "description",
                                 value: line.Description
-                            });
+                        });
                         }
 
+                        // PRICE LEVEL / CUSTOM
                         if (line.PriceLevel && String(line.PriceLevel) !== "-1") {
+                            // Standard price level
                             estRec.setCurrentSublistValue({
                                 sublistId: "item",
                                 fieldId: "price",
@@ -2141,6 +2240,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             });
                         } 
                         else {
+                            // Custom pricing
                             estRec.setCurrentSublistValue({
                                 sublistId: "item",
                                 fieldId: "price",
@@ -2148,35 +2248,73 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             });
                         }
 
-                        estRec.setCurrentSublistValue({
-                            sublistId: "item",
+                            estRec.setCurrentSublistValue({
+                                sublistId: "item",
                             fieldId: "rate",
                             value: rateVal
                         });
+
                         
+                        // ✅ REQUIRED FOR ESTIMATE
                         estRec.setCurrentSublistValue({
                             sublistId: "item",
                             fieldId: "amount",
                             value: amountVal
                         });
                         
-                        log.debug("Setting amount", { qty: qtyVal, rate: rateVal, amount: amountVal });
-                        
-                        if (line.Class) {
-                            estRec.setCurrentSublistValue({
-                                sublistId: "item",
-                                fieldId: "class",
-                                value: parseInt(line.Class, 10)
-                            });
+                        // ------------------------------------
+                        // UPDATE ITEM MASTER (CLASS / DEPARTMENT)
+                        // ------------------------------------
+                        if (line.Class || line.Department) {
+                            try {
+                                // Get item record type dynamically
+                                const itemLookup = search.lookupFields({
+                                    type: search.Type.ITEM,
+                                    id: itemId,
+                                    columns: ["recordtype"]
+                                });
+
+                                const itemType = itemLookup.recordtype;
+
+                                if (itemType) {
+                                    const itemRec = record.load({
+                                        type: itemType,
+                                        id: itemId,
+                                        isDynamic: false
+                                    });
+
+                                    if (line.Class && itemRec.getField({ fieldId: "class" })) {
+                                        itemRec.setValue({
+                                            fieldId: "class",
+                                            value: parseInt(line.Class, 10)
+                                        });
+                                    }
+
+                                    if (line.Department && itemRec.getField({ fieldId: "department" })) {
+                                        itemRec.setValue({
+                                            fieldId: "department",
+                                            value: parseInt(line.Department, 10)
+                                        });
+                                    }
+
+                                    itemRec.save();
+
+                                    log.debug("✅ Item updated", {
+                                        itemId,
+                                        itemType,
+                                        class: line.Class,
+                                        department: line.Department
+                                    });
+                                }
+                            } catch (itemErr) {
+                                log.error("❌ Item update failed", {
+                                    itemId,
+                                    error: itemErr
+                                });
+                            }
                         }
 
-                        if (line.Department) {
-                            estRec.setCurrentSublistValue({
-                                sublistId: "item",
-                                fieldId: "department",
-                                value: parseInt(line.Department, 10)
-                            });
-                        }
+
 
                         estRec.commitLine({ sublistId: "item" });
 
@@ -2188,12 +2326,14 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             amount: amountVal
                         });
 
-                    } 
-                    catch (e) {
+                    } catch (e) {
                         log.error(`❌ Failed adding estimate line ${idx + 1}`, e);
                         throw e;
                     }
                 });
+
+
+
 
 
                 const stCount = estRec.getLineCount({ sublistId: "salesteam" });
@@ -2491,6 +2631,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     total: salesOrderRecord.getText('total'),
                     opportunity: salesOrderRecord.getText('opportunity'),
                     partner: salesOrderRecord.getText('partner'),
+
                     salesrep: salesOrderRecord.getText('salesrep'),
                     saleseffectivedate: salesOrderRecord.getText('saleseffectivedate'),
                     leadsource: salesOrderRecord.getText('leadsource'),
@@ -2499,6 +2640,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     location: salesOrderRecord.getText('location'),
                     department: salesOrderRecord.getText('department'),
                     projectsummary: salesOrderRecord.getValue('custbody_jj_project_summary_invo'),
+
                     items: [],
                     salesteam: [],
                     soClassDetails: {},
@@ -2511,6 +2653,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     soItemList: {},
                     soUnitList: {},
                     isSalesManager: checkIfSalesManager(userEmail)
+
                 };
 
                 // 🔑 Fetch price levels once
@@ -2675,8 +2818,8 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
         /**
          * Update Sales Order with new values
          * @param {Object} requestData - Request data containing salesOrderId and field values
-         * @returns {Object} Success/failure response
-         */
+ * @returns {Object} Success/failure response
+ */
         function updateSalesOrder(requestData) {
             try {
                 if (!requestData.salesOrderId) {
@@ -2765,9 +2908,9 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             salesOrderRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'price', value: -1 });
                             salesOrderRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'rate', value: parseFloat(line.rate) });
                             // NetSuite requires amount to be set explicitly for custom price level
-                            if (line.amount) {
-                                salesOrderRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'amount', value: parseFloat(line.amount) });
-                            }
+                        if (line.amount) {
+                            salesOrderRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'amount', value: parseFloat(line.amount) });
+                        }
                         }
 
                         if (line.description) {
@@ -2942,13 +3085,13 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
 
 
         /**
- * Retrieves dependent records for a given subsidiary.
- *
- * @param {Object} search - The N/search module reference.
- * @param {number|string} subsidiaryId - Internal ID of the subsidiary.
- * @returns {Object} An object containing departments, locations, classes, and items,
- * or an error object on failure.
- */
+         * Retrieves dependent records for a given subsidiary.
+         *
+         * @param {Object} search - The N/search module reference.
+         * @param {number|string} subsidiaryId - Internal ID of the subsidiary.
+         * @returns {Object} An object containing departments, locations, classes, and items,
+         * or an error object on failure.
+         */
         function getSubsidiaryDependents(search, subsidiaryId) {
             try {
                 return {
@@ -2964,13 +3107,13 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
         }
 
         /**
- * Loads an Opportunity record and returns all header, line, and sales team data.
- *
- * @param {number|string} opportunityId - Internal ID of the Opportunity to load.
- * @param {Object} response - Suitelet response object used to write JSON output.
- * @param {Object} record - N/record module reference.
- * @returns {void} Writes JSON directly to the response object.
- */
+         * Loads an Opportunity record and returns all header, line, and sales team data.
+         *
+         * @param {number|string} opportunityId - Internal ID of the Opportunity to load.
+         * @param {Object} response - Suitelet response object used to write JSON output.
+         * @param {Object} record - N/record module reference.
+         * @returns {void} Writes JSON directly to the response object.
+         */
         function loadOpportunityForEdit(opportunityId, response, record) {
             try {
                 if (!opportunityId) {
