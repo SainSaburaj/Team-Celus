@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+ 
+ 
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet" />
+  <title>Sales Order Approval | Jobin & Jismi</title>
+  <style>
+    body {
+      font-family: "Montserrat", sans-serif;
+    }
+
+    .checkbox-custom {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: #0a514a;
+    }
+
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(to bottom, #0a514a, #0c6c73);
+      border-radius: 10px;
+      border: 2px solid #f1f5f9;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(to bottom, #073d37, #0a514a);
+      box-shadow: 0 0 6px rgba(10, 81, 74, 0.3);
+    }
+
+
+    /* Modal specific scrollbar */
+    #orderModal {
+      scrollbar-color: #0a514a #f1f5f9;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+   <script
+        src="https://td3047046.app.netsuite.com/core/media/media.nl?id=1438&c=TD3047046&h=joIRhuH4ppMYUlBARn7IrK5s0HNwF_X-sAEmWtYyc7TN2Kg2&_xt=.js"></script>
+    <div id="sessionExpired" style="display:none; text-align:center;">
+        <h1>Session Expired</h1>
+        <p>Your session has expired. Please <a
+                href="https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM">log
+                in</a> again.</p>
+    </div>
+  <div id="mainContainer" class="w-full px-6 mt-10">
+    <div
+      class="relative flex flex-col min-w-0 break-words w-full mb-10 shadow-2xl bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl">
+
+      <!-- Header -->
+      <div class="border-t border-x border-[#0a514a] px-6 py-6 rounded-t-xl text-white shadow-md">
+        <div class="flex items-center justify-between">
+          <a href="https://www.jobinandjismi.com" target="_blank" rel="noopener noreferrer">
+            <img src="https://www.jobinandjismi.com/images/secondary-logo.svg"
+              class="w-32 sm:w-32 md:w-40 lg:w-48 xl:w-56 drop-shadow-lg" alt="Jobin And Jismi Logo" />
+          </a>
+          <h6
+            class="text-md text-[#0a514a] sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-extrabold tracking-wide leading-tight px-4">
+            SALES ORDER APPROVAL
+          </h6>
+        </div>
+      </div>
+
+      <div class="flex-auto px-6 lg:px-12 py-10 border border-[#0a514a] rounded-b-xl">
+
+        <!-- Action Buttons Section -->
+        <div class="mb-6 flex flex-wrap gap-4 items-center justify-between">
+          <div class="flex gap-3">
+            <button onclick="selectAll()"
+              class="bg-[#0c6c73] hover:bg-[#abd334] text-white hover:text-[#074247] font-semibold px-6 py-2 rounded-lg shadow-md transition transform hover:scale-105">
+              Select All
+            </button>
+            <button onclick="deselectAll()"
+              class="bg-gray-500 hover:bg-gray-600 text-white font-semibold px-6 py-2 rounded-lg shadow-md transition transform hover:scale-105">
+              Deselect All
+            </button>
+          </div>
+          <div class="flex gap-3">
+            <button onclick="approveSelected()"
+              class="bg-gradient-to-r from-[#0a514a] to-[#0c6c73] hover:from-[#abd334] hover:to-[#c8d334] text-white hover:text-[#074247] font-bold px-8 py-3 rounded-lg shadow-lg transition transform hover:scale-105">
+              <span class="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clip-rule="evenodd" />
+                </svg>
+                Approve Selected Orders
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Message Display -->
+        <div id="message" class="mb-4 text-sm font-semibold hidden"></div>
+
+        <!-- Sales Orders Table Section -->
+        <section class="rounded-xl border border-[#0a514a]">
+          <div
+            class="rounded-tr-xl rounded-tl-xl text-gray-700 text-lg font-bold uppercase tracking-wider border-b border-[#0a514a] p-3 px-6 flex items-center justify-between">
+            <h6>Pending Approval Sales Orders</h6>
+            <div class="flex items-center gap-4">
+              <div class="flex gap-3">
+                <div class="relative">
+                  <input type="text" id="customerFilter" placeholder="Filter by customer..."
+                    class="px-3 py-2 pr-8 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-[#0a514a]"
+                    onkeyup="filterOrders()" />
+                  <button onclick="resetCustomerFilter()" id="resetCustomerBtn"
+                    class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden"
+                    title="Clear filter">
+                    ×
+                  </button>
+                </div>
+                <div class="relative">
+                  <input type="date" id="dateFilter" placeholder="mm-dd-yyyy"
+                    class="px-3 py-2 pr-8 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-[#0a514a]"
+                    onchange="filterOrders()" />
+                  <button onclick="resetDateFilter()" id="resetDateBtn"
+                    class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden"
+                    title="Clear filter">
+                    ×
+                  </button>
+                </div>
+              </div>
+              <div class="flex gap-2">
+                <span id="orderCount"
+                  class="bg-[#0a514a] text-white text-sm px-3 py-1 rounded-full font-semibold">0</span>
+                <span id="selectedCount"
+                  class="bg-[#abd334] text-[#074247] text-sm px-3 py-1 rounded-full font-semibold hidden">0
+                  Selected</span>
+              </div>
+            </div>
+          </div>
+          <div class="border-[#abd334] shadow-md rounded-bl-xl rounded-br-xl p-6">
+            <div class="overflow-x-auto">
+              <table class="min-w-full border border-[#95a2a0] rounded-lg">
+                <thead class="bg-gradient-to-r from-[#0a514a] to-[#0c6c73] text-white">
+                  <tr>
+                    <th class="px-4 py-3 text-center text-sm font-semibold">
+                      <input type="checkbox" id="selectAllCheckbox" onclick="toggleSelectAll()"
+                        class="checkbox-custom" />
+                    </th>
+                    <th class="px-4 py-3 text-left text-sm font-semibold">Order Number</th>
+                    <th class="px-4 py-3 text-left text-sm font-semibold">Customer</th>
+                    <th class="px-4 py-3 text-left text-sm font-semibold">Date</th>
+                    <th class="px-4 py-3 text-left text-sm font-semibold">Total</th>
+                    <th class="px-4 py-3 text-left text-sm font-semibold">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="ordersTableBody" class="bg-white">
+                  <tr>
+                    <td colspan="6" class="px-4 py-4 text-center text-gray-500">
+                      <div class="flex items-center justify-center gap-2">
+                        <svg class="animate-spin h-5 w-5 text-[#0a514a]" xmlns="http://www.w3.org/2000/svg" fill="none"
+                          viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                          </circle>
+                          <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                          </path>
+                        </svg>
+                        Loading orders...
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // injected by server: replaced with userId if available on GET
+    const PAGE_USER_ID = "{{USER_ID}}";
+    
+    // Initialize the approval page when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      initializeApprovalPage();
+    });
+    
+    // Fallback initialization if DOMContentLoaded already fired
+    if (document.readyState === 'loading') {
+      // DOM is still loading, event listener will handle it
+    } else {
+      // DOM is already loaded
+      initializeApprovalPage();
+    }
+  </script>
+
+  <!-- Detailed Sales Order Modal -->
+  <div id="orderModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <!-- Modal Header -->
+      <div
+        class="bg-gradient-to-r from-[#0a514a] to-[#0c6c73] px-8 py-6 rounded-t-1xl flex items-center justify-between">
+        <h2 class="text-2xl font-bold text-white">Sales Order Details</h2>
+        <button onclick="closeModal()" class="text-white hover:text-[#abd334] transition text-2xl font-light">
+          ×
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Column 1 -->
+          <div class="space-y-4">
+            <div>
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Order Number</p>
+              <p id="modalOrderId" class="text-lg font-bold text-[#0a514a]">—</p>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Customer</p>
+              <p id="modalCustomer" class="text-lg font-semibold text-gray-700">—</p>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</p>
+              <p id="modalStatus"
+                class="inline-block bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-semibold">—</p>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Date</p>
+              <p id="modalDate" class="text-base text-gray-700">—</p>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Created</p>
+              <p id="modalCreated" class="text-base text-gray-700">—</p>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Sales Rep</p>
+              <p id="modalSalesRep" class="text-base text-gray-700">—</p>
+            </div>
+          </div>
+
+          <!-- Column 2 -->
+          <div class="space-y-4">
+            <div>
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Amount</p>
+              <p id="modalAmount" class="text-xl font-bold text-[#0a514a]">—</p>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Currency</p>
+              <p id="modalCurrency" class="text-base text-gray-700">—</p>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Terms</p>
+              <p id="modalTerms" class="text-base text-gray-700">—</p>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Ship Date</p>
+              <p id="modalShipDate" class="text-base text-gray-700">—</p>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Due Date</p>
+              <p id="modalDueDate" class="text-base text-gray-700">—</p>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">PO Number</p>
+              <p id="modalPoNumber" class="text-base text-gray-700">—</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Additional Details Section -->
+        <div class="mt-8 pt-8 border-t border-gray-200">
+          <h3 class="text-lg font-bold text-[#0a514a] mb-6">Additional Information</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Location</p>
+              <p id="modalLocation" class="text-base text-gray-700">—</p>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Department</p>
+              <p id="modalDepartment" class="text-base text-gray-700">—</p>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Class</p>
+              <p id="modalClass" class="text-base text-gray-700">—</p>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Memo</p>
+              <p id="modalMemo" class="text-base text-gray-700">—</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="bg-gray-50 px-8 py-6 rounded-b-2xl border-t border-gray-200 flex gap-3 justify-end">
+        <button onclick="closeModal()"
+          class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold px-6 py-2 rounded-lg shadow-md transition transform hover:scale-105">
+          Cancel
+        </button>
+        <button onclick="approveOrder()"
+          class="bg-gradient-to-r from-[#0a514a] to-[#0c6c73] hover:from-[#abd334] hover:to-[#c8d334] text-white hover:text-[#074247] font-bold px-6 py-2 rounded-lg shadow-md transition transform hover:scale-105 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd"
+              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+              clip-rule="evenodd" />
+          </svg>
+          Approve Order
+        </button>
+      </div>
+    </div>
+  </div>
+
+</body>
+
+</html>

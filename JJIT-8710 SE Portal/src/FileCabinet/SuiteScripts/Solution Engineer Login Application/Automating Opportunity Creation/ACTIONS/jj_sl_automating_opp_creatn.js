@@ -1837,8 +1837,12 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             }
         }
 
-
-
+        /**
+         * Get Kanban-style details for an Estimate.
+         * @param {string|number} estimateId - Estimate internal ID
+         * @param {string} userEmail - Logged-in user's email
+         * @returns {Object} Kanban data including header, items, sales team, reps, and manager status
+         */
 
         function getKanbanEstimateDetails(estimateId, userEmail) {
             try {
@@ -1852,9 +1856,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     isDynamic: false
                 });
 
-                // ------------------------
-                // HEADER
-                // ------------------------
                 const header = {
                     tranid: estimateRecord.getValue("tranid"),
                     trandate: estimateRecord.getText("trandate"),
@@ -1972,6 +1973,16 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             }
         }
 
+        /**
+         * Update an Estimate record including header fields, line items, and sales team.
+         * @param {Object} req - Request object
+         * @param {string|number} req.estimateId - Internal ID of the estimate
+         * @param {Object} req.data - Payload containing header, line items, and sales team
+         * @param {Object} [req.data.Header] - Header-level fields
+         * @param {Array} [req.data.LineItems] - Line-level item details
+         * @param {Array} [req.data.SalesTeam] - Line-level sales team details
+         * @returns {Object} Result object with success status, message, and updated estimateId
+         */
         function updateEstimateRecord(req) {
             try {
                 if (!req || !req.estimateId || !req.data) {
@@ -2292,7 +2303,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     salesType: opportunityRecord.getText('cseg_jj_sales_type')
                 };
 
-                // ---- LINE ITEMS ----
                 const itemCount = opportunityRecord.getLineCount("item");
                 const items = [];
 
@@ -2308,7 +2318,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     });
                 }
 
-                // ---- SALES TEAM ----
                 const salesTeamCount = opportunityRecord.getLineCount("salesteam");
                 const salesTeam = [];
 
@@ -2322,9 +2331,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     });
                 }
 
-                // Add salesTeam to header for easier access in frontend
                 header.salesTeam = salesTeam;
-
                 log.debug("Opportunity Details", { header, items, salesTeam });
 
                 return {
@@ -4282,7 +4289,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
 
 
                         case 'getQuoteStatuses':
-                            const statuses = getQuoteStatuses(record); // your helper function
+                            const statuses = getQuoteStatuses(record);
                             res = { success: true, statuses: statuses };
                             break;
 

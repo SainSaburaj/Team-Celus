@@ -2210,8 +2210,14 @@ async function updateUserInfo() {
  * @param {string} card.entityStatus - Entity status label.
  * @returns {void}
  */
- function addCardToColumn(card) {
-      try{
+function addCardToColumn(card) {
+    try {
+        let currentURL = window.location.href;
+        let urlParams = new URLSearchParams(new URL(currentURL).search);
+        let userEmail = urlParams.get("userId");
+
+        console.log("Kanban Board userEmail:", userEmail);
+
         const readableStatus = formatStatus(card.status);
         const formattedCurrency = formatCurrency(card.amount, card.currency)
         const col = document.getElementById(`${card.stage}-col`);
@@ -2221,25 +2227,40 @@ async function updateUserInfo() {
         div.dataset.stage = card.stage;
         div.dataset.id = card.id;
         let stageInUrl = card.stage === 'opportunity' ? 'opprtnty.nl' : card.stage === 'estimate' ? 'estimate.nl' : 'salesord.nl';
-        div.onclick = () => window.open(`/app/accounting/transactions/${stageInUrl}?id=${card.id}&whence=`, "ChildWindow", "width=800,height=800,top=300,left=300");
+        div.onclick = () => {
+            let action = '';
+            if (card.stage === 'estimate') action = 'getKanbanEstimateDetails';
+            else if (card.stage === 'opportunity') action = 'getKanbanOpportunityDetails';
+            else if (card.stage === 'salesorder') action = 'getKanbanSalesOrderDetails';
+
+            let urlParam = '';
+            if (card.stage === 'estimate') urlParam = `estimateId=${card.id}`;
+            else if (card.stage === 'opportunity') urlParam = `opportunityId=${card.id}`;
+            else if (card.stage === 'salesorder') urlParam = `salesOrderId=${card.id}`;
+
+            const fileUrl = `${BASE_URL}&action=${action}&${urlParam}&type=${card.stage}&userId=${encodeURIComponent(userEmail)}`;
+            window.open(fileUrl, "_blank"); // Opens in a new tab
+        };
+
+
         // Determine badge color based on status
         let badgeColor = '';
         if (card.status.includes('inProgress')) badgeColor = 'var(--accent-opportunity-sec)';
         else if (card.status.includes('open')) badgeColor = 'var(--accent-estimate-sec)';
-        else if (card.status.includes('pendingFulfillment') || 
-        card.status.includes('fullyBilled') || 
-        card.status.includes('pendingApproval') ||
-        card.status.includes('partiallyBilled') ||
-        card.status.includes('partiallyFulfilled') ||
-        card.status.includes('closed') ||
-        card.status.includes('approved') ||
-        card.status.includes('due') ||
-        card.status.includes('created') ||
-        card.status.includes('pendingBilling')) badgeColor = 'var(--accent-salesorder-sec)';
+        else if (card.status.includes('pendingFulfillment') ||
+            card.status.includes('fullyBilled') ||
+            card.status.includes('pendingApproval') ||
+            card.status.includes('partiallyBilled') ||
+            card.status.includes('partiallyFulfilled') ||
+            card.status.includes('closed') ||
+            card.status.includes('approved') ||
+            card.status.includes('due') ||
+            card.status.includes('created') ||
+            card.status.includes('pendingBilling')) badgeColor = 'var(--accent-salesorder-sec)';
         else badgeColor = 'var(--accent-primary)';
 
         if (card.stage === 'opportunity') {
-          div.innerHTML = `
+            div.innerHTML = `
             <strong class="block text-sm font-medium mb-1 card-title" style="color: var(--text-primary);">${card.entity}</strong>
             <span class="text-xs font-medium px-2 py-1 rounded-full card-status" style="background-color: ${badgeColor}; color: var(--text-primary);">${readableStatus}</span>
             <p class="text-xs card-desc" style="color: var(--text-secondary);">Transaction ID: ${card.transactionNumber}</p>
@@ -2249,7 +2270,7 @@ async function updateUserInfo() {
             <p class="text-xs card-desc" style="color: var(--text-secondary);">${card.desc}</p>
           `;
         } else {
-          div.innerHTML = `
+            div.innerHTML = `
             <strong class="block text-sm font-medium mb-1 card-title" style="color: var(--text-primary);">${card.entity}</strong>
             <span class="text-xs font-medium px-2 py-1 rounded-full card-status" style="background-color: ${badgeColor}; color: var(--text-primary);">${readableStatus}</span>
             <p class="text-xs card-desc" style="color: var(--text-secondary);">Transaction ID: ${card.transactionNumber}</p>
@@ -2257,11 +2278,11 @@ async function updateUserInfo() {
             <small class="text-xs block mb-1 card-date" style="color: var(--text-secondary);">${card.date}</small>
           `;
         }
-        col.appendChild(div);
-      } catch(error) {
-        log.error('Error @ userInformation');
-      }
+        if (col) col.appendChild(div);
+    } catch (error) {
+        console.error('Error @ addCardToColumn:', error);
     }
+}
 
 
 /**
@@ -2446,7 +2467,7 @@ function toggleSidebar() {
  * @function
  * @returns {void}
  */
- function exportData() {
+function exportData() {
       try{
         let csv = "Stage,Title,Description\n";
         $(".kanban-column").each(function () {
@@ -2454,8 +2475,8 @@ function toggleSidebar() {
           $(this).find(".kanban-card").each(function () {
             const title = $(this).find(".card-title").text().trim();
             const desc = $(this).find(".card-desc").text().trim();
-            csv += `"${stage}","${title}","${desc}"\n`;
-          });
+                csv += `"${stage}","${title}","${desc}"\n`;
+            });
         });
         const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
         const link = document.createElement("a");
@@ -2465,7 +2486,7 @@ function toggleSidebar() {
         link.click();
         document.body.removeChild(link);
     } catch (error) {
-        console.error('Error @ exportData:', error);
+        log.error('Error @ ', error);
     }
 }
 
@@ -4195,7 +4216,8 @@ function initializeOpportunityFormListeners() {
 // =====================================================
 
 /**
- * Display loader with optional text
+ * Show the page loader with optional text.
+ * @param {string} [text="Loading…"] - Text to display in the loader.
  */
 function showLoader(text = "Loading…") {
     const loader = document.getElementById("pageLoader");
@@ -4207,7 +4229,7 @@ function showLoader(text = "Loading…") {
 }
 
 /**
- * Hide loader and show main content
+ * Hide the page loader and show the main content.
  */
 function hideLoader() {
     const loader = document.getElementById("pageLoader");
@@ -4223,7 +4245,9 @@ function hideLoader() {
 }
 
 /**
- * Format NetSuite date (MM/DD/YYYY) to input date format (YYYY-MM-DD)
+ * Convert a NetSuite-style date (MM/DD/YYYY) to HTML input format (YYYY-MM-DD).
+ * @param {string} nsDate - Date string in MM/DD/YYYY format.
+ * @returns {string} Formatted date string or empty if invalid.
  */
 function formatDateForInput(nsDate) {
     if (!nsDate) return "";
@@ -4236,7 +4260,8 @@ function formatDateForInput(nsDate) {
 }
 
 /**
- * Populate header fields with estimate data
+ * Populate HTML header fields with estimate data.
+ * @param {Object} header - Estimate header details.
  */
 function populateHeaderFields(header) {
     document.getElementById("est-name").innerText = header.entity || "";
@@ -4252,7 +4277,9 @@ function populateHeaderFields(header) {
 }
 
 /**
- * Populate job dropdown
+ * Populate the job dropdown with options.
+ * @param {Array<{id: string|number, name: string}>} jobs - List of jobs.
+ * @param {string|number} [selectedJobId=""] - ID of the job to preselect.
  */
 function populateJobDropdown(jobs = [], selectedJobId = "") {
     const select = document.getElementById("est-job-id");
@@ -4271,7 +4298,8 @@ function populateJobDropdown(jobs = [], selectedJobId = "") {
 }
 
 /**
- * Populate status dropdown
+ * Populate the status dropdown with predefined options.
+ * @param {string} [selectedStatus=""] - The status text to preselect.
  */
 function populateStatusDropdown(selectedStatus = "") {
     const statuses = [
@@ -4298,7 +4326,9 @@ function populateStatusDropdown(selectedStatus = "") {
 }
 
 /**
- * Populate lead source dropdown
+ * Populate the Lead Source dropdown.
+ * @param {Array<{id: string|number, title: string}>} [leadSources=[]] - Array of lead source objects.
+ * @param {string|number} [selectedLeadSourceId=""] - ID of the lead source to preselect.
  */
 function populateLeadSourceDropdown(leadSources = [], selectedLeadSourceId = "") {
     const select = document.getElementById("lead-source");
@@ -4319,7 +4349,8 @@ function populateLeadSourceDropdown(leadSources = [], selectedLeadSourceId = "")
 }
 
 /**
- * Populate forecast type dropdown
+ * Populate the Forecast Type dropdown.
+ * @param {string} [selectedForecast=""] - Forecast type text to preselect.
  */
 function populateForecastTypeDropdown(selectedForecast = "") {
     const forecastTypes = [
@@ -4343,7 +4374,9 @@ function populateForecastTypeDropdown(selectedForecast = "") {
 }
 
 /**
- * Populate partner dropdown
+ * Populate the Partner dropdown.
+ * @param {Array<{id: string|number, name: string}>} [partners=[]] - List of partner objects.
+ * @param {string|number} [selectedPartnerId=""] - ID of the partner to preselect.
  */
 function populatePartnerDropdown(partners = [], selectedPartnerId = "") {
     const select = document.getElementById("partner");
@@ -4362,7 +4395,10 @@ function populatePartnerDropdown(partners = [], selectedPartnerId = "") {
 }
 
 /**
- * Populate class dropdown
+ * Populate the Class dropdown.
+ * @param {{ classes?: Array<{id: string|number, name: string}>, selectedClassId?: string|number }} [classData={}]
+ *   - `classes`: Array of class objects to populate.
+ *   - `selectedClassId`: ID of the class to preselect.
  */
 function populateClassDropdown(classData = {}) {
     const select = document.getElementById("est-class");
@@ -4382,7 +4418,10 @@ function populateClassDropdown(classData = {}) {
 }
 
 /**
- * Populate department dropdown
+ * Populate the Department dropdown.
+ * @param {{ departments?: Array<{id: string|number, name: string}>, selectedDepartmentId?: string|number }} [departmentData={}]
+ *   - `departments`: Array of department objects to populate.
+ *   - `selectedDepartmentId`: ID of the department to preselect.
  */
 function populateDepartmentDropdown(departmentData = {}) {
     const select = document.getElementById("est-department");
@@ -4402,7 +4441,10 @@ function populateDepartmentDropdown(departmentData = {}) {
 }
 
 /**
- * Populate location dropdown
+ * Populate the Location dropdown.
+ * @param {{ locations?: Array<{id: string|number, name: string}>, selectedLocationId?: string|number }} [locationData={}]
+ *   - `locations`: Array of location objects to populate.
+ *   - `selectedLocationId`: ID of the location to preselect.
  */
 function populateLocationDropdown(locationData = {}) {
     const select = document.getElementById("est-location");
@@ -4422,7 +4464,10 @@ function populateLocationDropdown(locationData = {}) {
 }
 
 /**
- * Create item dropdown for line items
+ * Creates a disabled item dropdown <select> element.
+ * @param {Array<{id: string|number, name: string}>} [itemList=[]] - Array of items to populate.
+ * @param {string|number} [selectedItemId=""] - ID of the item to preselect.
+ * @returns {HTMLSelectElement} The populated <select> element (disabled).
  */
 function createItemDropdown(itemList = [], selectedItemId = "") {
     const select = document.createElement("select");
@@ -4444,7 +4489,10 @@ function createItemDropdown(itemList = [], selectedItemId = "") {
 }
 
 /**
- * Create class dropdown for line items
+ * Creates a disabled class dropdown <select> element.
+ * @param {Array<{id: string|number, name: string}>} [classList=[]] - Array of class objects to populate.
+ * @param {string|number} [selectedClassId=""] - ID of the class to preselect.
+ * @returns {HTMLSelectElement} The populated <select> element (disabled).
  */
 function createClassDropdown(classList = [], selectedClassId = "") {
     const select = document.createElement("select");
@@ -4466,7 +4514,10 @@ function createClassDropdown(classList = [], selectedClassId = "") {
 }
 
 /**
- * Create department dropdown for line items
+ * Creates a disabled department dropdown <select> element.
+ * @param {Array<{id: string|number, name: string}>} [deptList=[]] - Array of department objects to populate.
+ * @param {string|number} [selectedDeptId=""] - ID of the department to preselect.
+ * @returns {HTMLSelectElement} The populated <select> element (disabled).
  */
 function createDepartmentDropdown(deptList = [], selectedDeptId = "") {
     const select = document.createElement("select");
@@ -4488,7 +4539,10 @@ function createDepartmentDropdown(deptList = [], selectedDeptId = "") {
 }
 
 /**
- * Create unit dropdown for line items
+ * Creates a disabled unit of measure (UOM) dropdown <select> element.
+ * @param {Array<{id: string|number, name: string}>} [unitList=[]] - Array of UOM objects to populate.
+ * @param {string|number} [selectedUnitId=""] - ID of the unit to preselect.
+ * @returns {HTMLSelectElement} The populated <select> element (disabled).
  */
 function createUnitDropdown(unitList = [], selectedUnitId = "") {
     const select = document.createElement("select");
@@ -4512,7 +4566,10 @@ function createUnitDropdown(unitList = [], selectedUnitId = "") {
 }
 
 /**
- * Create price level dropdown for line items
+ * Creates a disabled price level dropdown <select> element.
+ * @param {Array<{id: string|number, name: string, rate?: number}>} [priceLevels=[]] - Array of price level objects.
+ * @param {string|number} [selectedPriceLevelId=""] - ID of the price level to preselect ("-1" for Custom).
+ * @returns {HTMLSelectElement} The populated <select> element (disabled).
  */
 function createPriceLevelDropdown(priceLevels = [], selectedPriceLevelId = "") {
     const select = document.createElement("select");
@@ -4543,7 +4600,10 @@ function createPriceLevelDropdown(priceLevels = [], selectedPriceLevelId = "") {
 }
 
 /**
- * Create sales rep dropdown for sales team
+ * Creates a disabled sales representative dropdown <select> element.
+ * @param {Array<{id: string|number, name: string}>} [repList=[]] - Array of sales rep objects.
+ * @param {string|number} [selectedEmployeeId=""] - ID of the employee to preselect.
+ * @returns {HTMLSelectElement} The populated <select> element (disabled).
  */
 function createSalesRepDropdown(repList = [], selectedEmployeeId = "") {
     const select = document.createElement("select");
@@ -4565,7 +4625,10 @@ function createSalesRepDropdown(repList = [], selectedEmployeeId = "") {
 }
 
 /**
- * Create sales role dropdown for sales team
+ * Creates a disabled sales role dropdown <select> element.
+ * @param {Array<{id: string|number, name: string}>} [roleList=[]] - Array of sales role objects.
+ * @param {string|number} [selectedRoleId=""] - ID of the role to preselect.
+ * @returns {HTMLSelectElement} The populated <select> element (disabled).
  */
 function createSalesRoleDropdown(roleList = [], selectedRoleId = "") {
     const select = document.createElement("select");
@@ -4587,7 +4650,10 @@ function createSalesRoleDropdown(roleList = [], selectedRoleId = "") {
 }
 
 /**
- * Set edit mode for form fields
+ * Toggles edit mode for the page.
+ * Enables or disables all input, select, and textarea fields,
+ * and controls visibility of edit buttons and actions.
+ * @param {boolean} isEdit - If true, enables editing; otherwise, disables it.
  */
 function setEditMode(isEdit) {
     const editableFields = document.querySelectorAll("input, select, textarea");
@@ -4612,7 +4678,9 @@ function setEditMode(isEdit) {
 }
 
 /**
- * Log and return current estimate form data
+ * Collects all current data from the estimate form.
+ * Logs the structured data object to the console.
+ * @returns {Object} Structured form data containing Header, LineItems, and SalesTeam.
  */
 function logEstimateFormData() {
     const logOutput = {};
@@ -4687,7 +4755,8 @@ function logEstimateFormData() {
 }
 
 /**
- * Recalculate amount based on quantity and rate
+ * Recalculates the Amount for a line item based on Quantity and Rate.
+ * @param {HTMLTableRowElement} row - The table row containing line item fields.
  */
 function recalculateAmount(row) {
     const qty = parseFloat(row.querySelector("td:nth-child(2) input")?.value) || 0;
@@ -4705,7 +4774,9 @@ function recalculateAmount(row) {
 }
 
 /**
- * Validate rate value
+ * Validates the Rate for a line item row.
+ * @param {HTMLTableRowElement} row - The table row containing line item fields.
+ * @returns {boolean} - True if rate is valid, false otherwise.
  */
 function validateRate(row) {
     const rateInput = row.querySelector("td:nth-child(6) input");
@@ -4721,7 +4792,8 @@ function validateRate(row) {
 }
 
 /**
- * Validate form before submission
+ * Checks all item rows have a valid rate before submit.
+ * @returns {boolean} True if all rates are valid, else false.
  */
 function validateBeforeSubmit() {
     const rows = document.querySelectorAll("#itemsTableBody tr");
@@ -4742,7 +4814,9 @@ function validateBeforeSubmit() {
 }
 
 /**
- * Handle item change and fetch item details
+ * Handles changes to the item selection in a line.
+ * @param {HTMLTableRowElement} row The table row being edited.
+ * @param {Object} header Optional header info (currently unused, reserved for future use).
  */
 function handleItemChange(row, header) {
     const itemSelect = row.querySelector("td:nth-child(1) select");
@@ -5014,12 +5088,14 @@ function loadEstimateDetails() {
                 const priceSelect = tr.querySelector(".pricelevelCell select");
                 const rateInput = tr.querySelector(".rateCell input");
 
+                // Initialize rate readonly based on selected price level
                 if (priceSelect.value === "-1") {
                     rateInput.removeAttribute("readonly");
                 } else {
                     rateInput.setAttribute("readonly", true);
                 }
 
+                // Update rate when user changes price level
                 priceSelect.addEventListener("change", () => {
                     if (priceSelect.value === "-1") {
                         rateInput.removeAttribute("readonly");
@@ -5039,6 +5115,7 @@ function loadEstimateDetails() {
             });
         }
 
+        // Populate sales team table
         const salesBody = document.getElementById("salesTeamTableBody");
         salesBody.innerHTML = "";
 
@@ -5148,7 +5225,1153 @@ else {
     initializeEstimateDetailsPage();
 }
 
+
+
 // End of Estimate Details Page Initialization
+
+// ============================================================
+// SALES ORDER DETAILS PAGE - FROM jj_salesorder_details.html
+// ============================================================
+
+/**
+ * Initialize tab switching for Sales Order Details page
+ */
+function initSalesOrderTabs() {
+    const tabs = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => {
+                t.classList.remove('border-[#0a514a]');
+                t.classList.add('border-transparent');
+            });
+
+            tabContents.forEach(c => c.classList.remove('tab-active'));
+            tab.classList.remove('border-transparent');
+            tab.classList.add('border-[#0a514a]');
+            const selectedTab = document.getElementById(tab.dataset.tab);
+            if (selectedTab) {
+                selectedTab.classList.add('tab-active');
+            }
+        });
+    });
+}
+
+/**
+ * Recalculates the line item amount based on quantity and rate.
+ * Updates the amount field and sets the row's blocked status based on rate validity.
+ * @param {HTMLTableRowElement} row - The table row element containing the line item
+ * @returns {void}
+ */
+function recalculateAmountSO(row) {
+    const qty = parseFloat(row.querySelector("td:nth-child(2) input")?.value) || 0;
+    const rateInput = row.querySelector("td:nth-child(6) input");
+    const amountInput = row.querySelector("td:nth-child(7) span");
+
+    const rate = parseFloat(rateInput?.value);
+
+    if (rate && rate > 0) {
+        amountInput.textContent = (qty * rate).toFixed(2);
+        row.dataset.blocked = "false";
+    } else {
+        amountInput.textContent = "0.00";
+        row.dataset.blocked = "true";
+    }
+}
+
+/**
+ * Toggles between edit and view modes for the sales order form.
+ * Enables/disables form fields, toggles visibility of edit-only and view-only elements,
+ * and manages button visibility.
+ * @param {boolean} isEdit - If true, switches to edit mode; if false, switches to view mode
+ * @returns {void}
+ */
+function setEditModeSO(isEdit) {
+    const inputs = document.querySelectorAll("input:not(.view-only)");
+    const textareas = document.querySelectorAll("textarea:not(.view-only)");
+    const selects = document.querySelectorAll("select");
+
+    inputs.forEach(f => f.disabled = !isEdit);
+    textareas.forEach(f => f.disabled = !isEdit);
+    selects.forEach(f => f.disabled = !isEdit);
+
+    const editOnlyElements = document.querySelectorAll(".edit-only");
+    const viewOnlyElements = document.querySelectorAll(".view-only");
+
+    editOnlyElements.forEach(el => {
+        if (isEdit) {
+            el.classList.remove("hidden");
+            if (el.tagName === 'SELECT') {
+                el.disabled = false;
+            }
+        } else {
+            el.classList.add("hidden");
+            if (el.tagName === 'SELECT') {
+                el.disabled = true;
+            }
+        }
+    });
+
+    viewOnlyElements.forEach(el => {
+        el.classList.toggle("hidden", isEdit);
+    });
+
+    if (isEdit) {
+        document.querySelectorAll("#so-itemsTableBody tr").forEach(row => {
+            const priceLevelSelect = row.querySelector(".priceLevelCell select");
+            const rateInput = row.querySelector(".rateCell input");
+
+            if (priceLevelSelect && rateInput) {
+                const selectedId = priceLevelSelect.value;
+                const isCustom = selectedId === "-1" ||
+                    priceLevelSelect.selectedOptions[0]?.text?.toLowerCase().includes("custom");
+
+                if (!isCustom) {
+                    rateInput.disabled = true;
+                    rateInput.classList.remove("bg-white");
+                    rateInput.classList.add("bg-gray-100");
+                } else {
+                    rateInput.disabled = false;
+                    rateInput.classList.remove("bg-gray-100");
+                    rateInput.classList.add("bg-white");
+                }
+            }
+        });
+    }
+
+    const editBtn = document.getElementById("editButton");
+    const editActions = document.getElementById("editActions");
+    if (editBtn) editBtn.classList.toggle("hidden", isEdit);
+    if (editActions) editActions.classList.toggle("hidden", !isEdit);
+}
+
+/**
+ * Converts a NetSuite date string (MM/DD/YYYY) to HTML5 date input format (YYYY-MM-DD).
+ * @param {string} nsDate - The date string in NetSuite format (MM/DD/YYYY)
+ * @returns {string} The date string in HTML5 input format (YYYY-MM-DD), or empty string if invalid
+ */
+function formatDateForInputSO(nsDate) {
+    if (!nsDate) return "";
+    const parts = nsDate.split("/");
+    if (parts.length !== 3) return "";
+    const month = parts[0].padStart(2, "0");
+    const day = parts[1].padStart(2, "0");
+    const year = parts[2];
+    return `${year}-${month}-${day}`;
+}
+
+/**
+ * Populates all header/primary information fields with sales order data.
+ * @param {Object} header - The header data object containing sales order information
+ * @returns {void}
+ */
+function populateHeaderFieldsSO(header) {
+    const els = {
+        "so-customer": header.entity,
+        "so-date": formatDateForInputSO(header.trandate),
+        "so-startdate": formatDateForInputSO(header.startdate),
+        "so-enddate": formatDateForInputSO(header.enddate),
+        "so-po": header.po,
+        "so-job-label": header.job,
+        "so-total": header.total,
+        "so-memo": header.memo,
+        "so-salesrep": header.salesrep,
+        "so-saleseffectivedate": formatDateForInputSO(header.saleseffectivedate),
+        "lead-source-label": header.leadsource,
+        "so-oppurtunity-label": header.opportunity,
+        "so-partner-label": header.partner,
+        "so-subsidiary": header.subsidiary,
+        "so-class-label": header.class,
+        "so-location-label": header.location,
+        "so-department-label": header.department,
+        "so-projectsummary": header.projectsummary
+    };
+
+    Object.entries(els).forEach(([id, value]) => {
+        const el = document.getElementById(id);
+        if (el) {
+            if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                el.value = value || "";
+            } else {
+                el.innerText = value || "";
+            }
+        }
+    });
+}
+
+/**
+ * Populates the Job dropdown with available jobs and selects the specified job.
+ * @param {Array<{id: string, name: string}>} jobs - Array of available jobs
+ * @param {string} selectedJobId - The ID of the job to select
+ * @returns {void}
+ */
+function populateJobDropdownSO(jobs = [], selectedJobId = "") {
+    const select = document.getElementById("so-job-id");
+    if (!select) return;
+    select.innerHTML = "";
+    const blank = document.createElement("option");
+    blank.value = "";
+    select.appendChild(blank);
+    jobs.forEach(job => {
+        const opt = document.createElement("option");
+        opt.value = job.id;
+        opt.textContent = job.name;
+        if (String(job.id) === String(selectedJobId)) opt.selected = true;
+        select.appendChild(opt);
+    });
+}
+
+/**
+ * Populates the Lead Source dropdown with available lead sources and selects the specified one.
+ * @param {Array<{id: string, title: string}>} leadSources - Array of available lead sources
+ * @param {string} selectedLeadSourceId - The ID of the lead source to select
+ * @returns {void}
+ */
+function populateLeadSourceDropdownSO(leadSources = [], selectedLeadSourceId = "") {
+    const select = document.getElementById("lead-source");
+    if (!select) return;
+    select.innerHTML = "";
+    const blank = document.createElement("option");
+    blank.value = "";
+    select.appendChild(blank);
+    leadSources.forEach(source => {
+        const opt = document.createElement("option");
+        opt.value = source.id;
+        opt.textContent = source.title;
+        if (String(source.id) === String(selectedLeadSourceId)) opt.selected = true;
+        select.appendChild(opt);
+    });
+    select.disabled = false;
+}
+
+/**
+ * Populates the Partner dropdown with available partners and selects the specified partner.
+ * @param {Array<{id: string, name: string}>} partners - Array of available partners
+ * @param {string} selectedPartnerId - The ID of the partner to select
+ * @returns {void}
+ */
+function populatePartnerDropdownSO(partners = [], selectedPartnerId = "") {
+    const select = document.getElementById("so-partner");
+    if (!select) return;
+    select.innerHTML = "";
+    const blank = document.createElement("option");
+    blank.value = "";
+    select.appendChild(blank);
+    partners.forEach(partner => {
+        const opt = document.createElement("option");
+        opt.value = partner.id;
+        opt.textContent = partner.name;
+        if (String(partner.id) === String(selectedPartnerId)) opt.selected = true;
+        select.appendChild(opt);
+    });
+}
+
+/**
+ * Populates the Class dropdown with available classes and selects the specified class.
+ * @param {Object} classData - Object containing classes array and selectedClassId
+ * @returns {void}
+ */
+function populateClassDropdownSO(classData = {}) {
+    const select = document.getElementById("so-class");
+    if (!select) return;
+    select.innerHTML = "";
+    const blank = document.createElement("option");
+    blank.value = "";
+    if (!classData.selectedClassId) blank.selected = true;
+    select.appendChild(blank);
+    classData.classes?.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c.id;
+        opt.textContent = c.name;
+        if (String(c.id) === String(classData.selectedClassId)) opt.selected = true;
+        select.appendChild(opt);
+    });
+}
+
+/**
+ * Populates the Department dropdown with available departments and selects the specified department.
+ * @param {Object} departmentData - Object containing departments array and selectedDepartmentId
+ * @returns {void}
+ */
+function populateDepartmentDropdownSO(departmentData = {}) {
+    const select = document.getElementById("so-department");
+    if (!select) return;
+    select.innerHTML = "";
+    const blank = document.createElement("option");
+    blank.value = "";
+    if (!departmentData.selectedDepartmentId) blank.selected = true;
+    select.appendChild(blank);
+    departmentData.departments?.forEach(dep => {
+        const opt = document.createElement("option");
+        opt.value = dep.id;
+        opt.textContent = dep.name;
+        if (String(dep.id) === String(departmentData.selectedDepartmentId)) opt.selected = true;
+        select.appendChild(opt);
+    });
+}
+
+/**
+ * Populates the Location dropdown with available locations and selects the specified location.
+ * @param {Object} locationData - Object containing locations array and selectedLocationId
+ * @returns {void}
+ */
+function populateLocationDropdownSO(locationData = {}) {
+    const select = document.getElementById("so-location");
+    if (!select) return;
+    select.innerHTML = "";
+    const blank = document.createElement("option");
+    blank.value = "";
+    if (!locationData.selectedLocationId) blank.selected = true;
+    select.appendChild(blank);
+    locationData.locations?.forEach(loc => {
+        const opt = document.createElement("option");
+        opt.value = loc.id;
+        opt.textContent = loc.name;
+        if (String(loc.id) === String(locationData.selectedLocationId)) opt.selected = true;
+        select.appendChild(opt);
+    });
+}
+
+/**
+ * Creates a dual-mode (view/edit) dropdown for item selection.
+ * @param {Array<{id: string, name: string}>} itemList - Array of available items
+ * @param {string} selectedItemId - The ID of the selected item
+ * @param {string} selectedItemText - The display text for the selected item in view mode
+ * @returns {HTMLElement} Container element with label and select elements
+ */
+function createItemDropdownSO(itemList = [], selectedItemId = "", selectedItemText = "") {
+    const container = document.createElement("div");
+    const label = document.createElement("label");
+    label.className = "view-only";
+    label.textContent = selectedItemText || "";
+    container.appendChild(label);
+
+    const select = document.createElement("select");
+    select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm edit-only hidden";
+    select.disabled = true;
+
+    const blank = document.createElement("option");
+    blank.value = "";
+    if (!selectedItemId) blank.selected = true;
+    select.appendChild(blank);
+
+    itemList.forEach(item => {
+        const opt = document.createElement("option");
+        opt.value = item.id;
+        opt.textContent = item.name;
+        if (String(item.id) === String(selectedItemId)) opt.selected = true;
+        select.appendChild(opt);
+    });
+
+    container.appendChild(select);
+    return container;
+}
+
+/**
+ * Creates a dual-mode (view/edit) dropdown for class selection in line items.
+ * @param {Array<{id: string, name: string}>} classList - Array of available classes
+ * @param {string} selectedClassId - The ID of the selected class
+ * @param {string} selectedClassText - The display text for the selected class in view mode
+ * @returns {HTMLElement} Container element with label and select elements
+ */
+function createClassDropdownSO(classList = [], selectedClassId = "", selectedClassText = "") {
+    const container = document.createElement("div");
+    const label = document.createElement("label");
+    label.className = "view-only";
+    label.textContent = selectedClassText || "";
+    container.appendChild(label);
+
+    const select = document.createElement("select");
+    select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm edit-only hidden";
+    select.disabled = true;
+
+    const blank = document.createElement("option");
+    blank.value = "";
+    if (!selectedClassId) blank.selected = true;
+    select.appendChild(blank);
+
+    classList.forEach(cls => {
+        const opt = document.createElement("option");
+        opt.value = cls.id;
+        opt.textContent = cls.name;
+        if (String(cls.id) === String(selectedClassId)) opt.selected = true;
+        select.appendChild(opt);
+    });
+
+    container.appendChild(select);
+    return container;
+}
+
+/**
+ * Creates a dual-mode (view/edit) dropdown for department selection in line items.
+ * @param {Array<{id: string, name: string}>} deptList - Array of available departments
+ * @param {string} selectedDeptId - The ID of the selected department
+ * @param {string} selectedDeptText - The display text for the selected department in view mode
+ * @returns {HTMLElement} Container element with label and select elements
+ */
+function createDepartmentDropdownSO(deptList = [], selectedDeptId = "", selectedDeptText = "") {
+    const container = document.createElement("div");
+    const label = document.createElement("label");
+    label.className = "view-only";
+    label.textContent = selectedDeptText || "";
+    container.appendChild(label);
+
+    const select = document.createElement("select");
+    select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm edit-only hidden";
+    select.disabled = true;
+
+    const blank = document.createElement("option");
+    blank.value = "";
+    if (!selectedDeptId) blank.selected = true;
+    select.appendChild(blank);
+
+    deptList.forEach(dep => {
+        const opt = document.createElement("option");
+        opt.value = dep.id;
+        opt.textContent = dep.name;
+        if (String(dep.id) === String(selectedDeptId)) opt.selected = true;
+        select.appendChild(opt);
+    });
+
+    container.appendChild(select);
+    return container;
+}
+
+/**
+ * Creates a dropdown for unit of measure selection in line items.
+ * @param {Array<{id: string, name: string}>} unitList - Array of available units
+ * @param {string} selectedUnitId - The ID of the unit to select
+ * @returns {HTMLSelectElement} Select dropdown element for units
+ */
+function createUnitDropdownSO(unitList = [], selectedUnitId = "") {
+    const select = document.createElement("select");
+    select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm";
+    select.disabled = true;
+
+    const blank = document.createElement("option");
+    blank.value = "";
+    select.appendChild(blank);
+
+    unitList.forEach(uom => {
+        if (!uom || !uom.id) return;
+        const opt = document.createElement("option");
+        opt.value = String(uom.id);
+        opt.textContent = uom.name;
+        if (String(uom.id) === String(selectedUnitId)) opt.selected = true;
+        select.appendChild(opt);
+    });
+
+    return select;
+}
+
+/**
+ * Creates a dual-mode (view/edit) dropdown for sales representative selection.
+ * @param {Array<{id: string, name: string}>} repList - Array of available sales representatives
+ * @param {string} selectedEmployeeId - The ID of the selected employee
+ * @param {string} selectedEmployeeText - The display text for the selected employee in view mode
+ * @returns {HTMLElement} Container element with label and select elements
+ */
+function createSalesRepDropdownSO(repList = [], selectedEmployeeId = "", selectedEmployeeText = "") {
+    const container = document.createElement("div");
+    const label = document.createElement("label");
+    label.className = "view-only";
+    label.textContent = selectedEmployeeText || "";
+    container.appendChild(label);
+
+    const select = document.createElement("select");
+    select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm edit-only hidden";
+    select.disabled = true;
+
+    const blank = document.createElement("option");
+    blank.value = "";
+    if (!selectedEmployeeId) blank.selected = true;
+    select.appendChild(blank);
+
+    repList.forEach(rep => {
+        const opt = document.createElement("option");
+        opt.value = rep.id;
+        opt.textContent = rep.name;
+        if (String(rep.id) === String(selectedEmployeeId)) opt.selected = true;
+        select.appendChild(opt);
+    });
+
+    container.appendChild(select);
+    return container;
+}
+
+/**
+ * Creates a dual-mode (view/edit) dropdown for sales role selection.
+ * @param {Array<{id: string, name: string}>} roleList - Array of available sales roles
+ * @param {string} selectedRoleId - The ID of the selected role
+ * @param {string} selectedRoleText - The display text for the selected role in view mode
+ * @returns {HTMLElement} Container element with label and select elements
+ */
+function createSalesRoleDropdownSO(roleList = [], selectedRoleId = "", selectedRoleText = "") {
+    const container = document.createElement("div");
+    const label = document.createElement("label");
+    label.className = "view-only";
+    label.textContent = selectedRoleText || "";
+    container.appendChild(label);
+
+    const select = document.createElement("select");
+    select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm edit-only hidden";
+    select.disabled = true;
+
+    const blank = document.createElement("option");
+    blank.value = "";
+    if (!selectedRoleId) blank.selected = true;
+    select.appendChild(blank);
+
+    roleList.forEach(role => {
+        const opt = document.createElement("option");
+        opt.value = role.id;
+        opt.textContent = role.name;
+        if (String(role.id) === String(selectedRoleId)) opt.selected = true;
+        select.appendChild(opt);
+    });
+
+    container.appendChild(select);
+    return container;
+}
+
+/**
+ * Creates a dual-mode (view/edit) dropdown for price level selection.
+ * @param {Array<{id: string, name: string, displayName?: string, rate?: number}>} priceLevelList - Array of available price levels
+ * @param {string} selectedPriceLevelId - The ID of the selected price level
+ * @param {string} selectedPriceLevelText - The display text for the selected price level in view mode
+ * @returns {HTMLElement} Container element with label and select elements
+ */
+function createPriceLevelDropdownSO(priceLevelList = [], selectedPriceLevelId = "", selectedPriceLevelText = "") {
+    const container = document.createElement("div");
+    const label = document.createElement("label");
+    label.className = "view-only";
+
+    if (selectedPriceLevelText) {
+        label.textContent = selectedPriceLevelText;
+    } else {
+        const selectedObj = priceLevelList.find(pl => String(pl.id) === String(selectedPriceLevelId));
+        label.textContent = selectedObj ? selectedObj.name : "";
+    }
+    container.appendChild(label);
+
+    const select = document.createElement("select");
+    select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm edit-only hidden";
+    select.disabled = true;
+
+    priceLevelList.forEach(priceLevel => {
+        const opt = document.createElement("option");
+        opt.value = priceLevel.id;
+        opt.textContent = priceLevel.name;
+        if (String(priceLevel.id) === String(selectedPriceLevelId)) opt.selected = true;
+        select.appendChild(opt);
+    });
+
+    container.appendChild(select);
+    return container;
+}
+
+/**
+ * Validates that mandatory classification fields (Class, Department, Location) are filled.
+ * @returns {boolean} True if all mandatory fields are filled, false otherwise
+ */
+function validateSalesOrderClassification() {
+    const classField = document.getElementById("so-class");
+    const deptField = document.getElementById("so-department");
+    const locationField = document.getElementById("so-location");
+    
+    if (!classField || !deptField || !locationField) return false;
+    
+    let isValid = true;
+    let missingFields = [];
+    
+    if (!classField.value) {
+        isValid = false;
+        missingFields.push("Class");
+    }
+    if (!deptField.value) {
+        isValid = false;
+        missingFields.push("Department");
+    }
+    if (!locationField.value) {
+        isValid = false;
+        missingFields.push("Location");
+    }
+    
+    if (!isValid) {
+        alert("Please fill in the following mandatory fields: " + missingFields.join(", "));
+    }
+    
+    return isValid;
+}
+
+/**
+ * Fetches detailed information for a specific item from the server.
+ * @async
+ * @param {string} itemId - The ID of the item to fetch details for
+ * @returns {Promise<Object|null>} The item details object or null if fetch fails
+ */
+async function fetchItemDetails(itemId) {
+    try {
+        const body = {
+            action: "getItemDetails",
+            itemId: itemId
+        };
+
+        const res = await fetch(BASE_URL, {
+            method: "POST",
+            body: JSON.stringify(body)
+        });
+
+        const data = await res.json();
+        return data.success ? data.data : null;
+    } catch (error) {
+        console.error("Error fetching item details:", error);
+        return null;
+    }
+}
+
+/**
+ * Replaces line item row data with fetched item details.
+ * @async
+ * @param {HTMLTableRowElement} row - The table row element to update
+ * @param {string} itemId - The ID of the item to fetch and populate
+ * @param {Object} headerData - The header data object containing available options
+ * @returns {Promise<void>}
+ */
+async function replaceRowWithItemDetails(row, itemId, headerData) {
+    const details = await fetchItemDetails(itemId);
+    if (!details) {
+        console.warn("No details found for item:", itemId);
+        return;
+    }
+
+    const rate = (typeof details.rate === "number" && !isNaN(details.rate))
+        ? details.rate
+        : parseFloat(details.rate) || 0;
+    const qty = 1;
+    
+    const qtyInput = row.querySelector("td:nth-child(2) input");
+    if (qtyInput) qtyInput.value = qty;
+
+    const descInput = row.querySelector("td:nth-child(4) input");
+    if (descInput) descInput.value = details.description || "";
+
+    const rateInput = row.querySelector(".rateCell input");
+    if (rateInput) rateInput.value = rate.toFixed(2);
+
+    const amountSpan = row.querySelector(".amountCell span");
+    if (amountSpan) amountSpan.textContent = (qty * rate).toFixed(2);
+
+    const unitCell = row.querySelector(".unitCell");
+    if (unitCell) {
+        unitCell.innerHTML = "";
+        unitCell.appendChild(createUnitDropdownSO(details.units || [], details.defaultUnit));
+    }
+
+    const priceSelect = row.querySelector(".priceLevelCell select");
+    if (priceSelect) {
+        priceSelect.innerHTML = "";
+        const customOpt = document.createElement("option");
+        customOpt.value = "-1";
+        customOpt.textContent = "Custom";
+        priceSelect.appendChild(customOpt);
+
+        let basePriceLevelId = "";
+        (details.priceLevels || []).forEach(pl => {
+            const opt = document.createElement("option");
+            opt.value = String(pl.id);
+            opt.textContent = (pl.name && pl.name.trim()) || (pl.displayName && pl.displayName.trim()) || `Price Level ${pl.id}`;
+            opt.dataset.rate = pl.rate || 0;
+
+            if (pl.name && pl.name.toLowerCase() === "base price") {
+                basePriceLevelId = String(pl.id);
+            }
+            priceSelect.appendChild(opt);
+        });
+
+        if (basePriceLevelId) {
+            priceSelect.value = basePriceLevelId;
+        } else {
+            priceSelect.value = "-1";
+        }
+    }
+
+    const classCell = row.querySelector(".classCell");
+    if (classCell) {
+        classCell.innerHTML = "";
+        classCell.appendChild(
+            createClassDropdownSO(
+                headerData?.soClassDetails?.classes || [],
+                details.classId,
+                ""
+            )
+        );
+    }
+
+    const deptCell = row.querySelector(".deptCell");
+    if (deptCell) {
+        deptCell.innerHTML = "";
+        deptCell.appendChild(
+            createDepartmentDropdownSO(
+                headerData?.soDepartmentDetails?.departments || [],
+                details.departmentId,
+                ""
+            )
+        );
+    }
+
+    if (rateInput) {
+        rateInput.disabled = details.isRateLocked || false;
+    }
+}
+
+/**
+ * Initialize Sales Order Details Page
+ */
+function initializeSalesOrderDetailsPage() {
+    // Check if we should initialize
+    let pageType = 'salesorder';
+    try {
+        const url = new URL(window.location.href);
+        pageType = url.searchParams.get("type");
+    } catch (e) {
+        console.error("Error getting page type:", e);
+        return;
+    }
+
+    if (!pageType || (pageType !== "salesorder" && pageType !== "estimate" && pageType !== "opportunity")) {
+        return;
+    }
+
+    // Initialize tabs
+    initSalesOrderTabs();
+
+    // Get URL parameters
+    const url = new URL(window.location.href);
+    const urlParams = new URLSearchParams(url.search);
+    const encodedUserId = urlParams.get("userId");
+
+    let recordId = '';
+    let action = "";
+
+    if (pageType === "estimate") {
+        recordId = url.searchParams.get("estimateId");
+        action = "getKanbanEstimateDetails";
+    } else if (pageType === "opportunity") {
+        recordId = url.searchParams.get("opportunityId");
+        action = "getKanbanOpportunityDetails";
+    } else if (pageType === "salesorder") {
+        recordId = url.searchParams.get("salesOrderId");
+        action = "getKanbanSalesOrderDetails";
+    }
+
+    const fetchBody = {
+        action,
+        userId: encodedUserId || ""
+    };
+
+    if (pageType === "estimate") fetchBody.estimateId = recordId;
+    else if (pageType === "opportunity") fetchBody.opportunityId = recordId;
+    else if (pageType === "salesorder") fetchBody.salesOrderId = recordId;
+
+    // Fetch data
+    fetch(BASE_URL, {
+        method: "POST",
+        body: JSON.stringify(fetchBody)
+    })
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success) {
+                console.error("Failed to load details:", data.message || "Unknown error");
+                alert("Failed to load sales order details: " + (data.message || "Unknown error"));
+                return;
+            }
+
+            const header = data.data;
+            const items = header.items || [];
+            const salesTeam = header.salesteam || [];
+            const salesManager = header.isSalesManager;
+
+            // Hide rate and amount columns for non-managers
+            if (!salesManager) {
+                const rateHeader = document.getElementById("th-rate");
+                const amountHeader = document.getElementById("th-amount");
+                if (rateHeader) rateHeader.style.display = "none";
+                if (amountHeader) amountHeader.style.display = "none";
+            }
+
+            // Hide sales team tab for non-managers
+            if (!salesManager) {
+                const salesTeamTabBtn = document.getElementById("sales-team-tab-btn");
+                const salesTeamTabContent = document.getElementById("so-sales-team");
+                if (salesTeamTabBtn) salesTeamTabBtn.style.display = "none";
+                if (salesTeamTabContent) salesTeamTabContent.style.display = "none";
+            }
+
+            // Populate header information
+            document.querySelectorAll(".so-number").forEach(el => el.innerText = header.tranid || "");
+            const custName = document.getElementById("so-custname");
+            if (custName) custName.innerText = header.entity || "";
+            const statusRef = document.getElementById("so-statusref");
+            if (statusRef) statusRef.innerText = header.status || "";
+
+            populateHeaderFieldsSO(header);
+            populateJobDropdownSO(header.soJobDetails?.jobs || [], header.soJobDetails?.selectedJobId || "");
+            populateLeadSourceDropdownSO(header.soLeadSourceDetails?.leadSources || [], header.soLeadSourceDetails?.selectedLeadSourceId || "");
+            populatePartnerDropdownSO(header.soPartnerDetails?.partners || [], header.soPartnerDetails?.selectedPartnerId || "");
+            populateClassDropdownSO(header.soClassDetails);
+            populateDepartmentDropdownSO(header.soDepartmentDetails);
+            populateLocationDropdownSO(header.soLocationDetails);
+
+            // Render items
+            const tbody = document.getElementById("so-itemsTableBody");
+            if (tbody) {
+                tbody.innerHTML = "";
+
+                if (!items || items.length === 0) {
+                    console.warn("No items to display");
+                    tbody.innerHTML = `<tr><td class="text-sm px-3 py-2 text-gray-500 text-center" colspan="9">No items found</td></tr>`;
+                } else {
+                    items.forEach((row, index) => {
+                        try {
+                            const tr = document.createElement("tr");
+                            tr.className = "border-b border-gray-200";
+
+                            const rateValue = row.rate != null ? (typeof row.rate === 'number' ? row.rate.toFixed(2) : parseFloat(row.rate).toFixed(2)) : '';
+                            const amountValue = row.amount != null ? (typeof row.amount === 'number' ? row.amount.toFixed(2) : parseFloat(row.amount).toFixed(2)) : '';
+
+                            tr.innerHTML = `
+                                <td class="itemCell px-3 py-2 text-sm"></td>
+                                <td class="px-3 py-2 text-sm"><input type="text" value="${row.quantity || ''}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
+                                <td class="unitCell px-3 py-2 text-sm"></td>
+                                <td class="px-3 py-2 text-sm"><input type="text" value="${row.description || ''}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
+                                <td class="priceLevelCell px-3 py-2 text-sm"></td>
+                                <td class="rateCell px-3 py-2 text-sm"><input type="text" value="${rateValue}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
+                                <td class="amountCell px-3 py-2 text-sm"><span class="text-gray-800">${amountValue}</span></td>
+                                <td class="classCell px-3 py-2 text-sm"></td>
+                                <td class="deptCell px-3 py-2 text-sm"></td>
+                            `;
+
+                            const itemCell = tr.querySelector(".itemCell");
+                            if (itemCell) {
+                                itemCell.appendChild(createItemDropdownSO(header.soItemList?.items || [], row.itemId, row.item));
+                            }
+
+                            const unitOptions = header.soUnitList?.units?.[row.itemId] || [];
+                            tr.querySelector(".unitCell").appendChild(createUnitDropdownSO(unitOptions, row.units));
+                            const priceLevelCell = tr.querySelector(".priceLevelCell");
+                            if (priceLevelCell) {
+                                const dropdown = createPriceLevelDropdownSO(
+                                    header.soPriceLevelList?.priceLevels || [],
+                                    row.priceLevelId,
+                                    row.priceLevel
+                                );
+                                priceLevelCell.appendChild(dropdown);
+
+                                const select = dropdown.querySelector("select");
+                                const rateInput = tr.querySelector(".rateCell input");
+                                const amountSpan = tr.querySelector(".amountCell span");
+
+                                if (select && rateInput) {
+                                    const handlePriceLevelChange = () => {
+                                        const selectedId = select.value;
+                                        const selectedPriceLevel = (header.soPriceLevelList?.priceLevels || [])
+                                            .find(pl => String(pl.id) === String(selectedId));
+                                        const isCustom = selectedId === "-1" ||
+                                            (selectedPriceLevel && selectedPriceLevel.name &&
+                                                selectedPriceLevel.name.toLowerCase().includes("custom"));
+                                        if (isCustom) {
+                                            rateInput.disabled = false;
+                                            rateInput.classList.remove("bg-gray-100");
+                                            rateInput.classList.add("bg-white");
+                                            if (!rateInput.value || rateInput.value === "0.00") {
+                                                rateInput.value = "";
+                                            }
+                                        } else {
+                                            rateInput.disabled = true;
+                                            rateInput.classList.remove("bg-white");
+                                            rateInput.classList.add("bg-gray-100");
+
+                                            if (selectedPriceLevel) {
+                                                const itemRate = selectedPriceLevel.rates?.[row.itemId];
+                                                if (itemRate) {
+                                                    rateInput.value = itemRate;
+                                                } else {
+                                                    rateInput.value = "0.00";
+                                                }
+                                            }
+                                        }
+                                        recalculateAmountSO(tr);
+                                        if (amountSpan) {
+                                            amountSpan.textContent = (
+                                                parseFloat(row.quantity || 0) * parseFloat(rateInput.value || 0)
+                                            ).toFixed(2);
+                                        }
+                                    };
+                                    select.addEventListener("change", handlePriceLevelChange);
+                                    handlePriceLevelChange();
+                                }
+                            }
+
+                            const classCell = tr.querySelector(".classCell");
+                            if (classCell) {
+                                classCell.appendChild(createClassDropdownSO(header.soClassDetails?.classes || [], row.classId, row.class));
+                            }
+
+                            const deptCell = tr.querySelector(".deptCell");
+                            if (deptCell) {
+                                deptCell.appendChild(createDepartmentDropdownSO(header.soDepartmentDetails?.departments || [], row.departmentId, row.department));
+                            }
+
+                            if (!salesManager) {
+                                const rateCell = tr.querySelector(".rateCell");
+                                const amountCell = tr.querySelector(".amountCell");
+                                if (rateCell) rateCell.style.display = "none";
+                                if (amountCell) amountCell.style.display = "none";
+                            }
+
+                            tbody.appendChild(tr);
+                        } catch (error) {
+                            console.error(`Error rendering item ${index}:`, error);
+                        }
+                    });
+                }
+
+                // Listen for item changes
+                tbody.addEventListener("change", async function (e) {
+                    if (e.target.tagName === "SELECT" && e.target.closest(".itemCell")) {
+                        const row = e.target.closest("tr");
+                        const selectedItemId = e.target.value;
+                        if (selectedItemId) {
+                            await replaceRowWithItemDetails(row, selectedItemId, header);
+                        }
+                    }
+                });
+
+                // Listen for amount recalculation
+                tbody.addEventListener("input", function (e) {
+                    if (
+                        e.target.matches("td:nth-child(2) input") ||
+                        e.target.matches("td:nth-child(6) input")
+                    ) {
+                        const row = e.target.closest("tr");
+                        recalculateAmountSO(row);
+                    }
+                });
+            }
+
+            // Render sales team
+            const salesBody = document.getElementById("so-salesTeamTableBody");
+            if (salesBody) {
+                salesBody.innerHTML = "";
+                if (!salesTeam || salesTeam.length === 0) {
+                    console.warn("No sales team to display");
+                    salesBody.innerHTML = `<tr><td colspan="4" class="text-sm px-3 py-2 text-gray-500 text-center">No sales team found</td></tr>`;
+                } else {
+                    salesTeam.forEach((row, index) => {
+                        try {
+                            const contributionValue = row.contribution != null ?
+                                (typeof row.contribution === 'number' ? row.contribution.toFixed(1) : parseFloat(row.contribution).toFixed(1)) : '0.0';
+
+                            const tr = document.createElement("tr");
+                            tr.className = "border-b border-gray-200";
+                            tr.innerHTML = `
+                                <td class="empCell px-3 py-2 text-sm"></td>
+                                <td class="roleCell px-3 py-2 text-sm"></td>
+                                <td class="px-3 py-2 text-sm text-center"><input type="checkbox" ${row.primary ? 'checked' : ''} disabled class="primaryCheckbox w-4 h-4" /></td>
+                                <td class="px-3 py-2 text-sm"><input type="number" value="${contributionValue}" disabled class="contributionInput w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
+                            `;
+
+                            const empCell = tr.querySelector(".empCell");
+                            if (empCell) {
+                                empCell.appendChild(createSalesRepDropdownSO(header.soEmployeeList?.reps || [], row.employeeId, row.employee));
+                            }
+
+                            const roleCell = tr.querySelector(".roleCell");
+                            if (roleCell) {
+                                roleCell.appendChild(createSalesRoleDropdownSO(header.soSalesRoleList?.salesRoles || [], row.salesRoleId, row.salesRole));
+                            }
+
+                            salesBody.appendChild(tr);
+                        } catch (error) {
+                            console.error(`Error rendering sales team member ${index}:`, error);
+                        }
+                    });
+                }
+            }
+
+            // Setup edit button
+            const editButton = document.getElementById("editButton");
+            let originalData = null;
+            if (editButton) {
+                editButton.addEventListener("click", () => {
+                    originalData = {
+                        date: document.getElementById("so-date")?.value,
+                        startdate: document.getElementById("so-startdate")?.value,
+                        enddate: document.getElementById("so-enddate")?.value,
+                        po: document.getElementById("so-po")?.value,
+                        job: document.getElementById("so-job-id")?.value,
+                        memo: document.getElementById("so-memo")?.value,
+                        saleseffectivedate: document.getElementById("so-saleseffectivedate")?.value,
+                        leadsource: document.getElementById("lead-source")?.value,
+                        partner: document.getElementById("so-partner")?.value,
+                        class: document.getElementById("so-class")?.value || null,
+                        department: document.getElementById("so-department")?.value || null,
+                        location: document.getElementById("so-location")?.value || null,
+                        projectsummary: document.getElementById("so-projectsummary")?.value
+                    };
+                    setEditModeSO(true);
+                });
+            }
+
+            // Setup cancel button
+            const cancelButton = document.getElementById("cancelButton");
+            if (cancelButton) {
+                cancelButton.addEventListener("click", () => {
+                    if (originalData) {
+                        document.getElementById("so-date").value = originalData.date;
+                        document.getElementById("so-startdate").value = originalData.startdate;
+                        document.getElementById("so-enddate").value = originalData.enddate;
+                        document.getElementById("so-po").value = originalData.po;
+                        document.getElementById("so-job-id").value = originalData.job;
+                        document.getElementById("so-memo").value = originalData.memo;
+                        document.getElementById("so-saleseffectivedate").value = originalData.saleseffectivedate;
+                        document.getElementById("lead-source").value = originalData.leadsource;
+                        document.getElementById("so-partner").value = originalData.partner;
+                        document.getElementById("so-class").value = originalData.class;
+                        document.getElementById("so-department").value = originalData.department;
+                        document.getElementById("so-location").value = originalData.location;
+                        document.getElementById("so-projectsummary").value = originalData.projectsummary;
+                    }
+                    setEditModeSO(false);
+                });
+            }
+
+            // Setup save button
+            const saveButton = document.getElementById("saveButton");
+            if (saveButton) {
+                saveButton.addEventListener("click", () => {
+                    if (!validateSalesOrderClassification()) {
+                        return;
+                    }
+
+                    saveButton.disabled = true;
+                    const saveButtonText = document.getElementById("saveButtonText");
+                    const saveSpinner = document.getElementById("saveSpinner");
+                    if (saveButtonText) saveButtonText.textContent = "Saving...";
+                    if (saveSpinner) saveSpinner.classList.remove("hidden");
+
+                    const updatedData = {
+                        action: "updateSalesOrder",
+                        salesOrderId: recordId,
+                        trandate: document.getElementById("so-date")?.value,
+                        startdate: document.getElementById("so-startdate")?.value,
+                        enddate: document.getElementById("so-enddate")?.value,
+                        otherrefnum: document.getElementById("so-po")?.value,
+                        job: document.getElementById("so-job-id")?.value,
+                        memo: document.getElementById("so-memo")?.value,
+                        saleseffectivedate: document.getElementById("so-saleseffectivedate")?.value,
+                        leadsource: document.getElementById("lead-source")?.value,
+                        partner: document.getElementById("so-partner")?.value,
+                        class: document.getElementById("so-class")?.value || null,
+                        department: document.getElementById("so-department")?.value || null,
+                        location: document.getElementById("so-location")?.value || null,
+                        projectsummary: document.getElementById("so-projectsummary")?.value,
+                        lineItems: [],
+                        salesTeam: []
+                    };
+
+                    // Collect line items
+                    document.querySelectorAll("#so-itemsTableBody tr").forEach(row => {
+                        const itemSelect = row.querySelector(".itemCell select");
+                        const unitSelect = row.querySelector(".unitCell select");
+                        const priceLevelSelect = row.querySelector(".priceLevelCell select");
+                        const classSelect = row.querySelector(".classCell select");
+                        const deptSelect = row.querySelector(".deptCell select");
+                        const quantity = parseFloat(row.querySelector("td:nth-child(2) input")?.value || 0);
+                        const rate = parseFloat(row.querySelector(".rateCell input")?.value || 0);
+                        const priceLevelId = priceLevelSelect?.value || "";
+
+                        const lineItem = {
+                            itemId: itemSelect?.value || "",
+                            itemName: itemSelect?.selectedOptions[0]?.text || "",
+                            quantity,
+                            description: row.querySelector("td:nth-child(4) input")?.value || "",
+                            rate,
+                            amount: (quantity * rate).toFixed(2),
+                            unitId: unitSelect?.value || "",
+                            classId: classSelect?.value || "",
+                            departmentId: deptSelect?.value || ""
+                        };
+
+                        if (priceLevelId && priceLevelId !== "-1") {
+                            lineItem.priceLevelId = priceLevelId;
+                        }
+
+                        updatedData.lineItems.push(lineItem);
+                    });
+
+                    // Collect sales team
+                    document.querySelectorAll("#so-salesTeamTableBody tr").forEach(row => {
+                        const repSelect = row.querySelector(".empCell select");
+                        const roleSelect = row.querySelector(".roleCell select");
+                        const primaryCheckbox = row.querySelector(".primaryCheckbox");
+                        const contributionInput = row.querySelector(".contributionInput");
+
+                        const member = {
+                            employeeId: repSelect?.value || "",
+                            employeeName: repSelect?.selectedOptions[0]?.text || "",
+                            salesRole: roleSelect?.value || "",
+                            primary: primaryCheckbox?.checked || false,
+                            contribution: contributionInput?.value || 0
+                        };
+
+                        updatedData.salesTeam.push(member);
+                    });
+
+                    fetch(BASE_URL, {
+                        method: "POST",
+                        body: JSON.stringify(updatedData)
+                    })
+                        .then(res => res.json())
+                        .then(response => {
+                            saveButton.disabled = false;
+                            if (saveButtonText) saveButtonText.textContent = "Save";
+                            if (saveSpinner) saveSpinner.classList.add("hidden");
+
+                            if (response.success) {
+                                alert("Sales Order updated successfully!");
+                                setEditModeSO(false);
+                                location.reload();
+                            } else {
+                                alert("Failed to update: " + (response.message || "Unknown error"));
+                            }
+                        })
+                        .catch(err => {
+                            console.error("Save error:", err);
+                            saveButton.disabled = false;
+                            if (saveButtonText) saveButtonText.textContent = "Save";
+                            if (saveSpinner) saveSpinner.classList.add("hidden");
+                            alert("Error saving changes. Please try again.");
+                        });
+                });
+            }
+        })
+        .catch(err => console.error("Error loading sales order details:", err));
+}
+
+// ============================================================
+// COMPLETE SALES ORDER DETAILS PAGE - FULL IMPLEMENTATION
+// ============================================================
+
+// Auto-initialize on page load if on sales order details page
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeSalesOrderDetailsPage);
+} else {
+    initializeSalesOrderDetailsPage();
+}
+
 
 
 
