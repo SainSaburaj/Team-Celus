@@ -90,6 +90,7 @@
     th {
       background-color: #0a514a;
       color: white;
+      cursor: pointer;
     }
 
     tr:nth-child(even) {
@@ -110,6 +111,11 @@
       background-color: #abd334;
       color: #000;
     }
+
+    .sort-indicator {
+      margin-left: 5px;
+      font-size: 10px;
+    }
   </style>
 </head>
 
@@ -123,13 +129,24 @@
 
     <div class="container">
       <h3>Estimate Details</h3>
+      <div style="margin-bottom: 20px; display: flex; gap: 20px;">
+        <select id="customerFilter" class="printBtn">
+          <option value="">All Customers</option>
+        </select>
+
+        <select id="statusFilter" class="printBtn">
+          <option value="">All Statuses</option>
+        </select>
+      </div>
       <div class="table-container">
         <table id="estimate-table">
           <thead>
             <tr>
               <th style="width: 10%;">Estimate #</th>
-              <th style="width: 20%;">Customer</th>
-              <th style="width: 15%;">Date</th>
+              <th style="width: 20%;" onclick="sortTable('customerName')">Customer <span id="custSort"
+                  class="sort-indicator"></span></th>
+              <th style="width: 15%;" onclick="sortTable('date')">Date <span id="dateSort"
+                  class="sort-indicator"></span></th>
               <th style="width: 15%;">Status</th>
               <th style="width: 15%;">Total</th>
               <th style="width: 10%;">Action</th>
@@ -144,59 +161,142 @@
   </div>
 
   <script>
-    let estimatesData = [];   // store all estimates
+    let estimatesData = [];
     let currentPage = 1;
     const rowsPerPage = 10;
+    let sortDirection = { customerName: 'asc', date: 'asc' };
 
     async function loadEstimates() {
-        try {
-            const currentURL = window.location.href;
-            console.log("current url", currentURL);
-            const urlParams = new URLSearchParams(new URL(currentURL).search);
+      try {
+        const currentURL = window.location.href;
+        const urlParams = new URLSearchParams(new URL(currentURL).search);
+        const encodedUserId = urlParams.get("userId");
 
-            const encodedUserId = urlParams.get("userId");
-
-            if (!encodedUserId) {
-                console.error("UserId missing in URL");
-                return;
-            }
-            
-            const response = await fetch(
-                "https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM",
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        action: "fetchEstimates",
-                        userId: encodedUserId
-                    })
-                }
-            );
-
-            const data = await response.json();
-            console.log("POST Response:", data);
-
-            if (data.success) {
-                estimatesData = data.estimatesList || [];
-            } 
-            else {
-                console.error("Error fetching estimates:", data.message);
-            }
-
-            renderTable();
-            renderPagination();
-
-        } catch (err) {
-            console.error('Error loading estimates:', err);
+        if (!encodedUserId) {
+          console.error("UserId missing in URL");
+          return;
         }
+
+        const response = await fetch(
+          "https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "fetchEstimates",
+              userId: encodedUserId,
+              customerId: document.getElementById("customerFilter").value,
+              status: document.getElementById("statusFilter").value
+            })
+          }
+        );
+
+        const data = await response.json();
+        if (data.success) {
+          estimatesData = data.estimatesList || [];
+        } else {
+          console.error("Error fetching estimates:", data.message);
+        }
+
+        renderTable();
+        renderPagination();
+
+      } catch (err) {
+        console.error('Error loading estimates:', err);
+      }
     }
 
+    async function loadStatuses() {
+      try {
+        const response = await fetch(
+          "https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "getQuoteStatuses" })
+          }
+        );
+
+        const data = await response.json();
+        if (data.success) {
+          const dropdown = document.getElementById("statusFilter");
+          dropdown.innerHTML = `<option value="10">Proposal</option>`;
+          Object.entries(data.statuses).forEach(([id, text]) => {
+            const exists = Array.from(dropdown.options).some(opt => opt.value === id);
+            if (!exists) {
+              const option = document.createElement("option");
+              option.value = id;
+              option.textContent = text;
+              dropdown.appendChild(option);
+            }
+          });
+          dropdown.addEventListener("change", () => {
+            currentPage = 1;
+            loadEstimates();
+          });
+        } else {
+          console.error("Error fetching statuses:", data.message);
+        }
+      } catch (err) {
+        console.error("Error loading statuses:", err);
+      }
+    }
+
+    async function loadCustomers() {
+      try {
+        const currentURL = window.location.href;
+        const urlParams = new URLSearchParams(new URL(currentURL).search);
+        const encodedEmail = urlParams.get("userId");
+
+        if (!encodedEmail) {
+          console.error("Email missing in URL");
+          return;
+        }
+
+        const email = decodeURIComponent(encodedEmail);
+
+        const response = await fetch(
+          "https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "getCustomerDetailsByEmail",
+              email: email
+            })
+          }
+        );
+
+        const data = await response.json();
+        console.log("Customer Response:", data);
+
+        if (data.success) {
+          const dropdown = document.getElementById("customerFilter");
+          dropdown.innerHTML = `<option value="">All Customers</option>`; // reset
+
+          Object.entries(data.customers).forEach(([id, name]) => {
+            const option = document.createElement("option");
+            option.value = id;
+            option.textContent = name;
+            dropdown.appendChild(option);
+          });
+
+          dropdown.addEventListener("change", () => {
+            currentPage = 1;
+            loadEstimates();
+          });
+        } else {
+          console.error("Error fetching customers:", data.message);
+        }
+      } catch (err) {
+        console.error("Error loading customers:", err);
+      }
+    }
 
     function renderTable() {
       const tbody = document.getElementById('estimate-body');
       tbody.innerHTML = '';
 
-      // calculate slice indexes
       const start = (currentPage - 1) * rowsPerPage;
       const end = start + rowsPerPage;
       const pageData = estimatesData.slice(start, end);
@@ -204,13 +304,13 @@
       pageData.forEach(est => {
         const row = document.createElement('tr');
         row.innerHTML = `
-        <td>${est.estimateNumber}</td>
-        <td>${est.customerName}</td>
-        <td>${est.date}</td>
-        <td>${est.status}</td>
-        <td>$${est.total}</td>
-        <td><button class="printBtn" onclick="printBill('${est.id}')">Print</button></td>
-      `;
+          <td>${est.estimateNumber}</td>
+          <td>${est.customerName}</td>
+          <td>${est.date}</td>
+          <td>${est.status}</td>
+          <td>$${est.total}</td>
+          <td><button class="printBtn" onclick="printBill('${est.id}')">Print</button></td>
+        `;
         tbody.appendChild(row);
       });
     }
@@ -253,7 +353,52 @@
       );
     }
 
-    document.addEventListener('DOMContentLoaded', loadEstimates);
+    function sortTable(field) {
+      const indicatorCust = document.getElementById("custSort");
+      const indicatorDate = document.getElementById("dateSort");
+
+      // Reset indicators
+      indicatorCust.textContent = "";
+      indicatorDate.textContent = "";
+
+      // Toggle direction
+      sortDirection[field] = sortDirection[field] === 'asc' ? 'desc' : 'asc';
+
+      estimatesData.sort((a, b) => {
+        let valA = a[field];
+        let valB = b[field];
+
+        // Handle date sorting
+        if (field === 'date') {
+          valA = new Date(valA);
+          valB = new Date(valB);
+        } else {
+          valA = valA.toLowerCase();
+          valB = valB.toLowerCase();
+        }
+
+        if (valA < valB) return sortDirection[field] === 'asc' ? -1 : 1;
+        if (valA > valB) return sortDirection[field] === 'asc' ? 1 : -1;
+        return 0;
+      });
+
+      // Set indicator arrow
+      if (field === 'customerName') {
+        indicatorCust.textContent = sortDirection[field] === 'asc' ? "▲" : "▼";
+      } else if (field === 'date') {
+        indicatorDate.textContent = sortDirection[field] === 'asc' ? "▲" : "▼";
+      }
+
+      currentPage = 1;
+      renderTable();
+      renderPagination();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadEstimates();
+      loadCustomers();
+      loadStatuses();
+    });
   </script>
 
 </body>

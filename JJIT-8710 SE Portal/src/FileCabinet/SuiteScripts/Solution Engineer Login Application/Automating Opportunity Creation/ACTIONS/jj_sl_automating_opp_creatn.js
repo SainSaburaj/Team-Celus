@@ -848,8 +848,8 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     return '../VIEW/jj_home_page.html';
                 case 'home':
                     return '../VIEW/jj_home_page.html';
-                case 'opportunityform':
-                    return '../VIEW/jj_opportunity_layouts.html';
+                // case 'opportunityform':
+                //     return '../VIEW/jj_home_page.html';
                 case 'editopp':
                     return '../VIEW/jj_home_page.html';
                 case 'help':
@@ -857,9 +857,11 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 case 'report':
                     return '../VIEW/jj_home_page.html';
                 case 'implementation':
-                    return '../VIEW/jj_home_page.html';
+                    return '../VIEW/jj_add_imp_details.html';
                 case 'leaddetails':
                     return '../VIEW/jj_home_page.html';
+                case 'opportunityform':
+                    return '../VIEW/jj_opportunity_layouts.html';
                 case 'kanbanBoard':
                     return '../VIEW/jj_sales_process_kanban_board.html';
 
@@ -1113,18 +1115,25 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
         /**
          * Fetches Kanban dashboard data including transaction records and summary totals.
          *
+         * @function fetchKanbanData
          * @param {string} startDate - The start date for filtering records (ISO format or NetSuite-compatible).
          * @param {string} endDate - The end date for filtering records (ISO format or NetSuite-compatible).
-         * @returns {Object} An object containing:
-         * @property {Array} data - List of filtered transaction records for the Kanban board.
+         * @param {string|number} userId - The unique identifier of the user requesting the data.
+         * @returns {KanbanData|undefined} An object containing transaction records and summary totals,
+         *                                or `undefined` if an error occurs.
+         *
+         * @typedef {Object} KanbanData
+         * @property {Array<Object>} data - List of filtered transaction records for the Kanban board.
          * @property {Object|null} recordTypeTotal - Summary totals by record type (opportunity, estimate, salesorder),
-         *                                           or null if the user is not authorized to view totals.
+         *                                           or `null` if the user is not authorized to view totals.
+         *
+         * @throws {Error} Logs an error if fetching data fails.
          */
-        function fetchKanbanData(startDate, endDate) {
+        function fetchKanbanData(startDate, endDate, userId) {
             try {
                 return {
-                    data: getRecords(startDate, endDate),
-                    recordTypeTotal: salesSummaryByType(startDate, endDate),
+                    data: getRecords(startDate, endDate, userId),
+                    recordTypeTotal: salesSummaryByType(startDate, endDate, userId),
                 };
             } catch (error) {
                 log.error('Error @ fetchKanbanData', error);
@@ -1132,45 +1141,49 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
         }
 
         /**
-         * Fetches transaction records (Opportunity, Sales Order, Estimate) within a given date range.
+         * Fetches transaction records (Opportunity, Sales Order, Estimate) within a date range.
          *
-         * @param {Date|string} startDate - The start date for the search range.
-         * @param {Date|string} endDate - The end date for the search range.
-         * @returns {Array<Object>} An array of transaction objects containing:
-         *   - id {string} Internal ID
-         *   - transactionNumber {string} Transaction Number
-         *   - stage {string} Derived stage/type
-         *   - date {string} Transaction date
-         *   - desc {string|null} Memo
-         *   - status {string} Status reference
-         *   - entity {string} Customer/Entity name
-         *   - amount {string|number} Transaction amount
-         *   - probability {string|number} Probability
-         *   - entityStatus {string} Entity status
-         *   - currency {string} Currency name
+         * @param {Date|string} startDate - Start date for the search.
+         * @param {Date|string} endDate - End date for the search.
+         * @param {string} [userId] - User identifier for filtering by sales team member.
+         * @returns {Object[]} Array of transaction records with id, transactionNumber, stage, date,
+         *                     desc, status, entity, amount, probability, entityStatus, and currency.
          */
-        function getRecords(startDate, endDate) {
+        function getRecords(startDate, endDate, userId) {
+
             const resultRow = [];
+
             try {
+
                 let formattedStartDate = '';
+
                 let formattedEndDate = '';
+                if (userId) {
+                    employeeId = getEmployeeIdByEmail(userId);
+                    log.debug('kanban - Employee ID for filtering', employeeId);
+                } else {
+                    log.debug('kanban - No userId available, returning all pending approval orders');
+                }
                 if (startDate && endDate) {
                     formattedStartDate = dateFormatter(startDate);
                     formattedEndDate = dateFormatter(endDate);
                     if (formattedStartDate && formattedEndDate) {
+                        const filters = [
+                            ["type", "anyof", "Opprtnty", "SalesOrd", "Estimate"],
+                            "AND",
+                            ["mainline", "is", "T"],
+                            "AND",
+                            ["trandate", "within", formattedStartDate, formattedEndDate],
+                            "AND",
+                            ["status", "noneof", "Opprtnty:C", "Estimate:C", "Estimate:X", "Estimate:B", "Estimate:V", "Opprtnty:D", "Opprtnty:B", "SalesOrd:G", "SalesOrd:C", "SalesOrd:H", "SalesOrd:D", "SalesOrd:F", "SalesOrd:E", "SalesOrd:B"]
+                        ]
+                        if (employeeId) {
+                            filters.push("AND", ["salesteammember", "anyof", employeeId]);
+                        }
                         const transactionSearchObj = search.create({
                             type: "transaction",
                             settings: [{ "name": "consolidationtype", "value": "ACCTTYPE" }],
-                            filters:
-                                [
-                                    ["type", "anyof", "Opprtnty", "SalesOrd", "Estimate"],
-                                    "AND",
-                                    ["mainline", "is", "T"],
-                                    "AND",
-                                    ["trandate", "within", formattedStartDate, formattedEndDate],
-                                    "AND",
-                                    ["status", "noneof", "Opprtnty:C", "Estimate:C", "Estimate:X", "Estimate:B", "Estimate:V", "Opprtnty:D", "Opprtnty:B", "SalesOrd:G", "SalesOrd:C", "SalesOrd:H", "SalesOrd:D", "SalesOrd:F", "SalesOrd:E", "SalesOrd:B"]
-                                ],
+                            filters: filters,
                             columns:
                                 [
                                     search.createColumn({ name: "transactionnumber", label: "Transaction Number" }),
@@ -1200,6 +1213,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                                     search.createColumn({ name: "probability", label: "Probability" }),
                                     search.createColumn({ name: "currency", label: "Currency" })
                                 ]
+
                         });
                         const pagedSearchData = transactionSearchObj.runPaged({
                             pagesize: 1000
@@ -1231,26 +1245,39 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                         log.debug('Formatted date is not available in the getRecord search');
                         return [];
                     }
+
                 } else {
+
                     log.debug('Start date or end date did not available in getRecord');
+
                     return [];
+
                 }
+
             } catch (e) {
+
                 log.error('Error @ getRecords', e);
+
                 return []
+
             }
+
         }
+
 
         /**
          * Calculates total amounts for Sales Orders, Estimates (Quotes), and Opportunities
          * within a specified date range using a NetSuite transaction search.
          *
-         * @param {Date|string} startDate - The start date for the search range.
-         * @param {Date|string} endDate - The end date for the search range.
-         * @returns {{salesorderTotal: number, estimateTotal: number, opportunityTotal: number}} 
-         *          An object containing summed totals for each transaction type.
+         * @function salesSummaryByType
+         * @param {Date|string} startDate - Start date for the search range.
+         * @param {Date|string} endDate - End date for the search range.
+         * @param {string} [userId] - Optional user identifier for filtering by sales team member.
+         * @returns {{salesorderTotal: number, estimateTotal: number, opportunityTotal: number}|undefined}
+         *          Object with summed totals for each transaction type, or `undefined` if an error occurs.
+         * @throws {Error} Logs an error if the search fails.
          */
-        function salesSummaryByType(startDate, endDate) {
+        function salesSummaryByType(startDate, endDate, userId) {
             try {
                 const totals = {
                     salesorderTotal: 0,
@@ -1262,23 +1289,30 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 if (startDate && endDate) {
                     formattedStartDate = dateFormatter(startDate);
                     formattedEndDate = dateFormatter(endDate);
+                    if (userId) {
+                        employeeId = getEmployeeIdByEmail(userId);
+                        log.debug('kanban - Employee ID for filtering', employeeId);
+                    } else {
+                        log.debug('kanban - No userId available, returning all pending approval orders');
+                    }
 
                     if (formattedStartDate && formattedEndDate) {
+                        const filters = [
+                            ["type", "anyof", "Opprtnty", "SalesOrd", "Estimate"],
+                            "AND",
+                            ["mainline", "is", "T"],
+                            "AND",
+                            ["trandate", "within", formattedStartDate, formattedEndDate],
+                            "AND",
+                            ["status", "noneof", "Opprtnty:C", "Estimate:C", "Estimate:X", "Estimate:B", "Estimate:V", "Opprtnty:D", "Opprtnty:B", "SalesOrd:G", "SalesOrd:C", "SalesOrd:H", "SalesOrd:D", "SalesOrd:F", "SalesOrd:E", "SalesOrd:B"]
+                        ]
+                        if (employeeId) {
+                            filters.push("AND", ["salesteammember", "anyof", employeeId]);
+                        }
                         const searchTotal = search.create({
                             type: "transaction",
                             settings: [{ "name": "consolidationtype", "value": "ACCTTYPE" }],
-                            filters:
-                                [
-                                    ["type", "anyof", "Estimate", "SalesOrd", "Opprtnty"],
-                                    "AND",
-                                    ["memorized", "is", "F"],
-                                    "AND",
-                                    ["mainline", "is", "T"],
-                                    "AND",
-                                    ["trandate", "within", formattedStartDate, formattedEndDate],
-                                    "AND",
-                                    ["status", "noneof", "Opprtnty:C", "Opprtnty:B", "Opprtnty:D", "Estimate:C", "Estimate:X", "Estimate:B", "Estimate:V"]
-                                ],
+                            filters: filters,
                             columns:
                                 [
                                     search.createColumn({
@@ -1627,7 +1661,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 return { success: false, message: 'Error saving Job record' };
             }
         }
-        
+
 
         /**
          * Approve sales order(s)
@@ -1639,16 +1673,50 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
         function approveSo(req) {
             try {
                 const { salesOrderId, salesOrderIds } = req;
+                // Use userId from request if present; otherwise fall back to runtime current user email
+                let userId = req.userId || null;
+                if (!userId) {
+                    try {
+                        userId = runtime && runtime.getCurrentUser ? runtime.getCurrentUser().email : null;
+                    } catch (e) {
+                        userId = null;
+                    }
+                }
+                log.debug('approveSo - Request received', JSON.stringify({ salesOrderId, salesOrderIds, userId }));
 
-                // Case 1: No IDs provided → return pending approval orders
+                // Case 1: No IDs provided → return pending approval orders filtered by sales team
                 if (!salesOrderId && !salesOrderIds) {
                     const salesOrders = [];
+
+                    // Get employee ID from userId (email)
+                    let employeeId = null;
+                    if (userId) {
+                        employeeId = getEmployeeIdByEmail(userId);
+                        log.debug('approveSo - Employee ID for filtering', employeeId);
+                    } else {
+                        log.debug('approveSo - No userId available, returning all pending approval orders');
+                    }
+
+                    // Build filters - include sales team filter if employee ID exists
+                    const filters = [
+                        ['mainline', 'is', 'T'],
+                        'AND',
+                        ['status', 'anyof', 'SalesOrd:A']
+                    ];
+
+                    // Add sales team member filter if employee ID is available
+                    if (employeeId) {
+                        filters.push('AND', ['salesteammember', 'anyof', employeeId]);
+                    }
+
                     search.create({
                         type: search.Type.SALES_ORDER,
-                        filters: [['mainline', 'is', 'T'], 'AND', ['status', 'anyof', 'SalesOrd:A']],
-                        columns: ['tranid', 'entity', 'statusref', 'trandate', 'datecreated', 'memo',
+                        filters: filters,
+                        columns: [
+                            'tranid', 'entity', 'statusref', 'trandate', 'datecreated', 'memo',
                             'salesrep', 'currency', 'terms', 'shipdate', 'location', 'department',
-                            'class', 'total', 'otherrefnum']
+                            'class', 'total', 'otherrefnum'
+                        ]
                     }).run().each(result => {
                         salesOrders.push({
                             id: result.id,
@@ -1705,7 +1773,76 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
             }
         }
 
+        /**
+         * Reject sales order(s) by closing all lines to cancel the order
+         * @param {Object} req - Request object containing salesOrderId or salesOrderIds
+         * @returns {Object} Result object with success status and message
+         */
+        function rejectSo(req) {
+            try {
+                const { salesOrderId, salesOrderIds } = req;
 
+                if (!salesOrderId && !salesOrderIds) {
+                    return { success: false, message: 'No sales order ID provided' };
+                }
+
+                // Reject given IDs by closing all lines
+                const idsToReject = salesOrderIds || [salesOrderId];
+                const results = idsToReject.map(id => {
+                    try {
+                        // Load the sales order
+                        const soRecord = record.load({
+                            type: record.Type.SALES_ORDER,
+                            id: id,
+                            isDynamic: true
+                        });
+
+                        // Close all item lines by setting isclosed to true
+                        const lineCount = soRecord.getLineCount({ sublistId: 'item' });
+                        for (let i = 0; i < lineCount; i++) {
+                            soRecord.selectLine({ sublistId: 'item', line: i });
+                            soRecord.setCurrentSublistValue({
+                                sublistId: 'item',
+                                fieldId: 'isclosed',
+                                value: true
+                            });
+                            soRecord.commitLine({ sublistId: 'item' });
+                        }
+
+                        const savedId = soRecord.save({
+                            enableSourcing: true,
+                            ignoreMandatoryFields: true
+                        });
+
+                        log.debug('Sales Order Rejected (Closed)', 'Sales Order ID: ' + savedId);
+                        return { id, success: true, message: 'Rejected (Closed)' };
+                    } catch (e) {
+                        log.error(`Error rejecting Sales Order ${id}`, e);
+                        return { id, success: false, message: e.message };
+                    }
+                });
+
+                const successCount = results.filter(r => r.success).length;
+                const failCount = results.length - successCount;
+
+                return {
+                    success: successCount > 0,
+                    message: `Rejected ${successCount} order(s). Failed: ${failCount}`,
+                    results
+                };
+
+            } catch (e) {
+                log.error('Error @ rejectSo', e);
+                return { success: false, message: 'Failed to process rejection: ' + e.message };
+            }
+        }
+
+        /**
+         * Get Kanban-style details for an Estimate.
+         * @param {string|number} estimateId - Estimate internal ID
+         * @param {string} userEmail - Logged-in user's email
+         * @returns {Object} Kanban data including header, items, sales team, reps, and manager status
+         */
 
         function getKanbanEstimateDetails(estimateId, userEmail) {
             try {
@@ -1719,9 +1856,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     isDynamic: false
                 });
 
-                // ------------------------
-                // HEADER
-                // ------------------------
                 const header = {
                     tranid: estimateRecord.getValue("tranid"),
                     trandate: estimateRecord.getText("trandate"),
@@ -1729,46 +1863,35 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     statusRef: estimateRecord.getValue("statusRef"),
                     status: estimateRecord.getText("entitystatus"),
                     job: estimateRecord.getText("job"),
-                    probability: estimateRecord.getValue("probability"),
                     title: estimateRecord.getValue("title"),
                     expectedCloseDate: estimateRecord.getText("expectedclosedate"),
                     expirationDate: estimateRecord.getText("duedate"),
                     memo: estimateRecord.getValue("memo"),
-
+                    projectSummary: estimateRecord.getValue("custbody_jj_project_summary_invo"),
                     salesRep: estimateRecord.getText("salesrep"),
                     salesRepId: estimateRecord.getValue("salesrep"),
-
                     opportunity: estimateRecord.getText("opportunity"),
                     forecastType: estimateRecord.getText("forecasttype"),
                     leadSource: estimateRecord.getText("leadsource"),
                     partner: estimateRecord.getText("partner"),
-
                     subsidiary: estimateRecord.getText("subsidiary"),
                     subsidiaryId: estimateRecord.getValue("subsidiary"),
-
                     department: estimateRecord.getText("department"),
                     class: estimateRecord.getText("class"),
                     location: estimateRecord.getText("location"),
-
                     jobDetails: {},
                     leadSourceDetails: {}
                 };
 
-                // ------------------------
-                // LINE ITEMS
-                // ------------------------
                 const items = [];
                 const itemCount = estimateRecord.getLineCount("item");
-
                 for (let i = 0; i < itemCount; i++) {
-
                     const itemId = estimateRecord.getSublistValue({
                         sublistId: "item",
                         fieldId: "item",
                         line: i
                     });
 
-                    // Lookup item class & department
                     let itemClassId = "", itemClassText = "";
                     let itemDeptId = "", itemDeptText = "";
 
@@ -1786,7 +1909,8 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             itemDeptId = itemFields.department?.[0]?.value || "";
                             itemDeptText = itemFields.department?.[0]?.text || "";
                         }
-                    } catch (err) {
+                    }
+                    catch (err) {
                         log.error("Item Lookup Failed", { line: i, itemId, error: err });
                     }
 
@@ -1795,12 +1919,11 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                         itemId,
                         item: estimateRecord.getSublistText({ sublistId: "item", fieldId: "item", line: i }),
                         quantity: estimateRecord.getSublistValue({ sublistId: "item", fieldId: "quantity", line: i }),
-                        units: estimateRecord.getSublistText({ sublistId: "item", fieldId: "units", line: i }),
+                        units: estimateRecord.getSublistValue({ sublistId: "item", fieldId: "units", line: i }),
                         description: estimateRecord.getSublistValue({ sublistId: "item", fieldId: "description", line: i }),
-                        priceLevel: estimateRecord.getSublistText({ sublistId: "item", fieldId: "price", line: i }),
+                        priceLevelId: estimateRecord.getSublistValue({ sublistId: "item", fieldId: "price", line: i }),
                         rate: estimateRecord.getSublistValue({ sublistId: "item", fieldId: "rate", line: i }),
                         amount: estimateRecord.getSublistValue({ sublistId: "item", fieldId: "amount", line: i }),
-
                         classId: itemClassId,
                         class: itemClassText,
                         departmentId: itemDeptId,
@@ -1808,12 +1931,8 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     });
                 }
 
-                // ------------------------
-                // SALES TEAM
-                // ------------------------
                 const salesTeam = [];
                 const salesCount = estimateRecord.getLineCount("salesteam");
-
                 for (let i = 0; i < salesCount; i++) {
                     salesTeam.push({
                         employee: estimateRecord.getSublistText({ sublistId: "salesteam", fieldId: "employee", line: i }),
@@ -1825,30 +1944,17 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     });
                 }
 
-                // ------------------------
-                // SALES REP LIST
-                // ------------------------
                 const repListResult = model.salesRepList();
                 const repList = repListResult.reps || [];
-
-                // ------------------------
-                // UNIT, CLASS, DEPT LISTS
-                // ------------------------
                 const unitResult = model.unitList(estimateId);
-
                 header.classList = model.classList(estimateId);
                 header.departmentList = model.departmentList(estimateId);
                 header.unitDetails = unitResult.units || [];
-
-                // ------------------------
-                // SALES ROLE LIST ⭐
-                // ------------------------
+                header.priceLevelList = model.pricelevelList(estimateId);
                 header.salesRoles = model.salesRoleList().salesRoles || [];
-
-                // ------------------------
-                // CHECK SALES MANAGER
-                // ------------------------
                 const isSalesManager = checkIfSalesManager(userEmail);
+
+                log.debug("Sales manager", isSalesManager );
 
                 return {
                     success: true,
@@ -1860,61 +1966,52 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                         isSalesManager
                     }
                 };
-
-            } catch (e) {
+            }
+            catch (e) {
                 log.error("Error @ getKanbanEstimateDetails", e);
                 return { success: false, message: "Failed to load estimate details." };
             }
         }
 
+        /**
+         * Update an Estimate record including header fields, line items, and sales team.
+         * @param {Object} req - Request object
+         * @param {string|number} req.estimateId - Internal ID of the estimate
+         * @param {Object} req.data - Payload containing header, line items, and sales team
+         * @param {Object} [req.data.Header] - Header-level fields
+         * @param {Array} [req.data.LineItems] - Line-level item details
+         * @param {Array} [req.data.SalesTeam] - Line-level sales team details
+         * @returns {Object} Result object with success status, message, and updated estimateId
+         */
         function updateEstimateRecord(req) {
-            log.debug("🔵 updateEstimateRecord() — START", req);
-
             try {
-                // -------------------------
-                // BASIC VALIDATION
-                // -------------------------
                 if (!req || !req.estimateId || !req.data) {
-                    log.error("❌ Invalid Request Data", req);
                     return { success: false, message: "Invalid request data received." };
                 }
-
                 const estimateId = req.estimateId;
                 const data = req.data;
-
                 const header = data.Header || {};
                 const items = data.LineItems || [];
                 const salesTeam = data.SalesTeam || [];
 
-                log.debug("📌 Estimate ID", estimateId);
-                log.debug("📌 Header payload", header);
-
-                // -------------------------
-                // SAFE SET FUNCTION
-                // -------------------------
                 function safeSet(rec, fieldId, value, isDate = false, allowEmpty = true) {
                     try {
                         let finalValue = value;
-
-                        // Parse integers for number fields
                         if (!isDate && typeof value === "string" && value.match(/^\d+$/)) {
                             finalValue = parseInt(value, 10);
                         }
 
-                        // Parse dates
                         if (isDate && value) {
                             finalValue = new Date(value);
                             if (isNaN(finalValue.getTime())) {
-                                log.debug(`⚠ Invalid date for ${fieldId}: ${value}`);
                                 return;
                             }
                         }
 
-                        // If value is empty string and allowEmpty, send null to NetSuite
                         if ((value === undefined || value === null || value === "") && allowEmpty) {
                             finalValue = null;
-                        } else if (value === undefined || value === null || value === "") {
-                            log.debug(`⚠ Skipping empty field: ${fieldId}`);
+                        }
+                        else if (value === undefined || value === null || value === "") {
                             return;
                         }
 
@@ -1922,47 +2019,31 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             fieldId: fieldId,
                             value: finalValue
                         });
-
-                        log.debug(`✔ Set ${fieldId}`, finalValue);
-
-                    } catch (e) {
+                    }
+                    catch (e) {
                         log.error(`❌ Failed to set field: ${fieldId}`, e);
                     }
                 }
 
-                // -------------------------
-                // LOAD RECORD (dynamic)
-                // -------------------------
                 const estRec = record.load({
                     type: record.Type.ESTIMATE,
                     id: estimateId,
                     isDynamic: true
                 });
 
-                log.audit("✅ Record Loaded", estimateId);
-
-                // -------------------------
-                // HEADER FIELD UPDATES
-                // -------------------------
                 const dropdownFields = ["class", "department", "location", "partner", "leadsource", "forecasttype"];
                 dropdownFields.forEach(field => {
-                    // Normalize keys: remove spaces and lowercase
                     const keyNoSpace = field.replace(/\s+/g, '').toLowerCase();
                     const val = Object.keys(header).find(k => k.replace(/\s+/g, '').toLowerCase() === keyNoSpace);
                     safeSet(estRec, field, val ? header[val] : null);
                 });
 
-
                 safeSet(estRec, "memo", header.Memo);
-                safeSet(estRec, "probability", header["Probability (%)"] ? parseFloat(header["Probability (%)"]) : null);
+                safeSet(estRec, "custbody_jj_project_summary_invo", header["Project Summary"]);
                 safeSet(estRec, "title", header.Title);
 
-                // -------------------------
-                // STATUS (entitystatus)
-                // -------------------------
                 if (header.Status) {
                     let statusVal = header.Status;
-
                     if (!String(header.Status).match(/^\d+$/)) {
                         const stRes = search.create({
                             type: search.Type.ESTIMATE,
@@ -1973,22 +2054,20 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                         if (stRes && stRes.length) {
                             statusVal = stRes[0].getValue("entitystatus");
                             log.debug("✔ Status text → internal id", statusVal);
-                        } else {
+                        }
+                        else {
                             log.debug("⚠ Status lookup failed. Skipping.");
                             statusVal = null;
                         }
                     }
-
                     safeSet(estRec, "entitystatus", statusVal);
                 }
 
-                // -------------------------
-                // JOB
-                // -------------------------
                 if (header.Job) {
                     if (String(header.Job).match(/^\d+$/)) {
                         safeSet(estRec, "job", parseInt(header.Job, 10));
-                    } else {
+                    }
+                    else {
                         try {
                             const jobSearch = search.create({
                                 type: search.Type.JOB,
@@ -1999,159 +2078,199 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             if (jobSearch && jobSearch.length) {
                                 const jobInternal = jobSearch[0].getValue("internalid");
                                 safeSet(estRec, "job", parseInt(jobInternal, 10));
-                            } else {
-                                log.debug("⚠ Job text lookup failed.");
                             }
-                        } catch (e) {
-                            log.error("❌ Job lookup failed", e);
+                            else {
+                                log.debug("Job text lookup failed.");
+                            }
+                        }
+                        catch (e) {
+                            log.error("Job lookup failed", e);
                         }
                     }
                 }
 
-                // -------------------------
-                // DATE FIELDS
-                // -------------------------
                 safeSet(estRec, "trandate", header["Transaction Date"] || header["Date"], true);
                 safeSet(estRec, "expectedclosedate", header["Expected Close Date"], true);
                 safeSet(estRec, "duedate", header["Expiration Date"], true);
 
-                // -------------------------
-                // UPDATE EXISTING LINE ITEMS
-                // -------------------------
-                const lineCount = estRec.getLineCount({ sublistId: "item" });
-                log.debug("🛒 Existing Lines", lineCount);
+                const existingLineCount = estRec.getLineCount({ sublistId: "item" });
+                for (let i = existingLineCount - 1; i >= 0; i--) {
+                    estRec.removeLine({
+                        sublistId: "item",
+                        line: i,
+                        ignoreRecalc: true
+                    });
+                }
 
-                const itemsByLineNo = {};
-                items.forEach(it => {
-                    const ln = it["Line #"] || it.LineNo;
-                    if (ln) itemsByLineNo[Number(ln) - 1] = it;
-                });
-
-                for (let i = 0; i < lineCount; i++) {
-                    estRec.selectLine({ sublistId: "item", line: i });
-
-                    const itemData = itemsByLineNo[i] || items[i] || {};
-                    if (!itemData || !itemData["Item ID"]) {
-                        estRec.commitLine({ sublistId: "item" });
-                        continue;
-                    }
-
+                items.forEach((line, idx) => {
                     try {
-                        // 1️⃣ ITEM (FIRST)
+                        estRec.selectNewLine({ sublistId: "item" });
+
+                        const itemId = parseInt(line["Item ID"], 10);
+                        const qtyVal = parseFloat(line.Quantity) || 1;
+                        const rateVal = parseFloat(line.Rate) || 0;
+                        const amountVal =
+                            line.Amount !== undefined && line.Amount !== null && line.Amount !== ""
+                                ? parseFloat(line.Amount)
+                                : parseFloat((qtyVal * rateVal).toFixed(2));
+
                         estRec.setCurrentSublistValue({
                             sublistId: "item",
                             fieldId: "item",
-                            value: parseInt(itemData["Item ID"], 10)
+                            value: itemId
                         });
-
-                        // 2️⃣ QUANTITY (NEVER EMPTY)
-                        const qty =
-                            itemData.Quantity !== "" && itemData.Quantity != null
-                                ? parseFloat(itemData.Quantity)
-                                : 1;
 
                         estRec.setCurrentSublistValue({
                             sublistId: "item",
                             fieldId: "quantity",
-                            value: qty
+                            value: qtyVal
                         });
 
-                        // 3️⃣ RATE (MANDATORY)
-                        if (!itemData.Rate || Number(itemData.Rate) <= 0) {
-                            throw new Error(`Missing rate on line ${i + 1}`);
+                        if (line.Units) {
+                            estRec.setCurrentSublistValue({
+                                sublistId: "item",
+                                fieldId: "units",
+                                value: parseInt(line.Units, 10)
+                            });
+                        }
+
+                        if (line.Description) {
+                        estRec.setCurrentSublistValue({
+                            sublistId: "item",
+                                fieldId: "description",
+                                value: line.Description
+                        });
+                        }
+
+                        if (line.PriceLevel && String(line.PriceLevel) !== "-1") {
+                            // Standard price level
+                            estRec.setCurrentSublistValue({
+                                sublistId: "item",
+                                fieldId: "price",
+                                value: parseInt(line.PriceLevel, 10)
+                            });
+                        } 
+                        else {
+                            estRec.setCurrentSublistValue({
+                                sublistId: "item",
+                                fieldId: "price",
+                                value: -1
+                            });
                         }
 
                         estRec.setCurrentSublistValue({
                             sublistId: "item",
                             fieldId: "rate",
-                            value: parseFloat(itemData.Rate)
+                            value: rateVal
                         });
+                        
+                        estRec.setCurrentSublistValue({
+                            sublistId: "item",
+                            fieldId: "amount",
+                            value: amountVal
+                        });
+                        
+                        if (line.Class || line.Department) {
+                            try {
+                                const itemLookup = search.lookupFields({
+                                    type: search.Type.ITEM,
+                                    id: itemId,
+                                    columns: ["recordtype"]
+                                });
 
-                        // OPTIONAL FIELDS
-                        if (itemData.Units)
-                            estRec.setCurrentSublistValue({
-                                sublistId: "item",
-                                fieldId: "units",
-                                value: itemData.Units
-                            });
+                                const itemType = itemLookup.recordtype;
 
-                        if (itemData.Description)
-                            estRec.setCurrentSublistValue({
-                                sublistId: "item",
-                                fieldId: "description",
-                                value: itemData.Description
-                            });
+                                if (itemType) {
+                                    const itemRec = record.load({
+                                        type: itemType,
+                                        id: itemId,
+                                        isDynamic: false
+                                    });
 
-                        if (itemData.Class)
-                            estRec.setCurrentSublistValue({
-                                sublistId: "item",
-                                fieldId: "class",
-                                value: parseInt(itemData.Class)
-                            });
+                                    if (line.Class && itemRec.getField({ fieldId: "class" })) {
+                                        itemRec.setValue({
+                                            fieldId: "class",
+                                            value: parseInt(line.Class, 10)
+                                        });
+                                    }
 
-                        if (itemData.Department)
-                            estRec.setCurrentSublistValue({
-                                sublistId: "item",
-                                fieldId: "department",
-                                value: parseInt(itemData.Department)
-                            });
-
-                    } catch (e) {
-                        log.error(`❌ Line ${i + 1} failed`, e);
+                                    if (line.Department && itemRec.getField({ fieldId: "department" })) {
+                                        itemRec.setValue({
+                                            fieldId: "department",
+                                            value: parseInt(line.Department, 10)
+                                        });
+                                    }
+                                    itemRec.save();
+                                }
+                            } 
+                            catch (itemErr) {
+                                log.error("❌ Item update failed", {
+                                    itemId,
+                                    error: itemErr
+                                });
+                            }
+                        }
+                        estRec.commitLine({ sublistId: "item" });
+                    }
+                    catch (e) {
+                        log.error(`❌ Failed adding estimate line ${idx + 1}`, e);
                         throw e;
                     }
+                });
 
-                    // 4️⃣ COMMIT (NOW AMOUNT IS AUTO-CALCULATED)
-                    estRec.commitLine({ sublistId: "item" });
-                }
-
-
-
-                // -------------------------
-                // SALES TEAM UPDATE
-                // -------------------------
                 const stCount = estRec.getLineCount({ sublistId: "salesteam" });
+
                 for (let i = 0; i < stCount; i++) {
                     estRec.selectLine({ sublistId: "salesteam", line: i });
-
                     const stData = salesTeam[i] || {};
+
                     if (!stData || Object.keys(stData).length === 0) {
                         estRec.commitLine({ sublistId: "salesteam" });
                         continue;
                     }
 
-                    try {
-                        if (stData["Employee ID"]) safeSet(estRec, "employee", parseInt(stData["Employee ID"], 10));
-                        if (stData["Role ID"]) safeSet(estRec, "salesrole", parseInt(stData["Role ID"], 10));
-                        if (stData["Contribution %"]) safeSet(estRec, "contribution", parseFloat(stData["Contribution %"]));
-                        if (stData.Primary !== undefined) {
-                            const p = (stData.Primary === true || stData.Primary === "Yes" || stData.Primary === "true");
-                            safeSet(estRec, "isprimary", p);
-                        }
-                    } catch (e) {
-                        log.error(`❌ Sales team update failed ${i + 1}`, e);
+                    if (stData["Employee ID"]) {
+                        estRec.setCurrentSublistValue({
+                            sublistId: "salesteam",
+                            fieldId: "employee",
+                            value: parseInt(stData["Employee ID"], 10)
+                        });
                     }
 
+                    if (stData["Role ID"]) {
+                        estRec.setCurrentSublistValue({
+                            sublistId: "salesteam",
+                            fieldId: "salesrole",
+                            value: parseInt(stData["Role ID"], 10)
+                        });
+                    }
+
+                    if (stData["Contribution %"] !== undefined) {
+                        estRec.setCurrentSublistValue({
+                            sublistId: "salesteam",
+                            fieldId: "contribution",
+                            value: parseFloat(stData["Contribution %"])
+                        });
+                    }
+
+                    if (stData.Primary !== undefined) {
+                        const isPrimary = stData.Primary === true || stData.Primary === "Yes" || stData.Primary === "true";
+                        estRec.setCurrentSublistValue({
+                            sublistId: "salesteam",
+                            fieldId: "isprimary",
+                            value: isPrimary
+                        });
+                    }
                     estRec.commitLine({ sublistId: "salesteam" });
                 }
-
-                // -------------------------
-                // SAVE
-                // -------------------------
                 const updatedId = estRec.save();
-                log.audit("🎉 Estimate Updated Successfully", updatedId);
-
                 return { success: true, message: "Estimate updated successfully", estimateId: updatedId };
-
-            } catch (e) {
-                log.error("❌ Update Failed", e);
+            }
+            catch (e) {
+                log.error("Update Failed", e);
                 return { success: false, message: e.message || "Error updating estimate" };
             }
         }
-
-
-
-
 
         function getKanbanOpportunityDetails(opportunityId) {
             try {
@@ -2184,7 +2303,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     salesType: opportunityRecord.getText('cseg_jj_sales_type')
                 };
 
-                // ---- LINE ITEMS ----
                 const itemCount = opportunityRecord.getLineCount("item");
                 const items = [];
 
@@ -2200,7 +2318,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     });
                 }
 
-                // ---- SALES TEAM ----
                 const salesTeamCount = opportunityRecord.getLineCount("salesteam");
                 const salesTeam = [];
 
@@ -2214,9 +2331,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     });
                 }
 
-                // Add salesTeam to header for easier access in frontend
                 header.salesTeam = salesTeam;
-
                 log.debug("Opportunity Details", { header, items, salesTeam });
 
                 return {
@@ -2394,12 +2509,11 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     salesrep: salesOrderRecord.getText('salesrep'),
                     saleseffectivedate: salesOrderRecord.getText('saleseffectivedate'),
                     leadsource: salesOrderRecord.getText('leadsource'),
-
-                    // Use getText to return the name (instead of internal id) for subsidiaries, classes, locations, departments
-                    subsidiary: salesOrderRecord.getText('subsidiary'), // Subsidiary name instead of internalid
-                    class: salesOrderRecord.getText('class'), // Class name instead of internalid
-                    location: salesOrderRecord.getText('location'), // Location name instead of internalid
-                    department: salesOrderRecord.getText('department'), // Department name instead of internalid
+                    subsidiary: salesOrderRecord.getText('subsidiary'),
+                    class: salesOrderRecord.getText('class'),
+                    location: salesOrderRecord.getText('location'),
+                    department: salesOrderRecord.getText('department'),
+                    projectsummary: salesOrderRecord.getValue('custbody_jj_project_summary_invo'),
 
                     items: [],
                     salesteam: [],
@@ -2411,28 +2525,43 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     soLeadSourceDetails: {},
                     soOpportunityDetails: {},
                     soItemList: {},
+                    soUnitList: {},
                     isSalesManager: checkIfSalesManager(userEmail)
 
                 };
 
+                // 🔑 Fetch price levels once
+                const priceLevelData = getSalesOrderPriceLevels(salesOrderId);
 
                 // Line items
                 const itemLineCount = salesOrderRecord.getLineCount({ sublistId: 'item' });
                 for (let i = 0; i < itemLineCount; i++) {
+                    const itemId = salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'item', line: i });
+
                     const lineData = {
                         item: salesOrderRecord.getSublistText({ sublistId: 'item', fieldId: 'item', line: i }),
-                        itemId: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'item', line: i }),
+                        itemId,
                         quantity: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'quantity', line: i }),
-                        units: salesOrderRecord.getSublistText({ sublistId: 'item', fieldId: 'units', line: i }),
+                        units: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'units', line: i }),
                         description: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'description', line: i }),
+                        priceLevel: salesOrderRecord.getSublistText({ sublistId: 'item', fieldId: 'price', line: i }),
+                        priceLevelId: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'price', line: i }),
                         rate: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'rate', line: i }),
                         amount: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'amount', line: i }),
                         location: salesOrderRecord.getSublistText({ sublistId: 'item', fieldId: 'location', line: i }),
                         classId: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'class', line: i }),
                         departmentId: salesOrderRecord.getSublistValue({ sublistId: 'item', fieldId: 'department', line: i }),
-                        class:salesOrderRecord.getSublistText({ sublistId: 'item', fieldId: 'class', line: i }),
-                        department:salesOrderRecord.getSublistText({ sublistId: 'item', fieldId: 'department', line: i }),
+                        class: salesOrderRecord.getSublistText({ sublistId: 'item', fieldId: 'class', line: i }),
+                        department: salesOrderRecord.getSublistText({ sublistId: 'item', fieldId: 'department', line: i }),
+
+                        // ⭐ Attach price levels for this item
+                        priceLevels: priceLevelData.priceLevels.map(pl => ({
+                            id: pl.id,
+                            name: pl.name,
+                            rate: pl.rates[itemId] || null
+                        }))
                     };
+
                     header.items.push(lineData);
                 }
 
@@ -2443,6 +2572,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                         employee: salesOrderRecord.getSublistText({ sublistId: 'salesteam', fieldId: 'employee', line: i }),
                         employeeId: salesOrderRecord.getSublistValue({ sublistId: 'salesteam', fieldId: 'employee', line: i }),
                         salesRole: salesOrderRecord.getSublistText({ sublistId: 'salesteam', fieldId: 'salesrole', line: i }),
+                        salesRoleId: salesOrderRecord.getSublistValue({ sublistId: 'salesteam', fieldId: 'salesrole', line: i }),
                         primary: salesOrderRecord.getSublistValue({ sublistId: 'salesteam', fieldId: 'isprimary', line: i }),
                         contribution: salesOrderRecord.getSublistValue({ sublistId: 'salesteam', fieldId: 'contribution', line: i })
                     };
@@ -2458,10 +2588,112 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
         }
 
         /**
+         * Get price levels for sales order items
+         * @param {string} salesOrderId - Sales Order ID
+         * @returns {Object} Price levels data
+         */
+        function getSalesOrderPriceLevels(salesOrderId) {
+            const result = { priceLevels: [] };
+
+            try {
+                if (!salesOrderId) return result;
+
+                const soRecord = record.load({
+                    type: record.Type.SALES_ORDER,
+                    id: salesOrderId
+                });
+
+                const itemCount = soRecord.getLineCount({ sublistId: "item" });
+                const itemIds = new Set();
+
+                // Get all item IDs from the sales order
+                for (let i = 0; i < itemCount; i++) {
+                    const itemId = soRecord.getSublistValue({
+                        sublistId: "item",
+                        fieldId: "item",
+                        line: i
+                    });
+                    if (itemId) itemIds.add(itemId);
+                }
+
+                if (itemIds.size === 0) {
+                    result.priceLevels.push({ id: "custom", name: "Custom", rates: [] });
+                    return result;
+                }
+
+                // Step 1: Search pricing records for all items
+                const pricingSearch = search.create({
+                    type: "pricing",
+                    filters: [
+                        ["item", "anyof", Array.from(itemIds)]
+                    ],
+                    columns: [
+                        "pricelevel",
+                        "item",
+                        "unitprice"
+                    ]
+                });
+
+                const priceLevelMap = {};
+                // { priceLevelId: { itemId: rate } }
+
+                pricingSearch.run().each(row => {
+                    const priceLevelId = row.getValue("pricelevel");
+                    const itemId = row.getValue("item");
+                    const rate = row.getValue("unitprice");
+
+                    if (priceLevelId && itemId) {
+                        if (!priceLevelMap[priceLevelId]) {
+                            priceLevelMap[priceLevelId] = {};
+                        }
+                        priceLevelMap[priceLevelId][itemId] = rate;
+                    }
+                    return true;
+                });
+
+                const priceLevelIds = Object.keys(priceLevelMap);
+                if (priceLevelIds.length > 0) {
+                    // Step 2: Fetch price level names
+                    search.create({
+                        type: "pricelevel",
+                        filters: [
+                            ["internalid", "anyof", priceLevelIds]
+                        ],
+                        columns: ["internalid", "name"]
+                    }).run().each(row => {
+                        const id = row.getValue("internalid");
+                        result.priceLevels.push({
+                            id,
+                            name: row.getValue("name"),
+                            rates: priceLevelMap[id] || {}
+                        });
+                        return true;
+                    });
+                }
+
+                // Always add Custom option
+                result.priceLevels.push({
+                    id: "-1",
+                    name: "Custom",
+                    rates: {}
+                });
+
+                log.debug("getSalesOrderPriceLevels",
+                    `Fetched ${result.priceLevels.length} price levels with rates for items (including Custom)`);
+
+            } catch (e) {
+                log.error("getSalesOrderPriceLevels error", e);
+            }
+
+            return result;
+        }
+
+
+        /**
          * Update Sales Order with new values
          * @param {Object} requestData - Request data containing salesOrderId and field values
-         * @returns {Object} Success/failure response
-         */
+ * @returns {Object} Success/failure response
+ */
         function updateSalesOrder(requestData) {
             try {
                 if (!requestData.salesOrderId) {
@@ -2473,7 +2705,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 const salesOrderRecord = record.load({
                     type: record.Type.SALES_ORDER,
                     id: requestData.salesOrderId,
-                    isDynamic: false
+                    isDynamic: true
                 });
 
                 // Update header fields if provided
@@ -2516,6 +2748,90 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 if (requestData.location) {
                     salesOrderRecord.setValue({ fieldId: 'location', value: requestData.location });
                 }
+                if (requestData.projectsummary) {
+                    salesOrderRecord.setValue({ fieldId: 'custbody_jj_project_summary_invo', value: requestData.projectsummary });
+                }
+
+                // ---------------- LINE ITEMS ----------------
+                if (requestData.lineItems && Array.isArray(requestData.lineItems)) {
+                    // Clear existing lines
+                    const lineCount = salesOrderRecord.getLineCount({ sublistId: 'item' });
+                    for (let i = lineCount - 1; i >= 0; i--) {
+                        salesOrderRecord.removeLine({ sublistId: 'item', line: i });
+                    }
+
+                    // Add new lines
+                    requestData.lineItems.forEach(line => {
+                        salesOrderRecord.selectNewLine({ sublistId: 'item' });
+
+                        if (line.itemId) {
+                            salesOrderRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'item', value: line.itemId });
+                        }
+                        if (line.quantity) {
+                            salesOrderRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'quantity', value: parseFloat(line.quantity) });
+                        }
+
+                        // Handle price level vs custom
+                        if (line.priceLevelId && line.priceLevelId !== "-1") {
+                            // Standard price level: set the price level
+                            log.debug("Setting standard price level", { itemId: line.itemId, priceLevelId: line.priceLevelId });
+                            salesOrderRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'price', value: line.priceLevelId });
+                        } else if (line.rate) {
+                            // Custom price level: set price level to Custom (-1) first, then set rate and amount
+                            log.debug("Setting custom price level", { itemId: line.itemId, rate: line.rate, amount: line.amount });
+                            salesOrderRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'price', value: -1 });
+                            salesOrderRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'rate', value: parseFloat(line.rate) });
+                            // NetSuite requires amount to be set explicitly for custom price level
+                        if (line.amount) {
+                            salesOrderRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'amount', value: parseFloat(line.amount) });
+                        }
+                        }
+
+                        if (line.description) {
+                            salesOrderRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'description', value: line.description });
+                        }
+                        if (line.classId) {
+                            salesOrderRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'class', value: line.classId });
+                        }
+                        if (line.departmentId) {
+                            salesOrderRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'department', value: line.departmentId });
+                        }
+                        if (line.unitId) {
+                            salesOrderRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'units', value: line.unitId });
+                        }
+
+                        salesOrderRecord.commitLine({ sublistId: 'item' });
+                    });
+                }
+
+                // ---------------- SALES TEAM ----------------
+                if (requestData.salesTeam && Array.isArray(requestData.salesTeam)) {
+                    // Clear existing sales team lines
+                    const teamCount = salesOrderRecord.getLineCount({ sublistId: 'salesteam' });
+                    for (let i = teamCount - 1; i >= 0; i--) {
+                        salesOrderRecord.removeLine({ sublistId: 'salesteam', line: i });
+                    }
+
+                    // Add new sales team members
+                    requestData.salesTeam.forEach(member => {
+                        salesOrderRecord.selectNewLine({ sublistId: 'salesteam' });
+
+                        if (member.employeeId) {
+                            salesOrderRecord.setCurrentSublistValue({ sublistId: 'salesteam', fieldId: 'employee', value: member.employeeId });
+                        }
+                        if (member.salesRole) {
+                            salesOrderRecord.setCurrentSublistValue({ sublistId: 'salesteam', fieldId: 'salesrole', value: member.salesRole });
+                        }
+                        if (member.primary !== undefined) {
+                            salesOrderRecord.setCurrentSublistValue({ sublistId: 'salesteam', fieldId: 'isprimary', value: member.primary });
+                        }
+                        if (member.contribution) {
+                            salesOrderRecord.setCurrentSublistValue({ sublistId: 'salesteam', fieldId: 'contribution', value: parseFloat(member.contribution) });
+                        }
+
+                        salesOrderRecord.commitLine({ sublistId: 'salesteam' });
+                    });
+                }
 
                 const savedId = salesOrderRecord.save();
                 log.debug("Sales Order Updated", savedId);
@@ -2537,6 +2853,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
 
 
 
+
         function getOpportunityFormData(requestData) {
             try {
                 const opportunityFormData = model.getOpportunityFormData(requestData);
@@ -2546,6 +2863,63 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 return { success: false, message: "Failed to load opportunity form data." };
             }
         }
+        function getItemPriceLevelsUsingSearch(itemId) {
+            const result = { priceLevels: [] };
+            try {
+                if (!itemId) return result;
+                const pricingSearch = search.create({
+                    type: "pricing",
+                    filters: [
+                        ["item", "anyof", itemId]
+                    ],
+                    columns: [
+                        "pricelevel",
+                        "unitprice"
+                    ]
+                });
+                const priceLevelMap = {};
+                pricingSearch.run().each(row => {
+                    const priceLevelId = row.getValue("pricelevel");
+                    const rate = row.getValue("unitprice");
+                    if (priceLevelId) {
+                        priceLevelMap[priceLevelId] = rate;
+                    }
+                    return true;
+                });
+                const priceLevelIds = Object.keys(priceLevelMap);
+                if (priceLevelIds.length === 0) return result;
+                search.create({
+                    type: "pricelevel",
+                    filters: [
+                        ["internalid", "anyof", priceLevelIds]
+                    ],
+                    columns: ["internalid", "name"]
+                }).run().each(row => {
+                    const id = row.getValue("internalid");
+                    result.priceLevels.push({
+                        id,
+                        name: row.getValue("name"),
+                        rate: priceLevelMap[id] || null
+                    });
+                    return true;
+                });
+                result.priceLevels.push({
+                    id: "custom",
+                    name: "Custom",
+                    rate: null
+                });
+
+                log.debug("getItemPriceLevelsUsingSearch",
+                    `Fetched ${result.priceLevels.length} price levels for item ${itemId}`);
+
+            } catch (e) {
+                log.error("getItemPriceLevelsUsingSearch error", e);
+            }
+
+            return result;
+        }
+
+
         /**
              * Handles dropdown data request
              * @param {Object} response - The response object
@@ -2582,6 +2956,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 return { success: false, error: e.message };
             }
         }
+
 
         /**
  * Retrieves dependent records for a given subsidiary.
@@ -2628,6 +3003,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 });
                 const formData = {
                     title: opportunityRecord.getValue({ fieldId: 'title' }),
+                    projectSummary: opportunityRecord.getValue({ fieldId: 'custbody_jj_project_summary_invo' }),
                     details: opportunityRecord.getValue({ fieldId: 'memo' }),
                     company: opportunityRecord.getValue({ fieldId: 'entity' }),
                     status: opportunityRecord.getValue({ fieldId: 'entitystatus' }),
@@ -2656,6 +3032,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                         qty: opportunityRecord.getSublistValue({ sublistId: 'item', fieldId: 'quantity', line: lineIndex }),
                         rate: opportunityRecord.getSublistValue({ sublistId: 'item', fieldId: 'rate', line: lineIndex }),
                         amount: opportunityRecord.getSublistValue({ sublistId: 'item', fieldId: 'amount', line: lineIndex }),
+                        priceLevelId: opportunityRecord.getSublistValue({ sublistId: 'item', fieldId: 'price', line: lineIndex }),
                         classId: opportunityRecord.getSublistValue({
                             sublistId: 'item',
                             fieldId: 'class',
@@ -2779,12 +3156,16 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 const projectedTotal = request.parameters.projectedTotal ? String(request.parameters.projectedTotal).trim() : '';
                 const subsidiary = request.parameters.subsidiary ? String(request.parameters.subsidiary).trim() : '';
                 const expectedCloseParam = request.parameters.expectedClose ? String(request.parameters.expectedClose).trim() : '';
+
+                // Check required fields
                 if (!company) throw new Error('Company is required');
                 if (!status) throw new Error('Status is required');
                 if (!probability) throw new Error('Probability is required');
                 if (!projectedTotal) throw new Error('Projected Total is required');
                 if (!subsidiary) throw new Error('Subsidiary is required');
                 if (!expectedCloseParam) throw new Error('Expected Close Date is required');
+
+                // Set Opportunity record values
                 opportunityRecord.setValue({ fieldId: 'entity', value: company });
                 opportunityRecord.setValue({ fieldId: 'entitystatus', value: status });
                 opportunityRecord.setValue({ fieldId: 'probability', value: parseFloat(probability) });
@@ -2814,6 +3195,9 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     const descVal = line.desc || '';
                     const classVal = line.classId || '';
                     const departmentVal = line.departmentId || '';
+                    const priceLevelVal = line.priceLevel || '';  // Get Price Level value from the form
+
+                    // Add item to Opportunity
                     opportunityRecord.selectNewLine({ sublistId: 'item' });
                     opportunityRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'item', value: itemId });
                     opportunityRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'class', value: classVal || '' });
@@ -2822,12 +3206,48 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     opportunityRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'rate', value: rateVal });
                     opportunityRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'amount', value: amtVal });
                     opportunityRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'description', value: descVal });
+
+                    if (String(priceLevelVal).toLowerCase() === 'custom' || priceLevelVal == -1) {
+
+                        opportunityRecord.setCurrentSublistValue({
+                            sublistId: 'item',
+                            fieldId: 'price',
+                            value: -1
+                        });
+                        opportunityRecord.setCurrentSublistValue({
+                            sublistId: 'item',
+                            fieldId: 'rate',
+                            value: rateVal
+                        });
+
+                    } else {
+
+                        opportunityRecord.setCurrentSublistValue({
+                            sublistId: 'item',
+                            fieldId: 'price',
+                            value: priceLevelVal
+                        });
+
+                        opportunityRecord.setCurrentSublistValue({
+                            sublistId: 'item',
+                            fieldId: 'rate',
+                            value: rateVal
+                        });
+                    }
+
+                    opportunityRecord.setCurrentSublistValue({
+                        sublistId: 'item',
+                        fieldId: 'amount',
+                        value: amtVal
+                    });
+
                     try {
                         opportunityRecord.commitLine({ sublistId: 'item' });
                     } catch (commitErr) {
-                        log.error("Error committing line " + itemId + ", continuing with next line", commitErr);
+                        log.error("Error committing line " + itemId, commitErr);
                     }
                 });
+
                 let salesTeam = [];
                 try {
                     if (request.parameters.salesTeam) {
@@ -2926,6 +3346,9 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 if (request.parameters.title) {
                     opportunityRecord.setValue({ fieldId: 'title', value: request.parameters.title });
                 }
+                if (request.parameters.projectSummary) {
+                    opportunityRecord.setValue({ fieldId: 'custbody_jj_project_summary_invo', value: request.parameters.projectSummary });
+                }
                 if (request.parameters.forecastType) {
                     opportunityRecord.setValue({ fieldId: 'forecasttype', value: request.parameters.forecastType });
                 }
@@ -2967,6 +3390,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 const originalCompany = oppRecord.getValue({ fieldId: 'entity' });
                 setHeaderFieldsForUpdate(oppRecord, request);
                 setOptionalOpportunityFields(oppRecord, request);
+                ensureCompanyOnRecord(oppRecord, request, originalCompany);
                 let items = [];
                 try {
                     if (request.parameters.items) {
@@ -2986,24 +3410,38 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 }
                 items.forEach(line => {
                     if (!line.id) return;
+
                     const itemId = line.id;
                     const qtyVal = parseFloat(line.qty) || 1;
                     const rateVal = parseFloat(line.rate) || 0;
                     const amtVal = (line.amount !== undefined && line.amount !== null && line.amount !== '')
                         ? parseFloat(line.amount)
                         : parseFloat((qtyVal * rateVal).toFixed(2));
+
                     const descVal = line.desc || '';
                     const classVal = line.classId || '';
                     const departmentVal = line.departmentId || '';
+                    const priceLevelVal = line.priceLevel || '';
+
                     try {
                         oppRecord.selectNewLine({ sublistId: 'item' });
+
                         oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'item', value: parseInt(itemId, 10) });
-                        oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'class', value: classVal || '' });
-                        oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'department', value: departmentVal || '' });
+                        oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'class', value: classVal });
+                        oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'department', value: departmentVal });
                         oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'quantity', value: qtyVal });
-                        oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'rate', value: rateVal });
-                        oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'amount', value: amtVal });
                         oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'description', value: descVal });
+
+                        if (String(priceLevelVal).toLowerCase() === 'custom' || priceLevelVal == -1) {
+                            oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'price', value: -1 });
+                        oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'rate', value: rateVal });
+                        } else {
+                            oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'price', value: priceLevelVal });
+                            oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'rate', value: rateVal });
+                        }
+
+                        oppRecord.setCurrentSublistValue({ sublistId: 'item', fieldId: 'amount', value: amtVal });
+
                         oppRecord.commitLine({ sublistId: 'item' });
                         log.debug('Re-added item line (update)', { item: itemId, qty: qtyVal, rate: rateVal, amount: amtVal });
                     } catch (addErr) {
@@ -3012,7 +3450,6 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 });
                 let salesTeamCount = oppRecord.getLineCount({ sublistId: 'salesteam' });
                 log.debug('Existing sales team line count before update', salesTeamCount);
-                ensureCompanyOnRecord(oppRecord, request, originalCompany);
                 updateSalesTeamLines(oppRecord, request);
                 const savedId = oppRecord.save();
                 return {
@@ -3076,6 +3513,9 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                 if (request.parameters.title) {
                     opportunityRecord.setValue({ fieldId: 'title', value: request.parameters.title });
                 }
+                if (request.parameters.projectSummary) {
+                    opportunityRecord.setValue({ fieldId: 'custbody_jj_project_summary_invo', value: request.parameters.projectSummary });
+                }
                 if (request.parameters.forecastType) {
                     opportunityRecord.setValue({ fieldId: 'forecasttype', value: request.parameters.forecastType });
                 }
@@ -3126,10 +3566,18 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     log.debug('No sales team data provided, skipping update');
                     return;
                 }
-                const totalContribution = salesTeam.reduce((sum, m) => sum + (parseFloat(m.contribution) || 0), 0);
-                if (Math.abs(totalContribution - 100) > 0.01) {
+                const hasEmployee = salesTeam.some(m => m.employeeId);
+
+                const totalContribution = salesTeam.reduce((sum, m) => {
+                    if (m.employeeId) {
+                        return sum + (parseFloat(m.contribution) || 0);
+                    }
+                    return sum;
+                }, 0);
+                if (hasEmployee && Math.abs(totalContribution - 100) > 0.01) {
                     throw new Error('Sales team contributions must total 100. Current total: ' + totalContribution);
                 }
+
                 const existingCount = oppRecord.getLineCount({ sublistId: 'salesteam' }) || 0;
                 for (let i = existingCount - 1; i >= 0; i--) {
                     try {
@@ -3638,12 +4086,14 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                         name: 'Content-Type',
                         value: 'application/json'
                     });
-
+                    log.debug("post request", response)
                     let req = null;
                     let action = request.parameters.action || null;
+                    log.debug("intial ation 1", action)
                     if (action === 'createOpportunity' || action === 'updateOpportunity' || action === 'opportunityform') {
                         req = request.parameters;
                         action = req.action;
+                        skipJsonParse = true;
                     }
 
                     if (action === 'upload') {
@@ -3658,9 +4108,14 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                         JSON.parse(request.body).action === 'kanbanBoard'
                     ) {
                         let reqBody = JSON.parse(request.body);
-                        res = fetchKanbanData(reqBody.startDate, reqBody.endDate);
+                        res = fetchKanbanData(reqBody.startDate, reqBody.endDate, reqBody.userId);
 
                     }
+                    // else if (request.body.action === 'kanbanBoard') {
+                    //     let reqBody = JSON.parse(request.body);
+                    //     console.log('Kanban Board Request Body:', reqBody);
+                    //     res = fetchKanbanData(reqBody.startDate, reqBody.endDate, reqBody.userId);
+                    // }
                     else if (action === 'updateOpportunity') {
                         req = request.parameters;
                     }
@@ -3675,9 +4130,10 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                     }
 
                     req.userId = req.userId || params.userId || null;
-
+                    log.debug("request before if", req)
                     if (!action && req && req.action) {
                         action = req.action;
+                        log.debug("action  in if", action)
                     }
 
                     let res;
@@ -3699,6 +4155,9 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             break;
                         case 'opportunityform':
                             res = getOpportunityFormData(req);
+                            break;
+                        case 'getItemPriceLevels':
+                            res = getItemPriceLevelsUsingSearch(req.itemId);
                             break;
                         case 'opportunitydropdowns':
                             res = getOpportunityDropdowns();
@@ -3741,7 +4200,7 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             res = getReportData(req)
                             break;
                         case 'fetchRecords':
-                            res = fetchKanbanData(req.startDate, req.endDate);
+                            res = fetchKanbanData(req.startDate, req.endDate, req.userId);
                             break;
                         case 'updateStage':
                             res = { success: updateRecordStage(req.fromRecordType, req.toRecordType, req.fromId) };
@@ -3766,15 +4225,15 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             res.data.header.classList = model.classList(req.estimateId);
                             res.data.header.departmentList = model.departmentList(req.estimateId);
                             res.data.header.unitList = model.unitList(req.estimateId);
+                            res.data.header.priceLevelList = model.pricelevelList(req.estimateId);
                             res.data.header.salesRoleList = model.salesRoleList();
                             break;
                         case 'updateEstimate':
                             res = updateEstimateRecord(req);
                             break;
-                        case 'getItemDetails': 
+                        case 'getItemDetails':
                             res = model.getItemDetails(req.itemId);
                             break;
-
 
                         case 'getKanbanOpportunityDetails':
                             res = getKanbanOpportunityDetails(req.opportunityId);
@@ -3790,6 +4249,9 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             res.data.soOpportunityDetails = model.soOpportunityDetails(req.salesOrderId);
                             res.data.soItemList = model.soItemList(req.salesOrderId);
                             res.data.soEmployeeList = model.salesRepList();
+                            res.data.soUnitList = model.soUnitList(req.salesOrderId);
+                            res.data.soSalesRoleList = model.salesRoleList();
+                            res.data.soPriceLevelList = getSalesOrderPriceLevels(req.salesOrderId);
                             break;
 
                         case 'updateSalesOrder':
@@ -3825,8 +4287,9 @@ define(['N/file', 'crypto', 'N/crypto', 'N/record', '../MODEL/jj_cm_model.js', '
                             res = approveSo(req);
                             break;
 
+
                         case 'getQuoteStatuses':
-                            const statuses = getQuoteStatuses(record); // your helper function
+                            const statuses = getQuoteStatuses(record);
                             res = { success: true, statuses: statuses };
                             break;
 

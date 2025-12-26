@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Opportunity</title>
+  <style>
+    :root {
+      --brand-primary: #0c6c73;
+      --brand-light: #e6f5f5;
+      --brand-dark: #0a514a;
+      --text: #2c3e50;
+      --muted: #7f8c8d;
+      --bg: #f5faf8;
+      --card: #fafcfb;
+      --border: #c7e9d0;
+      --radius: 8px;
+      --btn-color: #0c6c73;
+      --heading-color: #0a514a;
+      --shadow: 0 1px 3px rgba(12, 108, 115, 0.06), 0 2px 6px rgba(12, 108, 115, 0.04);
+      --shadow-lg: 0 2px 8px rgba(12, 108, 115, 0.12), 0 4px 12px rgba(12, 108, 115, 0.08);
+      --focus: #0c6c73;
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
+      color: var(--text);
+      background: linear-gradient(135deg, #f5faf8 0%, #f0f8f5 100%);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      font-weight: 400;
+    }
+
+    .wrap {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: clamp(8px, 2.5vw, 16px)
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: clamp(10px, 1.5vw, 14px);
+      flex-wrap: wrap;
+      gap: clamp(12px, 2vw, 16px);
+      background: #fff;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+
+    .header nav a {
+      text-decoration: none;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .brand-icon {
+      width: clamp(100px, 18vw, 160px);
+      height: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.08));
+    }
+
+    h1 {
+      font-size: clamp(18px, 4.5vw, 28px);
+      margin: clamp(8px, 1.5vw, 12px) 0 clamp(10px, 1.5vw, 14px);
+      color: var(--heading-color);
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.2px
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: clamp(12px, 2.5vw, 16px);
+      transition: all 0.2s ease;
+    }
+
+    .card:hover {
+      box-shadow: var(--shadow-lg);
+      border-color: var(--btn-color)
+    }
+
+    .section-title {
+      font-weight: 700;
+      color: var(--heading-color);
+      font-size: clamp(12px, 3vw, 14px);
+      text-transform: uppercase;
+      margin: clamp(10px, 1.5vw, 12px) 0 clamp(6px, 1vw, 8px);
+      padding-bottom: clamp(4px, 0.8vw, 6px);
+      border-bottom: 2px solid var(--brand-light);
+      letter-spacing: 0.15px
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(clamp(130px, 35vw, 260px), 1fr));
+      gap: clamp(8px, 1.5vw, 12px)
+    }
+
+    .grid-1 {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: clamp(8px, 1.5vw, 12px)
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: clamp(3px, 0.8vw, 4px)
+    }
+
+    .sub-label {
+      font-size: clamp(9px, 1.5vw, 11px);
+      font-weight: 700;
+      color: var(--heading-color);
+      text-transform: uppercase;
+      margin: clamp(2px, 0.5vw, 4px) 0;
+      letter-spacing: 0.1px
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: clamp(7px, 1.5vw, 9px);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      font-size: clamp(11px, 1.5vw, 12px);
+      font-family: inherit;
+      background: var(--card);
+      color: var(--text);
+      transition: all 0.15s ease;
+      box-shadow: 0 1px 2px rgba(82, 183, 136, 0.03);
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--btn-color);
+      box-shadow: 0 0 0 2px rgba(12, 108, 115, 0.1), 0 1px 2px rgba(12, 108, 115, 0.05);
+      background: #fff;
+    }
+
+    textarea {
+      min-height: clamp(50px, 12vw, 80px);
+      resize: vertical
+    }
+
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: clamp(6px, 1.2vw, 10px);
+      margin-top: clamp(12px, 2vw, 16px);
+      flex-wrap: wrap;
+      padding-top: clamp(8px, 1.2vw, 10px);
+      border-top: 1px solid var(--brand-light);
+    }
+
+    .btn {
+      appearance: none;
+      border: none;
+      border-radius: 5px;
+      padding: clamp(8px, 1.2vw, 9px) clamp(12px, 1.8vw, 16px);
+      font-weight: 700;
+      font-size: clamp(11px, 1.5vw, 12px);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      min-width: clamp(75px, 22vw, 110px);
+      letter-spacing: 0.1px;
+      text-transform: uppercase;
+    }
+
+    .btn-primary {
+      background: var(--btn-color);
+      color: #fff;
+      box-shadow: 0 1px 4px rgba(12, 108, 115, 0.2), 0 1px 2px rgba(0, 0, 0, 0.06);
+    }
+
+    .btn-primary:hover {
+      filter: brightness(0.95);
+      box-shadow: 0 2px 8px rgba(12, 108, 115, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: var(--brand-light);
+      color: var(--btn-color);
+      box-shadow: 0 1px 3px rgba(12, 108, 115, 0.1), 0 1px 2px rgba(0, 0, 0, 0.02);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--btn-color);
+      color: #fff;
+      box-shadow: 0 2px 6px rgba(12, 108, 115, 0.2), 0 1px 3px rgba(0, 0, 0, 0.08);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary:active {
+      transform: translateY(0);
+    }
+
+    .btn-load {
+      background: var(--btn-color);
+      color: #fff;
+      box-shadow: 0 1px 4px rgba(12, 108, 115, 0.2), 0 1px 2px rgba(0, 0, 0, 0.06);
+      padding: clamp(8px, 1.2vw, 9px) clamp(10px, 1.5vw, 12px);
+      min-width: auto;
+      font-size: clamp(10px, 1.3vw, 11px);
+    }
+
+    .btn-load:hover {
+      background: var(--btn-color);
+      box-shadow: 0 2px 6px rgba(12, 108, 115, 0.25), 0 1px 2px rgba(0, 0, 0, 0.08);
+      transform: translateY(-1px);
+    }
+
+    .alert {
+      padding: clamp(8px, 1.5vw, 10px) clamp(10px, 1.8vw, 12px);
+      border-radius: 5px;
+      margin-bottom: clamp(8px, 1.5vw, 10px);
+      display: none;
+      animation: slideDown 0.25s ease;
+      word-wrap: break-word;
+      font-size: clamp(11px, 1.5vw, 12px);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      border-left: 3px solid;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .alert.show {
+      display: block;
+    }
+
+    .alert-error {
+      background-color: #fee;
+      border-left-color: #d32f2f;
+      color: #b71c1c;
+      font-weight: 500;
+    }
+
+    .alert-success {
+      background-color: var(--brand-light);
+      border-left-color: var(--brand-primary);
+      color: var(--brand-dark);
+      font-weight: 500;
+    }
+
+    .alert-close {
+      cursor: pointer;
+      float: right;
+      font-weight: bold;
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .field.error input,
+    .field.error select {
+      border-color: #d32f2f;
+      background-color: #fee;
+      box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.08);
+    }
+
+    .mode-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: clamp(8px, 1.5vw, 12px);
+      align-items: flex-end;
+    }
+
+    .mode-row .field {
+      grid-column: span 1;
+    }
+
+    .mode-row .btn-load {
+      align-self: flex-end;
+      margin-bottom: 0;
+    }
+
+    @media (max-width: 768px) {
+      .mode-row {
+        grid-template-columns: 1fr;
+      }
+
+      .mode-row .btn-load {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .wrap {
+        padding: clamp(6px, 2vw, 10px)
+      }
+
+      .grid {
+        grid-template-columns: 1fr
+      }
+
+      .header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: clamp(8px, 1.5vw, 12px)
+      }
+
+      .brand-icon {
+        width: clamp(100px, 25vw, 150px)
+      }
+
+      .btn {
+        min-width: 100%;
+        padding: clamp(8px, 1.5vw, 10px) clamp(12px, 2vw, 16px)
+      }
+
+      .actions {
+        flex-direction: column
+      }
+
+      input,
+      select,
+      textarea {
+        font-size: 16px;
+        padding: clamp(8px, 1.8vw, 10px)
+      }
+
+      h1 {
+        font-size: clamp(18px, 4.5vw, 24px)
+      }
+
+      .card {
+        padding: clamp(10px, 2vw, 14px)
+      }
+    }
+
+    @media (max-width: 480px) {
+      .wrap {
+        padding: clamp(4px, 2vw, 8px)
+      }
+
+      h1 {
+        font-size: clamp(16px, 4vw, 20px);
+        margin: clamp(6px, 1vw, 8px) 0 clamp(6px, 1vw, 10px)
+      }
+
+      .card {
+        padding: clamp(8px, 1.8vw, 11px)
+      }
+
+      .section-title {
+        font-size: clamp(11px, 2.5vw, 13px);
+        margin: clamp(6px, 1vw, 8px) 0 clamp(4px, 0.8vw, 6px)
+      }
+
+      .sub-label {
+        font-size: clamp(9px, 1.5vw, 10px)
+      }
+
+      input,
+      select,
+      textarea {
+        padding: clamp(7px, 1.5vw, 9px);
+        font-size: 16px;
+        border-width: 1px
+      }
+
+      .grid {
+        gap: clamp(8px, 1.5vw, 10px)
+      }
+
+      .btn {
+        padding: clamp(8px, 1.3vw, 9px) clamp(12px, 1.8vw, 14px);
+        font-size: clamp(11px, 1.5vw, 12px);
+        min-width: clamp(75px, 22vw, 110px)
+      }
+
+      .alert {
+        padding: clamp(8px, 1.5vw, 10px) clamp(10px, 1.8vw, 12px);
+        font-size: clamp(11px, 1.5vw, 12px)
+      }
+    }
+
+    @media (max-width: 360px) {
+      .wrap {
+        padding: clamp(3px, 1.5vw, 6px)
+      }
+
+      h1 {
+        font-size: clamp(14px, 3.5vw, 18px);
+        margin: clamp(4px, 0.8vw, 6px) 0 clamp(4px, 0.8vw, 8px)
+      }
+
+      .card {
+        padding: clamp(6px, 1.5vw, 9px)
+      }
+
+      .section-title {
+        font-size: clamp(10px, 2vw, 12px);
+        margin: clamp(4px, 0.8vw, 6px) 0 clamp(3px, 0.5vw, 5px);
+        padding-bottom: clamp(4px, 0.5vw, 6px)
+      }
+
+      .sub-label {
+        font-size: clamp(8px, 1.5vw, 9px)
+      }
+
+      input,
+      select,
+      textarea {
+        padding: clamp(6px, 1.3vw, 8px);
+        font-size: 13px;
+        border-width: 1px;
+        border-radius: 4px
+      }
+
+      .grid {
+        gap: clamp(6px, 1vw, 8px)
+      }
+
+      .btn {
+        padding: clamp(7px, 1vw, 8px) clamp(10px, 1.5vw, 12px);
+        font-size: clamp(10px, 1.3vw, 11px);
+        min-width: clamp(65px, 20vw, 90px);
+        border-radius: 5px
+      }
+
+      .header {
+        padding: clamp(8px, 1vw, 10px)
+      }
+
+      .brand-icon {
+        width: clamp(80px, 20vw, 100px)
+      }
+
+      .alert {
+        padding: clamp(6px, 1.2vw, 8px) clamp(8px, 1.5vw, 10px);
+        font-size: clamp(10px, 1.3vw, 11px)
+      }
+    }
+
+    @media (max-height: 500px) {
+      .wrap {
+        padding: clamp(3px, 1.5vw, 6px)
+      }
+
+      .card {
+        padding: clamp(8px, 1.5vw, 10px)
+      }
+
+      .section-title {
+        margin: clamp(4px, 0.8vw, 6px) 0 clamp(4px, 0.6vw, 6px);
+        font-size: clamp(11px, 2.5vw, 12px)
+      }
+
+      input,
+      select,
+      textarea {
+        padding: clamp(6px, 1.2vw, 8px);
+        margin: clamp(1px, 0.3vw, 2px) 0
+      }
+
+      .btn {
+        padding: clamp(7px, 1vw, 9px) clamp(12px, 1.5vw, 14px);
+        font-size: clamp(11px, 1.5vw, 12px)
+      }
+
+      h1 {
+        font-size: clamp(14px, 3.5vw, 18px);
+        margin: clamp(3px, 0.5vw, 5px) 0
+      }
+    }
+
+    @media (min-width: 1200px) {
+      .wrap {
+        max-width: 1000px;
+        padding: clamp(10px, 2.5vw, 16px)
+      }
+
+      .grid {
+        grid-template-columns: repeat(2, 1fr)
+      }
+
+      .card {
+        padding: clamp(14px, 2.5vw, 20px)
+      }
+    }
+
+    @media (min-width: 1600px) {
+      .wrap {
+        max-width: 1100px;
+        padding: clamp(12px, 2.5vw, 18px)
+      }
+
+      .card {
+        padding: clamp(16px, 2.5vw, 22px)
+      }
+
+      .brand-icon {
+        width: clamp(180px, 18vw, 240px)
+      }
+    }
+
+    @media (min-width: 768px) and (max-width: 1024px) {
+      .wrap {
+        max-width: 90%;
+        padding: clamp(8px, 2vw, 12px)
+      }
+
+      .grid {
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr))
+      }
+
+      .header nav {
+        flex-wrap: wrap;
+        gap: 8px;
+        font-size: clamp(12px, 2vw, 13px)
+      }
+
+      .brand-icon {
+        width: clamp(120px, 18vw, 160px)
+      }
+
+      .card {
+        padding: clamp(11px, 2vw, 15px)
+      }
+    }
+
+    @media (hover: none) and (pointer: coarse) {
+      .btn {
+        padding: clamp(10px, 1.8vw, 12px) clamp(14px, 2.5vw, 18px);
+        min-height: 44px;
+        border-radius: 6px
+      }
+
+      input,
+      select,
+      textarea {
+        padding: clamp(10px, 1.8vw, 12px);
+        min-height: 44px;
+        border-radius: 6px
+      }
+
+      .btn:active {
+        transform: scale(0.95);
+        filter: brightness(0.95)
+      }
+
+      .btn-primary:active {
+        background: linear-gradient(135deg, var(--brand-dark) 0%, #2d4870 100%)
+      }
+    }
+
+    @media print {
+
+      .alert,
+      .header nav,
+      .actions,
+      .section-title {
+        display: none
+      }
+
+      body {
+        background: #fff;
+        color: #000
+      }
+
+      .card {
+        box-shadow: none;
+        border: 1px solid #999;
+        page-break-inside: avoid
+      }
+
+      .wrap {
+        padding: 12px;
+        max-width: 100%
+      }
+
+      .header {
+        border: none;
+        padding: 6px 0;
+        background: none
+      }
+    }
+
+
+    .line-items-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    .line-items-table th,
+    .line-items-table td {
+      padding: 8px 10px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+
+    .line-items-table thead th {
+      font-weight: 700;
+      color: var(--heading-color);
+      text-transform: uppercase;
+      font-size: clamp(11px, 1.5vw, 13px);
+      border-bottom: 2px solid var(--brand-light);
+    }
+
+    .line-items-table tbody td input,
+    .line-items-table tbody td select {
+      width: 100%;
+      padding: 6px 8px;
+      font-size: 13px;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 2px rgba(12, 108, 115, 0.03);
+    }
+
+    .remove-line {
+      background: var(--btn-color);
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      padding: 4px 8px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .remove-line:hover {
+      filter: brightness(0.95);
+    }
+
+    .remove-st-line {
+      background: var(--btn-color);
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      padding: 4px 8px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .remove-st-line:hover {
+      filter: brightness(0.95);
+    }
+
+    @media (max-width: 768px) {
+      .line-items-table thead {
+        display: none;
+      }
+
+      .line-items-table tbody tr {
+        display: block;
+        margin-bottom: 12px;
+        border-radius: var(--radius);
+        padding: 10px;
+        background: var(--card);
+        box-shadow: var(--shadow);
+      }
+
+      .line-items-table tbody td {
+        display: flex;
+        justify-content: flex-start;
+        padding: 6px 0;
+        border: none;
+        flex-wrap: wrap;
+      }
+
+
+
+      .line-items-table tbody td:before {
+        content: attr(data-label);
+        font-weight: 700;
+        color: var(--heading-color);
+        text-transform: uppercase;
+        flex-basis: 40%;
+        margin-right: 8px;
+        font-size: 12px;
+      }
+
+      .line-items-table tbody td input,
+      .line-items-table tbody td select {
+        flex: 1 1 55%;
+      }
+
+      .remove-line {
+        margin-top: 8px;
+        width: auto;
+      }
+
+      #addLineBtn {
+        width: 100%;
+      }
+    }
+
+    .required {
+      color: red;
+      font-weight: bold;
+    }
+
+    .item-desc {
+      width: 100%;
+      min-height: 120px;
+      font-size: 14px;
+      padding: 8px;
+      box-sizing: border-box;
+      resize: vertical;
+    }
+
+    #panelTiles {
+      display: flex;
+      gap: 12px;
+    }
+
+    @media (max-width: 768px) {
+      #panelTiles {
+        flex-direction: column;
+      }
+
+      #panelTiles .btn {
+        width: 100%;
+      }
+
+      #itemsPanel,
+      #salesTeamPanel {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 768px) {
+      #salesTeamTable thead {
+        display: none;
+      }
+
+      #salesTeamTable tbody tr {
+        display: block;
+        margin-bottom: 10px;
+        padding: 10px;
+        border-radius: 6px;
+        background: var(--card);
+        box-shadow: var(--shadow);
+      }
+
+      #salesTeamTable tbody tr td {
+        display: block;
+        width: 100%;
+        padding: 6px 0;
+        border: none;
+      }
+
+      #salesTeamTable tbody tr td:before {
+        content: attr(data-label) ": ";
+        font-weight: 700;
+        display: inline-block;
+        width: 120px;
+      }
+
+      #salesTeamTable select,
+      #salesTeamTable input {
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      #salesTeamTable .remove-st-line {
+        width: 48px;
+        height: 36px;
+      }
+    }
+
+    #line-items-table,
+    #line-items-table table,
+    #line-items-table th,
+    #line-items-table td {
+      table-layout: fixed;
+    }
+
+    .line-items-table th:not(:nth-child(2)),
+    .line-items-table td:not(:nth-child(2)) {
+      width: 120px;
+      max-width: 120px;
+      overflow: hidden;
+    }
+
+    .line-items-table th:nth-child(2),
+    .line-items-table td:nth-child(2) {
+      width: auto;
+    }
+
+    .line-items-table input,
+    .line-items-table select,
+    .line-items-table textarea {
+      width: 100%;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+
+<body>
+
+  <script src="https://td3047046.app.netsuite.com/core/media/media.nl?id=1438&c=TD3047046&h=joIRhuH4ppMYUlBARn7IrK5s0HNwF_X-sAEmWtYyc7TN2Kg2&_xt=.js%22"></script>
+  <div id="sessionExpired" style="display:none; text-align:center;">
+    <h1>Session Expired</h1>
+    <p>Your session has expired. Please <a href="https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM">log in</a> again.</p>
+  </div>
+<div id="mainContainer">
+  <div class="wrap">
+    <header class="header">
+      <img src="https://www.jobinandjismi.com/images/secondary-logo.svg" alt="Jobin & Jismi Logo" class="brand-icon" />
+
+    </header>
+    <h1>Opportunity</h1>
+    <form class="card" method="post"
+      action="https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM"
+      onsubmit="return handleFormSubmit(event);" id="opportunityform">
+      <div id="alertContainer" class="alert alert-error">
+        <span class="alert-close" onclick="closeAlert()">&times;</span>
+        <div id="alertMessage"></div>
+      </div>
+
+      <div id="successContainer" class="alert alert-success">
+        <span class="alert-close" onclick="closeAlert()">&times;</span>
+        <div id="successMessage"></div>
+      </div>
+
+      <div class="section-title">MODE SELECTION</div>
+
+      <div class="mode-row">
+        <div class="field">
+          <label for="operationMode" class="sub-label">OPERATION</label>
+          <select id="operationMode" name="operationMode" onchange="handleModeChange()">
+            <option value="create">Create New Opportunity</option>
+            <option value="update">Update Existing Opportunity</option>
+          </select>
+        </div>
+
+        <div class="field" id="opportunityIdField" style="display: none;">
+          <label for="updateOpportunityId" class="sub-label">OPPORTUNITY ID</label>
+          <input id="updateOpportunityId" name="updateOpportunityId" type="text" placeholder="Enter ID" />
+        </div>
+
+        <button type="button" class="btn btn-load" id="loadBtn" style="display: none;"
+          onclick="loadOpportunityById()">Load</button>
+      </div>
+
+      <div class="section-title">PRIMARY INFORMATION</div>
+
+      <div class="grid">
+        <div class="field">
+          <label for="oppNumber" class="sub-label">OPPORTUNITY#</label>
+          <input id="oppNumber" name="oppNumber" type="text" disabled />
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="field">
+          <label for="title" class="sub-label">TITLE<span class="required">*</span></label>
+          <input id="title" name="title" type="text" required />
+        </div>
+
+
+        <div class="field">
+          <label for="company" class="sub-label">COMPANY</label>
+          <select id="company" name="company">
+            <option value="">Select Company<span class="required">*</span></option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid-1">
+        <div class="field">
+          <label for="details" class="sub-label">DETAILS</label>
+          <textarea id="details" name="details"></textarea>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="field">
+          <label for="status" class="sub-label">STATUS<span class="required">*</span></label>
+          <select id="status" name="status"></select>
+        </div>
+
+        <div class="field">
+          <label for="probability" class="sub-label">PROBABILITY (%)<span class="required">*</span></label>
+          <input id="probability" name="probability" type="text" placeholder="0.00" />
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="field">
+          <label for="expectedClose" class="sub-label">EXPECTED CLOSE DATE<span class="required">*</span></label>
+          <input id="expectedClose" name="expectedClose" type="date" />
+        </div>
+      </div>
+
+      <div class="section-title">FORECASTING</div>
+
+      <div class="grid">
+        <div class="field">
+          <label for="projectedTotal" class="sub-label">PROJECTED TOTAL<span class="required">*</span></label>
+          <input id="projectedTotal" name="projectedTotal" type="text" placeholder="0.00" />
+        </div>
+
+        <div class="field">
+          <label for="forecastType" class="sub-label">FORECAST TYPE</label>
+          <select id="forecastType" name="forecastType"></select>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="field">
+          <label for="rangeFrom" class="sub-label">RANGE FROM</label>
+          <input id="rangeFrom" name="rangeFrom" type="text" placeholder="0.00" />
+        </div>
+
+        <div class="field">
+          <label for="rangeTo" class="sub-label">RANGE TO</label>
+          <input id="rangeTo" name="rangeTo" type="text" placeholder="0.00" />
+        </div>
+      </div>
+
+      <div class="section-title">CLASSIFICATION</div>
+
+      <div class="grid">
+        <div class="field">
+          <label for="subsidiary" class="sub-label">SUBSIDIARY<span class="required">*</span></label>
+          <select id="subsidiary" name="subsidiary"></select>
+        </div>
+
+        <div class="field">
+          <label for="department" class="sub-label">DEPARTMENT<span class="required">*</span></label>
+          <select id="department" name="department"></select>
+        </div>
+
+        <div class="field">
+          <label for="class" class="sub-label">CLASS<span class="required">*</span></label>
+          <select id="class" name="class"></select>
+        </div>
+
+
+        <div class="field">
+          <label for="location" class="sub-label">LOCATION<span class="required">*</span></label>
+          <select id="location" name="location"></select>
+        </div>
+        <div class="field">
+          <label for="projectSummary" class="sub-label">Project Summary</label>
+          <input id="projectSummary" name="projectSummary" type="text" />
+        </div>
+
+        <div class="field" style="grid-column: span 2;">
+          <label for="salesType" class="sub-label">SALES TYPE<span class="required">*</span></label>
+          <select id="salesType" name="salesType"></select>
+        </div>
+      </div>
+
+      <div id="panelTiles" style="display:flex;gap:12px;margin-top:12px;margin-bottom:8px;">
+        <button type="button" id="tileItems" class="btn btn-secondary" style="flex:1;"
+          aria-pressed="true">Items</button>
+        <button type="button" id="tileSalesTeam" class="btn btn-secondary" style="flex:1;" aria-pressed="false">Sales
+          Team</button>
+      </div>
+
+      <div id="itemsPanel">
+        <div class="section-title">Items</div>
+
+        <table id="itemTable" class="line-items-table">
+          <thead>
+            <tr>
+              <th class="line-header">Item</th>
+              <th class="line-header">Description</th>
+              <th class="line-header class-header">Class</th>
+              <th class="line-header dept-header">Department</th>
+              <th class="line-header">Qty</th>
+              <th class="line-header">Price Level</th>
+              <th class="line-header item-rate-header">Rate</th>
+              <th class="line-header item-amount-header">Amount</th>
+              <th class="line-header">Action</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr class="line-row">
+              <td data-label="Item"><select class="item-select" name="item[]"></select></td>
+              <td data-label="Description">
+                <textarea class="item-desc" name="itemdesc[]" rows="3"></textarea>
+              </td>
+              <td data-label="Class">
+                <select class="item-class" name="itemclass[]"></select>
+              </td>
+              <td data-label="Department">
+                <select class="item-dept" name="itemdept[]"></select>
+              </td>
+              <td data-label="Qty"><input type="number" class="item-qty" name="itemqty[]" value="1" min="1" /></td>
+              <td data-label="Price Level">
+                <select class="item-pricelevel" name="itempricelevel[]"></select>
+              <td data-label="Rate"><input type="number" class="item-rate" name="itemrate[]" readonly /></td>
+              <td data-label="Amount"><input type="number" class="item-amount" name="itemamount[]" readonly /></td>
+              <td data-label="Action"><button type="button" class="remove-line">✕</button></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <button type="button" id="addLineBtn" class="btn btn-secondary" style="margin-top:10px;">+ Add </button>
+      </div>
+
+
+      <div id="salesTeamPanel" style="display:none;margin-top:14px;">
+        <div class="section-title">Sales Team</div>
+
+
+        <table id="salesTeamTable" class="line-items-table">
+          <thead>
+            <tr>
+
+              <th class="line-header">Sales Role</th>
+              <th class="line-header">Employee</th>
+              <th class="line-header">Primary</th>
+              <th class="line-header">Contribution (%)</th>
+              <th class="line-header">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="st-line-row">
+              <td data-label="Sales Role"><select class="salesrole-select" name="role[]">
+                  <option value="">Select Role</option>
+                </select></td>
+              <td data-label="Employee"><select class="employee-select" name="employee[]">
+                  <option value="">Select Employee</option>
+                </select></td>
+              <td data-label="Primary"><input type="checkbox" class="is-primary" name="primary[]" /></td>
+              <td data-label="Contribution"><input type="number" class="contribution" name="contribution[]" value="0"
+                  min="0" max="100" /></td>
+              <td data-label="Action"><button type="button" class="remove-st-line">✕</button></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="margin-top:10px;">
+          <button type="button" id="addSalesTeamBtnBottom" class="btn btn-secondary" style="margin-top:4px;">+
+            Add</button>
+        </div>
+
+      </div>
+
+      <div class="actions">
+        <button type="reset" class="btn btn-secondary">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+  <!-- NOTE: All functions from this HTML file have been moved to jj_front_end_actions.js -->
+  <!-- The following functions are now in jj_front_end_actions.js:
+       - isFieldRequired, isValidFutureDate, isPositiveNumber
+       - showErrorAlert, showSuccessAlert, closeAlertOpp
+       - markFieldError, clearFieldErrors, validateForm, validateContribution
+       - setupRealTimeValidation, hideSalesTeamSection, hideRateAndAmount
+       - checkAndApplyRateVisibilityPOST, loadDropdowns, handleModeChange
+       - loadOpportunityById, updateItemAmount, updateTotals
+       - ensureHiddenOpportunityIdInput, formDataToJSON, handleFormSubmit
+       - loadSubsidiaryDependents, clearSubsidiaryDependents
+       - attachRowEvents, attachSalesTeamRowEvents, defineSalesTeam
+       - evaluatePanelsVisibility, setActiveTile
+       - addSalesTeamRow, setupItemEventListeners, setupCompanyChangeListener
+       - setupItemRowUpdateListeners, setupAddLineButtonListener
+       - setupAddSalesTeamButtonListener, setupTileButtonListeners
+       - setupFormSubmitListener, setupInitialLineRowListeners
+       - setupNavigationListeners, initializeOpportunityFormListeners
+  -->
+  <script src="https://td3047046.app.netsuite.com/core/media/media.nl?id=1438&c=TD3047046&h=joIRhuH4ppMYUlBARn7IrK5s0HNwF_X-sAEmWtYyc7TN2Kg2&_xt=.js%22"></script>
+  <script>
+    const baseUrl = "https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM";
+
+    document.addEventListener('DOMContentLoaded', function () {
+      loadDropdowns();
+      checkAndApplyRateVisibilityPOST(baseUrl);
+      setupRealTimeValidation();
+      handleModeChange();
+      initializeOpportunityFormListeners();
+      evaluatePanelsVisibility();
+    });
+  </script>
+</body>

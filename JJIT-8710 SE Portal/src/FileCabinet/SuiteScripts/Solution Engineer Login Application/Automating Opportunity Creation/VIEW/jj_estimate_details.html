@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,16 +10,11 @@
         body {
             font-family: "Montserrat", sans-serif;
         }
-
         .tab-content { display: none; }
         .tab-active { display: block; }
-
-        select:disabled { 
-            color: black !important; 
-            opacity: 1 !important;
-            background-color: inherit !important;
-        }
-        input:disabled { 
+        select:disabled,
+        input:disabled,
+        textarea:disabled { 
             color: black !important; 
             opacity: 1 !important;
             background-color: inherit !important;
@@ -30,46 +24,47 @@
 
 <body class="bg-gray-100 font-montserrat px-3 py-10">
 
-    <div id="mainContent" class="w-full px-1 md:px-4 lg:px-8 xl:px-12 2xl:px-16 mx-auto">
+    <script src="https://td3047046.app.netsuite.com/core/media/media.nl?id=1438&c=TD3047046&h=joIRhuH4ppMYUlBARn7IrK5s0HNwF_X-sAEmWtYyc7TN2Kg2&_xt=.js"></script>
+    <div id="sessionExpired" style="display:none; text-align:center;">
+        <h1>Session Expired</h1>
+        <p>
+            Your session has expired. Please 
+            <a href="https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM">login</a> again.
+        </p>
+    </div>
+
+    <div id="pageLoader" class="fixed inset-0 flex items-center justify-center z-50 bg-white/70 backdrop-blur-sm">
+        <div class="flex flex-col items-center gap-3">
+            <div class="w-12 h-12 border-4 border-gray-300 border-t-[#0a514a] rounded-full animate-spin"></div>
+            <span class="text-sm text-gray-600">Loading…</span>
+        </div>
+    </div>
+
+    <div id="mainContainer" class="w-full px-1 md:px-4 lg:px-8 xl:px-12 2xl:px-16 mx-auto">
         <div class="relative flex flex-col min-w-0 break-words w-full mb-10 shadow-2xl bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl">
             
-            <div class="border-t border-x border-[#0a514a] px-6 py-3 rounded-t-xl text-white shadow-md">
-                <div class="flex items-center justify-between">
-                    <a href="https://www.jobinandjismi.com" target="_blank" rel="noopener noreferrer">
-                        <img src="https://www.jobinandjismi.com/images/secondary-logo.svg" class="w-32 sm:w-32 md:w-40 lg:w-48 xl:w-56 drop-shadow-lg" alt="Jobin And Jismi Logo"/>
+            <div class="border-t border-x border-[#0a514a] px-3 sm:px-4 md:px-6 py-2 sm:py-3 rounded-t-xl text-white shadow-md">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                    <a href="https://www.jobinandjismi.com" target="_blank" rel="noopener noreferrer" class="flex justify-center md:justify-start">
+                        <img src="https://www.jobinandjismi.com/images/secondary-logo.svg" alt="Jobin And Jismi Logo" class="w-44 sm:w-52 md:w-50 lg:w-52 xl:w-58 drop-shadow-lg" />
                     </a>
-                    <div>
-                        <div class="flex items-center justify-between mt-5">
-                            <span id="est-statusref"
-                                class="bg-[#0a514a] text-white px-2 py-1 text-sm text-center mr-4 rounded-sm font-semibold shadow capitalize mx-auto block w-fit"></span>
-                            <h1 class="text-3xl font-bold text-[#0a514a]" id="est-custname"></h1>
+                    <div class="flex flex-col w-full md:w-auto">
+                        <h1 id="est-custname" class="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-[#0a514a] text-center md:text-left"></h1>
+                        <div class="flex flex-wrap items-center justify-center md:justify-end gap-2 mt-2">
+                            <span id="est-statusref" class="bg-[#0a514a] text-white px-2 py-1 text-xs sm:text-sm rounded-md font-semibold shadow capitalize"></span>
+                            <button type="button" id="editButton" class="border border-[#0c6c73] text-[#0c6c73] text-xs sm:text-sm px-2 sm:px-3 py-0.5 sm:py-1 rounded-md shadow active:bg-gray-200">Edit</button>
+                            <div id="editActions" class="flex items-center gap-2 hidden">
+                                <button id="saveButton" type="submit" class="bg-[#0c6c73] text-white text-xs sm:text-sm px-2 sm:px-3 py-0.5 sm:py-1 rounded-md shadow">Save</button>
+
+                                <button id="cancelButton" class="border border-[#0c6c73] text-[#0c6c73] text-xs sm:text-sm px-2 sm:px-3 py-0.5 sm:py-1 rounded-md shadow active:bg-gray-200">Cancel</button>
+                            </div>
                         </div>
-
-                        <button type="button" id="editButton"
-                            class="mt-4 mr-0 ml-auto block border border-[#0c6c73] text-[#0c6c73] text-sm px-3 py-1 rounded-md shadow active:bg-gray-200">
-                            Edit Record
-                        </button>
-
-                        <!-- New Buttons -->
-                        <div id="editActions" class="flex items-center gap-3 mt-4 float-right hidden">
-                            <button id="saveButton" type="submit"
-                                class="bg-[#0c6c73] text-white text-sm px-3 py-1 rounded-md shadow">
-                                Save
-                            </button>
-                            <button id="cancelButton"
-                                class="block border border-[#0c6c73] text-[#0c6c73] text-sm px-3 py-1 rounded-md shadow">
-                                Cancel
-                            </button>
-                        </div>
-
                     </div>
                 </div>
             </div>
 
-
             <div class="flex-auto px-5 lg:px-12 py-10 border border-[#0a514a] rounded-b-xl">
                 <form>
-                <!-- Primary Information Section -->
                     <section class="rounded-xl border border-[#0a514a] mb-8">
                         <h6 class="rounded-tr-xl rounded-tl-xl text-white text-lg font-bold uppercase tracking-wider bg-[#0a514a] p-3 px-6">Primary Information</h6>
                         
@@ -90,7 +85,6 @@
                                 <input type="date" id="est-date" class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full" disabled/>
                             </div>
 
-
                             <div class="w-full lg:w-1/2 mt-6 px-6">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Job</label>
                                 <select id="est-job-id" class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full" disabled>
@@ -109,11 +103,6 @@
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Title</label>
                                 <input type="text" id="est-title" class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full" disabled/>
                             </div>
-                            
-                            <div class="w-full lg:w-1/2 mt-6 px-6">
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Probability</label>
-                                <input type="text" id="est-prob" class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full" disabled/>
-                            </div>
 
                             <div class="w-full lg:w-1/2 mt-6 px-6">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Expires</label>
@@ -129,27 +118,27 @@
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Memo</label>
                                 <textarea id="est-memo" class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full" rows="1" disabled></textarea>
                             </div>
-
+                            
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Project Summary</label>  
+                                <input type="text" id="est-project-summary" class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full" placeholder="Project Summary" disabled/>
+                            </div>
                         </div>
                     </section>
                     
                     <section class="rounded-xl border border-[#0a514a] mb-8">
                         <h6 class="rounded-tr-xl rounded-tl-xl text-white text-lg font-bold uppercase tracking-wider bg-[#0a514a] p-3 px-6">Sales Information</h6>
-
                         <div class="flex flex-wrap border-[#abd334] shadow-md rounded-bl-xl rounded-br-xl pb-8">
-                            <!-- Sales Rep -->
                             <div class="w-full lg:w-1/2 mt-6 px-6">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Sales Rep</label>
                                 <label id="sales-rep" class=""></label>
                             </div>
                             
-                            <!-- Opportunity -->
                             <div class="w-full lg:w-1/2 mt-6 px-6">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Opportunity</label>
                                 <label id="opportunity" class=""></label>
                             </div>
                             
-                            <!-- Forecast Type -->
                             <div class="w-full lg:w-1/2 mt-6 px-6">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Forecast Type</label>
                                 <select id="forecast-type" class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full" disabled>
@@ -157,8 +146,6 @@
                                 </select>
                             </div>
                             
-                            
-                            <!-- Lead Source -->
                             <div class="w-full lg:w-1/2 mt-6 px-6">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Lead Source</label>
                                 <select id="lead-source" class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full" disabled>
@@ -166,19 +153,15 @@
                                 </select>
                             </div>
 
-                            <!-- Partner -->
                             <div class="w-full lg:w-1/2 mt-6 px-6">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Partner</label>
                                 <select id="partner" class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full" disabled>
                                     <option selected hidden>Select Partner</option>
                                 </select>
                             </div>
-
                         </div>
                     </section>
 
-
-                    <!-- Classification Section -->
                     <section class="rounded-xl border border-[#0a514a] mb-8">
                         <h6 class="rounded-tr-xl rounded-tl-xl text-white text-lg font-bold uppercase tracking-wider bg-[#0a514a] p-3 px-6">Classification</h6>
                         <div class="flex flex-wrap border-[#abd334] shadow-md rounded-bl-xl rounded-br-xl pb-8">
@@ -208,16 +191,13 @@
                                     <option selected hidden>Select Location</option>
                                 </select>
                             </div>
-
                         </div>
                     </section>
 
-                    <!-- Line Items Section with Tabs -->
                     <section class="rounded-xl border border-[#0a514a]">
                         <h6 class="rounded-tr-xl rounded-tl-xl text-white text-lg font-bold uppercase tracking-wider bg-[#0a514a] p-3 px-6">Line Level Details</h6>
                         <div class="border-[#abd334] shadow-md rounded-bl-xl rounded-br-xl p-6">
                             
-                            <!-- Tabs -->
                             <div class="flex space-x-4 mb-4 border-b border-[#0a514a]">
                                 <button type="button" class="tab-btn py-2 px-4 text-gray-700 font-semibold border-b-2 border-[#0a514a]" data-tab="items">
                                     Items
@@ -227,8 +207,6 @@
                                 </button>
                             </div>
 
-
-                            <!-- Items Tab -->
                             <div id="items" class="tab-content tab-active">
                                 <div class="overflow-x-auto">
                                     <table class="min-w-full border border-[#95a2a0] rounded-lg">
@@ -238,6 +216,7 @@
                                                 <th class="px-4 py-3 text-left text-sm font-semibold">Quantity</th>
                                                 <th class="px-4 py-3 text-left text-sm font-semibold">Units</th>
                                                 <th class="px-4 py-3 text-left text-sm font-semibold">Description</th>
+                                                <th id="th-pricelevel" class="px-4 py-3 text-left text-sm font-semibold">Price Level</th>
                                                 <th id="th-rate" class="px-4 py-3 text-left text-sm font-semibold">Rate</th>
                                                 <th id="th-amount" class="px-4 py-3 text-left text-sm font-semibold ">Amount</th>
                                                 <th class="px-4 py-3 text-left text-sm font-semibold">Class</th>
@@ -250,7 +229,6 @@
                                 </div>
                             </div>
 
-                            <!-- Sales team Tab -->
                             <div id="sales-team" class="tab-content">
                                 <div class="overflow-x-auto">
                                     <table class="min-w-full border border-[#95a2a0] rounded-lg">
@@ -273,874 +251,6 @@
             </div>
         </div>
     </div>
-    
 
-    <script>
-        const tabs = document.querySelectorAll('.tab-btn');
-        const tabContents = document.querySelectorAll('.tab-content');
-
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-
-                tabs.forEach(t => {
-                    t.classList.remove('border-[#0a514a]');
-                    t.classList.add('border-transparent');
-                });
-
-                tabContents.forEach(c => c.classList.remove('tab-active'));
-                tab.classList.remove('border-transparent');
-                tab.classList.add('border-[#0a514a]'); // highlight active tab
-                const selectedTab = document.getElementById(tab.dataset.tab);
-                selectedTab.classList.add('tab-active');
-            });
-        });
-
-        function formatDateForInput(nsDate) {
-            if (!nsDate) return "";
-            const parts = nsDate.split("/");
-            if (parts.length !== 3) return "";
-            const month = parts[0].padStart(2, "0");
-            const day = parts[1].padStart(2, "0");
-            const year = parts[2];
-            return `${year}-${month}-${day}`;
-        }
-
-
-        const BASE_URL = 'https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM';
-
-        const loggedInUserId = "{{USER_ID}}";
-        
-        // Read URL params
-        const url = new URL(window.location.href);
-        const pageType = url.searchParams.get("type");
-        // type = estimate | opportunity | salesorder
-
-        let recordId = '';
-        if (pageType === "estimate") recordId = url.searchParams.get("estimateId");
-        else if (pageType === "opportunity") recordId = url.searchParams.get("opportunityId");
-        else if (pageType === "salesorder") recordId = url.searchParams.get("salesOrderId");
-
-        // Decide Suitelet action
-        let action = "";
-        if (pageType === "estimate") action = "getKanbanEstimateDetails";
-        else if (pageType === "opportunity") action = "getKanbanOpportunityDetails";
-        else if (pageType === "salesorder") action = "getKanbanSalesOrderDetails";
-
-        // Build fetch body
-        const userId = localStorage.getItem("userId");   // or however you store the logged-in email
-
-        let fetchBody = { 
-            action: "getKanbanEstimateDetails",
-            estimateId: recordId,
-            userId: loggedInUserId
-        };
-        if (pageType === "estimate") fetchBody.estimateId = recordId;
-        else if (pageType === "opportunity") fetchBody.opportunityId = recordId;
-        else if (pageType === "salesorder") fetchBody.salesOrderId = recordId;
-
-        fetch(BASE_URL, {
-            method: "POST",
-            body: JSON.stringify(fetchBody)
-        })
-        .then(res => res.json())
-        .then(data => {
-
-            console.log("➡️ Fetched Data:", data);
-
-            if (!data.success) {
-                console.error("Failed to load details");
-                return;
-            }
-
-            // Extract required data including sales manager
-            const { header, items, salesTeam, repList, isSalesManager } = data.data;
-            const salesManager = (isSalesManager === true || isSalesManager === "true" || isSalesManager === "T");
-
-            console.log("Is Sales Manager?", salesManager);
-
-            // Hide Rate & Amount headers if not sales manager
-            if (!salesManager) {
-                const rateHeader = document.getElementById("th-rate");
-                const amountHeader = document.getElementById("th-amount");
-
-                if (rateHeader) rateHeader.style.display = "none";
-                if (amountHeader) amountHeader.style.display = "none";
-            }
-
-
-            // Main header fields
-            document.querySelectorAll(".est-number").forEach(el => el.innerText = header.tranid || "");
-            document.getElementById("est-custname").innerText = header.entity || "";
-            document.getElementById("est-statusref").innerText = header.statusRef || "";
-
-            function populateHeaderFields(header) {
-                document.getElementById("est-name").innerText = header.entity || "";
-                document.getElementById("est-date").value = formatDateForInput(header.trandate) || "";
-                document.getElementById("est-title").value = header.title || "";
-                document.getElementById("est-prob").value = header.probability ? `${header.probability}%` : "";
-                document.getElementById("est-expires").value = formatDateForInput(header.expirationDate) || "";
-                document.getElementById("est-expclose").value = formatDateForInput(header.expectedCloseDate) || "";
-                document.getElementById("est-memo").value = header.memo || "";
-
-                document.getElementById("sales-rep").innerText = header.salesRep || "";
-                document.getElementById("opportunity").innerText = header.opportunity || "";
-                document.getElementById("subsidiary").innerText = header.subsidiary || "";
-            }
-
-            function populateJobDropdown(jobs = [], selectedJobId = "") {
-                const select = document.getElementById("est-job-id");
-                select.innerHTML = "";
-
-                const blank = document.createElement("option");
-                blank.value = "";
-                select.appendChild(blank);
-
-                jobs.forEach(job => {
-                    const opt = document.createElement("option");
-                    opt.value = job.id;
-                    opt.textContent = job.name;
-
-                    if (String(job.id) === String(selectedJobId)) opt.selected = true;
-
-                    select.appendChild(opt);
-                });
-            }
-
-            function populateStatusDropdown(selectedStatus = "") {
-                const statuses = [
-                    { id: 14, text: "Closed Lost" },
-                    { id: 17, text: "Qualified Prospect" },
-                    { id: 8,  text: "In Discussion" },
-                    { id: 9,  text: "Identified Decision Makers" },
-                    { id: 10, text: "Proposal" },
-                    { id: 11, text: "In Negotiation" },
-                    { id: 12, text: "Purchasing" }
-                ];
-
-                const select = document.getElementById("est-status");
-                select.innerHTML = "";
-
-                statuses.forEach(status => {
-                    const opt = document.createElement("option");
-                    opt.value = status.id;           // internal ID in value
-                    opt.textContent = status.text;   // label shown to user
-
-                    // SELECT item by comparing text (since UI sends selectedStatus as text)
-                    if (selectedStatus.trim().toLowerCase() === status.text.trim().toLowerCase()) {
-                        opt.selected = true;
-                    }
-
-                    select.appendChild(opt);
-                });
-            }
-
-
-            function populateLeadSourceDropdown(leadSources = [], selectedLeadSourceId = "") {
-                const select = document.getElementById("lead-source");
-                select.innerHTML = "";
-
-                // Add a blank option at the top
-                const blank = document.createElement("option");
-                blank.value = "";
-                select.appendChild(blank);
-
-                // Populate lead sources
-                leadSources.forEach(source => {
-                    const opt = document.createElement("option");
-                    opt.value = source.id;      // use internal id from NetSuite
-                    opt.textContent = source.title;
-
-                    if (String(source.id) === String(selectedLeadSourceId)) {
-                        opt.selected = true;
-                    }
-
-                    select.appendChild(opt);
-                });
-
-                select.disabled = false; // enable dropdown
-            }
-
-
-            function populateForecastTypeDropdown(selectedForecast = "") {
-                const forecastTypes = [
-                    { id: 0, text: "Omitted" },
-                    { id: 1, text: "Worst Case" },
-                    { id: 2, text: "Most Likely" },
-                    { id: 3, text: "Upside" }
-                ];
-
-                const select = document.getElementById("forecast-type");
-                select.innerHTML = "";
-
-                forecastTypes.forEach(type => {
-                    const opt = document.createElement("option");
-                    opt.value = type.id;        // store internal ID
-                    opt.textContent = type.text;
-
-                    // select using TEXT (NetSuite returns text)
-                    if (selectedForecast.trim().toLowerCase() === type.text.trim().toLowerCase()) {
-                        opt.selected = true;
-                    }
-
-                    select.appendChild(opt);
-                });
-            }
-
-            function populatePartnerDropdown(partners = [], selectedPartnerId = "") {
-                const select = document.getElementById("partner");
-                select.innerHTML = "";
-
-                const blank = document.createElement("option");
-                blank.value = "";
-                select.appendChild(blank);
-
-                partners.forEach(partner => {
-                    const opt = document.createElement("option");
-                    opt.value = partner.id;
-                    opt.textContent = partner.name;
-                    if (String(partner.id) === String(selectedPartnerId)) opt.selected = true;
-                    select.appendChild(opt);
-                });
-            }
-
-            function populateClassDropdown(classData = {}) {
-                const select = document.getElementById("est-class");
-                select.innerHTML = "";
-
-                const blank = document.createElement("option");
-                blank.value = "";
-                if (!classData.selectedClassId) blank.selected = true;
-                select.appendChild(blank);
-
-                classData.classes?.forEach(c => {
-                    const opt = document.createElement("option");
-                    opt.value = c.id;
-                    opt.textContent = c.name;
-                    if (String(c.id) === String(classData.selectedClassId)) opt.selected = true;
-                    select.appendChild(opt);
-                });
-            }
-
-            function populateDepartmentDropdown(departmentData = {}) {
-                const select = document.getElementById("est-department");
-                select.innerHTML = "";
-
-                const blank = document.createElement("option");
-                blank.value = "";
-                if (!departmentData.selectedDepartmentId) blank.selected = true;
-                select.appendChild(blank);
-
-                departmentData.departments?.forEach(dep => {
-                    const opt = document.createElement("option");
-                    opt.value = dep.id;
-                    opt.textContent = dep.name;
-                    if (String(dep.id) === String(departmentData.selectedDepartmentId)) opt.selected = true;
-                    select.appendChild(opt);
-                });
-            }
-
-            function populateLocationDropdown(locationData = {}) {
-                const select = document.getElementById("est-location");
-                select.innerHTML = "";
-
-                const blank = document.createElement("option");
-                blank.value = "";
-                if (!locationData.selectedLocationId) blank.selected = true;
-                select.appendChild(blank);
-
-                locationData.locations?.forEach(loc => {
-                    const opt = document.createElement("option");
-                    opt.value = loc.id;
-                    opt.textContent = loc.name;
-                    if (String(loc.id) === String(locationData.selectedLocationId)) opt.selected = true;
-                    select.appendChild(opt);
-                });
-            }
-
-
-
-            // -------------------- LINE ITEM DROPDOWNS --------------------
-            function createItemDropdown(itemList = [], selectedItemId = "") {
-                const select = document.createElement("select");
-                select.className = "line-item-select border border-[#95a2a0] p-1 rounded w-full text-xsm";
-                select.disabled = true;
-
-                const blank = document.createElement("option");
-                blank.value = "";
-                if (!selectedItemId) blank.selected = true;
-                select.appendChild(blank);
-
-                itemList.forEach(item => {
-                    const opt = document.createElement("option");
-                    opt.value = item.id;
-                    opt.textContent = item.name;
-                    if (String(item.id) === String(selectedItemId)) opt.selected = true;
-                    select.appendChild(opt);
-                });
-
-                return select;
-            }
-
-            function createClassDropdown(classList = [], selectedClassId = "") {
-                const select = document.createElement("select");
-                select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm";
-                select.disabled = true;
-
-                const blank = document.createElement("option");
-                blank.value = "";
-                if (!selectedClassId) blank.selected = true;
-                select.appendChild(blank);
-
-                classList.forEach(cls => {
-                    const opt = document.createElement("option");
-                    opt.value = cls.id;
-                    opt.textContent = cls.name;
-                    if (String(cls.id) === String(selectedClassId)) opt.selected = true;
-                    select.appendChild(opt);
-                });
-
-                return select;
-            }
-
-            function createDepartmentDropdown(deptList = [], selectedDeptId = "") {
-                const select = document.createElement("select");
-                select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm";
-                select.disabled = true;
-
-                const blank = document.createElement("option");
-                blank.value = "";
-                if (!selectedDeptId) blank.selected = true;
-                select.appendChild(blank);
-
-                deptList.forEach(dep => {
-                    const opt = document.createElement("option");
-                    opt.value = dep.id;
-                    opt.textContent = dep.name;
-                    if (String(dep.id) === String(selectedDeptId)) opt.selected = true;
-                    select.appendChild(opt);
-                });
-
-                return select;
-            }
-
-            function createUnitDropdown(unitList = [], selectedUnit = "") {
-                const select = document.createElement("select");
-                select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm";
-                select.disabled = true;
-
-                // Blank option
-                const blank = document.createElement("option");
-                blank.value = "";
-                if (!selectedUnit) blank.selected = true;
-                select.appendChild(blank);
-
-                // unitList = ["EA", "SET", "CT"]
-                unitList.forEach(abbr => {
-                    const opt = document.createElement("option");
-                    opt.value = abbr;
-                    opt.textContent = abbr;
-                    if (abbr === selectedUnit) opt.selected = true;
-                    select.appendChild(opt);
-                });
-
-                return select;
-            }
-
-
-            function createSalesRepDropdown(repList = [], selectedEmployeeId = "") {
-                const select = document.createElement("select");
-                select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm";
-                select.disabled = true;
-
-                const blank = document.createElement("option");
-                blank.value = "";
-                if (!selectedEmployeeId) blank.selected = true;
-                select.appendChild(blank);
-
-                repList.forEach(rep => {
-                    const opt = document.createElement("option");
-                    opt.value = rep.id;
-                    opt.textContent = rep.name;
-                    if (String(rep.id) === String(selectedEmployeeId)) opt.selected = true;
-                    select.appendChild(opt);
-                });
-
-                return select;
-            }
-
-            function createSalesRoleDropdown(roleList = [], selectedRoleId = "") {
-                const select = document.createElement("select");
-                select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm";
-                select.disabled = true;
-
-                // blank
-                const blank = document.createElement("option");
-                blank.value = "";
-                if (!selectedRoleId) blank.selected = true;
-                select.appendChild(blank);
-
-                roleList.forEach(role => {
-                    const opt = document.createElement("option");
-                    opt.value = role.id;
-                    opt.textContent = role.name;
-
-                    if (String(role.id) === String(selectedRoleId)) opt.selected = true;
-
-                    select.appendChild(opt);
-                });
-
-                return select;
-            }
-
-            populateHeaderFields(header);
-            populateJobDropdown(header.jobDetails?.jobs || [], header.jobDetails?.selectedJobId || "");
-            populateStatusDropdown(header.status || "");
-            populateLeadSourceDropdown(header.leadSourceDetails?.leadSources || [], header.leadSourceDetails?.selectedLeadSourceId || "");
-            populateForecastTypeDropdown(header.forecastType || "");
-            populatePartnerDropdown(header.partnerDetails?.partners || [], header.partnerDetails?.selectedPartnerId || "");
-            populateClassDropdown(header.classDetails);
-            populateDepartmentDropdown(header.departmentDetails);
-            populateLocationDropdown(header.locationDetails);
-
-            // -------------------- RENDER ITEMS --------------------
-            const tbody = document.getElementById("itemsTableBody");
-            tbody.innerHTML = "";
-
-            if (!items || items.length === 0) {
-                tbody.innerHTML = `<tr><td class="text-sm px-3 py-2 text-gray-500 text-center" colspan="9">No items found</td></tr>`;
-            }
-            else {
-                items.forEach(row => {
-                    const tr = document.createElement("tr");
-
-                    tr.innerHTML = `
-                        <td class="itemCell px-3 py-2 text-sm"></td>
-                        <td class="px-3 py-2 text-sm"><input type="number" value="${row.quantity || ''}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
-                        <td class="unitCell px-3 py-2 text-sm"></td>
-                        <td class="px-3 py-2 text-sm"><textarea disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" rows="1">${row.description || ''}</textarea></td>
-                        <td class="rateCell px-3 py-2 text-sm"><input type="number" value="${row.rate != null ? row.rate.toFixed(2) : ''}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
-                        <td class="amountCell px-3 py-2 text-sm"><input type="number" value="${row.amount != null ? row.amount.toFixed(2) : ''}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
-                        <td class="classCell px-3 py-2 text-sm"></td>
-                        <td class="deptCell px-3 py-2 text-sm"></td>
-                    `;
-
-                    // Item dropdown
-                    tr.querySelector(".itemCell")
-                        .appendChild(createItemDropdown(header.itemList?.items || [], row.itemId));
-
-                    const itemSelect = tr.querySelector(".itemCell select");
-                    itemSelect.addEventListener("change", () => {
-                        handleItemChange(tr, header);
-                    });
-
-
-                    // Units dropdown
-                    const unitOptions = header.unitDetails?.[row.itemId] || [];
-                    tr.querySelector(".unitCell")
-                        .appendChild(createUnitDropdown(unitOptions, row.units));
-
-                    // Class dropdown
-                    tr.querySelector(".classCell")
-                        .appendChild(createClassDropdown(header.classDetails?.classes || [], row.classId));
-
-                    // Department dropdown
-                    tr.querySelector(".deptCell")
-                        .appendChild(createDepartmentDropdown(header.departmentDetails?.departments || [], row.departmentId));
-
-                    // Hide Rate & Amount if user is not sales manager
-                    if (!salesManager) {
-                        tr.querySelector(".rateCell").style.display = "none";
-                        tr.querySelector(".amountCell").style.display = "none";
-                    }
-
-                    tbody.appendChild(tr);
-                });
-            }
-
-
-            // -------------------- RENDER SALES TEAM --------------------
-            const salesBody = document.getElementById("salesTeamTableBody");
-            salesBody.innerHTML = "";
-
-            if (!salesTeam || salesTeam.length === 0) {
-                salesBody.innerHTML = `<tr><td colspan="4" class="text-sm px-3 py-2 text-gray-500 text-center">No sales team found</td></tr>`;
-            }
-            else {
-                salesTeam.forEach(row => {
-                    const tr = document.createElement("tr");
-                    tr.innerHTML = `
-                        <td class="px-3 py-2 text-sm"></td>
-                        <td class="roleCell px-3 py-2 text-sm"></td>  
-
-                        <td class="primaryCell px-3 py-2 text-sm">
-                            <input type="checkbox" 
-                                class="primaryCheckbox h-5 w-5 ml-2 accent-[#007065]" 
-                                ${row.primary ? "checked" : ""} 
-                                disabled />
-                        </td>
-
-                        <td class="px-3 py-2 text-sm">
-                            <input type="number" 
-                                value="${row.contribution.toFixed(1)}" 
-                                disabled 
-                                class="contributionInput w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" />
-                        </td>
-                    `;
-
-                    // Employee dropdown
-                    tr.children[0].appendChild(createSalesRepDropdown(repList, row.employeeId));
-
-                    // 🌟 NEW: Sales Role dropdown
-                    tr.querySelector(".roleCell")
-                        .appendChild(createSalesRoleDropdown(header.salesRoles, row.salesRoleId));
-
-                    salesBody.appendChild(tr);
-                });
-            }
-
-        })
-        .catch(err => console.error(err));
-
-        // PAGE EDIT
-
-        function setEditMode(isEdit) {
-            const editableFields = document.querySelectorAll("input, select, textarea");
-            editableFields.forEach(field => {
-                field.disabled = !isEdit;
-            });
-
-            // Enable dynamically created selects inside line items
-            document.querySelectorAll("#itemsTableBody select").forEach(sel => {
-                sel.disabled = !isEdit ? true : false;
-            });
-
-            document.querySelectorAll("#itemsTableBody tr").forEach(row => {
-                const amountInput = row.querySelector("td:nth-child(6) input");
-                if (amountInput) {
-                    amountInput.readOnly = true;
-                }
-            });
-
-            // Enable dynamically created selects inside sales team table
-            document.querySelectorAll("#salesTeamTableBody select").forEach(sel => {
-                sel.disabled = !isEdit ? true : false;
-            });
-
-
-
-            // Toggle Buttons
-            document.getElementById("editButton").classList.toggle("hidden", isEdit);
-            document.getElementById("editActions").classList.toggle("hidden", !isEdit);
-        }
-
-
-        document.getElementById("editButton").addEventListener("click", () => {
-            setEditMode(true);
-        });
-
-        document.getElementById("cancelButton").addEventListener("click", () => {
-            setEditMode(false);
-        });
-
-
-        function logEstimateFormData() {
-            const logOutput = {};
-
-            // -----------------------------------
-            // HEADER FIELDS
-            // -----------------------------------
-            logOutput.Header = {
-                "Quote #": document.querySelector(".est-number")?.innerText || "",
-                "Transaction Date": document.getElementById("est-date")?.value || "",
-                "Customer Name": document.getElementById("est-custname")?.innerText || "",
-                "Company": document.getElementById("est-name")?.innerText || "",
-                "Title": document.getElementById("est-title")?.value || "",
-                "Memo": document.getElementById("est-memo")?.value || "",
-                "Expected Close Date": document.getElementById("est-expclose")?.value || "",
-                "Expiration Date": document.getElementById("est-expires")?.value || "",
-                "Probability (%)": document.getElementById("est-prob")?.value || "",
-                "Status": document.getElementById("est-status")?.value || "",
-                "Job": document.getElementById("est-job-id")?.selectedOptions?.[0]?.text || "",
-                "Class": document.getElementById("est-class")?.value || "", 
-                "Department": document.getElementById("est-department")?.value || "", 
-                "Location": document.getElementById("est-location")?.value || "", 
-                "Lead Source": document.getElementById("lead-source")?.value || "", 
-                "Forecast Type": document.getElementById("forecast-type")?.value || "", 
-                "Partner": document.getElementById("partner")?.value || "", 
-                "Sales Rep": document.getElementById("sales-rep")?.innerText || "",
-                "Opportunity": document.getElementById("opportunity")?.innerText || "",
-                "Subsidiary": document.getElementById("subsidiary")?.innerText || ""
-            };
-
-            // -----------------------------------
-            // LINE ITEMS
-            // -----------------------------------
-            const itemRows = document.querySelectorAll("#itemsTableBody tr");
-            const items = [];
-
-            itemRows.forEach((row, index) => {
-                items.push({
-                    "Line #": index + 1,
-                    "Item": row.querySelector("td:nth-child(1) select")?.value || "",
-                    "Item Name": row.querySelector("td:nth-child(1) select")?.selectedOptions?.[0]?.text || "",
-                    "Item ID": row.querySelector("td:nth-child(1) select")?.value || "",
-                    "Quantity": row.querySelector("td:nth-child(2) input")?.value || "",
-                    "Units": row.querySelector("td:nth-child(3) select")?.value || "",
-                    "Description": row.querySelector("td:nth-child(4) textarea")?.value || "",
-                    "Rate": row.querySelector("td:nth-child(5) input")?.value || "",
-                    "Amount": row.querySelector("td:nth-child(6) input")?.value || "",
-                    "Class": row.querySelector("td:nth-child(7) select")?.value || "",
-                    "Department": row.querySelector("td:nth-child(8) select")?.value || ""
-                });
-
-            });
-
-            logOutput.LineItems = items;
-
-            // --------------------
-            // SALES TEAM
-            // --------------------
-            const salesRows = document.querySelectorAll("#salesTeamTableBody tr");
-            const salesTeam = [];
-
-            salesRows.forEach((row, index) => {
-                const empSelect = row.querySelector("td:nth-child(1) select");
-                const roleSelect = row.querySelector("td:nth-child(2) select");
-                const primaryCheckbox = row.querySelector("td:nth-child(3) input[type='checkbox']");
-                const contributionInput = row.querySelector("td:nth-child(4) input");
-
-                salesTeam.push({
-                    "Line #": index + 1,
-                    "Employee": empSelect?.selectedOptions?.[0]?.text || "",
-                    "Employee ID": empSelect?.value || "",
-                    "Role": roleSelect?.selectedOptions?.[0]?.text || "",
-                    "Role ID": roleSelect?.value || "",
-                    "Primary": primaryCheckbox?.checked || false,
-                    "Contribution %": contributionInput?.value || ""
-                });
-            });
-
-            logOutput.SalesTeam = salesTeam;
-
-
-            // -----------------------------------
-            // LOG FINAL OUTPUT
-            // -----------------------------------
-            console.log("📌 ESTIMATE FORM DATA (LATEST)", logOutput);
-            return logOutput;
-        }
-
-
-        const urlParams = new URLSearchParams(window.location.search);
-        const estimateIdFromUrl = urlParams.get("estimateId");
-
-        // Set hidden input value
-        const estimateInput = document.querySelector("#estimateId");
-        if (estimateInput) estimateInput.value = estimateIdFromUrl || "";
-
-        // Also store in label dataset for reference
-        const estLabel = document.querySelector(".est-number");
-        if (estLabel) estLabel.dataset.id = estimateIdFromUrl || "";
-
-        document.getElementById("saveButton").addEventListener("click", async () => {
-
-            // ✅ FINAL LINE VALIDATION (BEFORE SAVE)
-            if (!validateBeforeSubmit()) {
-                return;
-            }
-
-            const estimateData = logEstimateFormData();
-            const estimateId = document.querySelector("#estimateId").value;
-
-            const body = {
-                action: "updateEstimate",
-                estimateId,
-                data: estimateData
-            };
-
-            try {
-                const response = await fetch(BASE_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(body)
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    alert("Updated successfully!");
-                    setEditMode(false);
-                } else {
-                    alert("Failed to update: " + result.message);
-                }
-            }
-            catch (e) {
-                console.error("Update failed", e);
-                alert("Update failed — check console");
-            }
-            
-        });
-
-        // -------------------- LINE ITEM HELPERS --------------------
-        function recalculateAmount(row) {
-            const qty = parseFloat(row.querySelector("td:nth-child(2) input")?.value) || 0;
-            const rateInput = row.querySelector("td:nth-child(5) input");
-            const amountInput = row.querySelector("td:nth-child(6) input");
-
-            const rate = parseFloat(rateInput?.value);
-
-            if (!rate || rate <= 0) {
-                amountInput.value = "0.00";
-                row.dataset.blocked = "true";
-                return;
-            }
-
-            amountInput.value = (qty * rate).toFixed(2);
-            row.dataset.blocked = "false";
-        }
-
-        function validateRate(row) {
-            const rateInput = row.querySelector("td:nth-child(5) input");
-            const amountInput = row.querySelector("td:nth-child(6) input");
-
-            if (!rateInput || Number(rateInput.value) <= 0) {
-                row.dataset.blocked = "true";
-                amountInput.value = "0.00";
-                return false;
-            }
-
-            row.dataset.blocked = "false";
-            return true;
-        }
-
-        function handleItemChange(row) {
-            const itemSelect = row.querySelector("td:nth-child(1) select");
-            const itemId = itemSelect.value;
-            if (!itemId) return;
-
-            const prevItemId = itemSelect.dataset.prevValue || "";
-
-            // 🔍 DUPLICATE ITEM CHECK
-            const rows = document.querySelectorAll("#itemsTableBody tr");
-            for (const r of rows) {
-                if (r === row) continue;
-
-                const otherSelect = r.querySelector("td:nth-child(1) select");
-                if (otherSelect && otherSelect.value === itemId) {
-                    alert("This item already exists in another line.");
-
-                    // 🔁 revert to previous item
-                    itemSelect.value = prevItemId;
-                    return;
-                }
-            }
-
-            // ✅ update previous value only if valid
-            itemSelect.dataset.prevValue = itemId;
-
-            // 🔽 YOUR EXISTING BACKEND CALL (UNCHANGED)
-            fetch(BASE_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    action: "getItemDetails",
-                    itemId: itemId
-                })
-            })
-            .then(res => res.json())
-            .then(unitRes => {
-                if (!unitRes?.success) return;
-
-                const data = unitRes.data;
-
-                // ---------- UNITS ----------
-                const unitSelect = row.querySelector(".unitCell select");
-                unitSelect.innerHTML = "<option value=''></option>";
-
-                (data.units || []).forEach(abbr => {
-                    const opt = document.createElement("option");
-                    opt.value = abbr;
-                    opt.textContent = abbr;
-                    unitSelect.appendChild(opt);
-                });
-
-                if (data.defaultUnit) {
-                    unitSelect.value = data.defaultUnit;
-                }
-
-                // ---------- DESCRIPTION ----------
-                row.querySelector("td:nth-child(4) textarea").value =
-                    data.description || "";
-
-                // ---------- RATE ----------
-                const rateInput = row.querySelector("td:nth-child(5) input");
-                const amountInput = row.querySelector("td:nth-child(6) input");
-
-                if (data.rate && Number(data.rate) > 0) {
-                    rateInput.value = Number(data.rate).toFixed(2);
-                    row.dataset.blocked = "false";
-                    recalculateAmount(row);
-                } else {
-                    rateInput.value = "";
-                    amountInput.value = "0.00";
-                    row.dataset.blocked = "true";
-
-                    alert("Please enter the rate for this item.");
-                }
-
-                // ---------- CLASS ----------
-                const classSelect = row.querySelector("td:nth-child(7) select");
-                classSelect.value = data.classId || "";
-
-                // ---------- DEPARTMENT ----------
-                const deptSelect = row.querySelector("td:nth-child(8) select");
-                deptSelect.value = data.departmentId || "";
-            })
-            .catch(err => console.error("Failed to fetch item details:", err));
-        }
-
-        function validateBeforeSubmit() {
-            const rows = document.querySelectorAll("#itemsTableBody tr");
-
-            for (const row of rows) {
-                const rateInput = row.querySelector("td:nth-child(5) input");
-                const rate = parseFloat(rateInput?.value);
-
-                if (!rate || rate <= 0) {
-                    alert("Please enter the rate for all items before saving.");
-
-                    // keep dataset consistent
-                    row.dataset.blocked = "true";
-
-                    // force amount reset
-                    const amountInput = row.querySelector("td:nth-child(6) input");
-                    if (amountInput) amountInput.value = "0.00";
-
-                    return false;
-                }
-
-                // valid row
-                row.dataset.blocked = "false";
-            }
-
-            return true;
-        }
-
-
-        document
-        .getElementById("itemsTableBody")
-        .addEventListener("input", function (e) {
-
-            if (
-                e.target.matches("td:nth-child(2) input") ||
-                e.target.matches("td:nth-child(5) input")
-            ) {
-                const row = e.target.closest("tr");
-                recalculateAmount(row);
-            }
-        });
-
-
-    </script>
 </body>
 </html>

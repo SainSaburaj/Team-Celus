@@ -41,8 +41,15 @@
 </head>
 
 <body class="bg-gray-100 font-montserrat px-3 py-10">
-
-    <div id="mainContent" class="w-full px-1 md:px-4 lg:px-8 xl:px-12 2xl:px-16 mx-auto">
+<script
+        src="https://td3047046.app.netsuite.com/core/media/media.nl?id=1438&c=TD3047046&h=joIRhuH4ppMYUlBARn7IrK5s0HNwF_X-sAEmWtYyc7TN2Kg2&_xt=.js"></script>
+    <div id="sessionExpired" style="display:none; text-align:center;">
+        <h1>Session Expired</h1>
+        <p>Your session has expired. Please <a
+                href="https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM">log
+                in</a> again.</p>
+    </div>
+    <div id="mainContainer" class="w-full px-1 md:px-4 lg:px-8 xl:px-12 2xl:px-16 mx-auto">
         <div
             class="relative flex flex-col min-w-0 break-words w-full mb-10 shadow-2xl bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl">
 
@@ -66,8 +73,17 @@
 
                         <!-- New Buttons -->
                         <div id="editActions" class="flex items-center gap-3 mt-4 hidden">
-                            <button id="saveButton" class="bg-[#0c6c73] text-white text-sm px-3 py-1 rounded-md shadow">
-                                Save
+                            <button id="saveButton"
+                                class="bg-[#0c6c73] text-white text-sm px-3 py-1 rounded-md shadow flex items-center gap-2">
+                                <span id="saveButtonText">Save</span>
+                                <svg id="saveSpinner" class="hidden animate-spin h-4 w-4 text-white"
+                                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                        stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                    </path>
+                                </svg>
                             </button>
                             <button id="cancelButton"
                                 class="block border border-[#0c6c73] text-[#0c6c73] text-sm px-3 py-1 rounded-md shadow">
@@ -96,10 +112,9 @@
 
                             <div class="w-full lg:w-1/2 mt-6 px-6">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Customer</label>
-                                <input type="text" id="so-customer"
-                                    class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full"
-                                    disabled />
+                                <label id="so-customer" class=""></label>
                             </div>
+
 
                             <div class="w-full lg:w-1/2 mt-6 px-6">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Date</label>
@@ -131,8 +146,9 @@
 
                             <div class="w-full lg:w-1/2 mt-6 px-6">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Job</label>
+                                <label id="so-job-label" class="view-only"></label>
                                 <select id="so-job-id"
-                                    class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full"
+                                    class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full edit-only hidden"
                                     disabled>
                                     <option selected hidden>Select Job</option>
                                 </select>
@@ -140,7 +156,7 @@
 
                             <div class="w-full lg:w-1/2 mt-6 px-6">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Total</label>
-                                <label id="so-total" class=""></label> <!-- ✅ innerText -->
+                                <label id="so-total" class=""></label>
                             </div>
 
                             <div class="w-full lg:w-1/2 mt-6 px-6">
@@ -175,8 +191,9 @@
 
                             <div class="w-full lg:w-1/2 mt-6 px-6">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Lead Source</label>
+                                <label id="lead-source-label" class="view-only"></label>
                                 <select id="lead-source"
-                                    class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full"
+                                    class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full edit-only hidden"
                                     disabled>
                                     <option selected hidden>Select Lead Source</option>
                                 </select>
@@ -184,17 +201,14 @@
 
                             <div class="w-full lg:w-1/2 mt-6 px-6">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Opportunity</label>
-                                <select id="so-oppurtunity"
-                                    class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full"
-                                    disabled>
-                                    <option selected hidden>Select Opportunity</option>
-                                </select>
+                                <label id="so-oppurtunity-label" class=""></label>
                             </div>
 
                             <div class="w-full lg:w-1/2 mt-6 px-6">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Partner</label>
+                                <label id="so-partner-label" class="view-only"></label>
                                 <select id="so-partner"
-                                    class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full"
+                                    class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full edit-only hidden"
                                     disabled>
                                     <option selected hidden>Select Partner</option>
                                 </select>
@@ -218,30 +232,43 @@
                             </div>
 
                             <div class="w-full lg:w-1/2 mt-6 px-6">
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Class</label>
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Class<span
+                                        class="text-red-500">*</span></label>
+                                <label id="so-class-label" class="view-only"></label>
                                 <select id="so-class"
-                                    class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full"
+                                    class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full edit-only hidden"
                                     disabled>
                                     <option selected hidden>Select Class</option>
                                 </select>
                             </div>
 
                             <div class="w-full lg:w-1/2 mt-6 px-6">
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Department</label>
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Department<span
+                                        class="text-red-500">*</span></label>
+                                <label id="so-department-label" class="view-only"></label>
                                 <select id="so-department"
-                                    class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full"
-                                    disabled>
+                                    class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full edit-only hidden"
+                                    required>
                                     <option selected hidden>Select Department</option>
                                 </select>
                             </div>
 
                             <div class="w-full lg:w-1/2 mt-6 px-6">
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Location</label>
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Location<span
+                                        class="text-red-500">*</span></label>
+                                <label id="so-location-label" class="view-only"></label>
                                 <select id="so-location"
-                                    class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full"
-                                    disabled>
+                                    class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full edit-only hidden"
+                                    required>
                                     <option selected hidden>Select Location</option>
                                 </select>
+                            </div>
+
+                            <div class="w-full lg:w-1/2 mt-6 px-6">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Project Summary</label>
+                                <textarea id="so-projectsummary"
+                                    class="border border-[#95a2a0] px-4 py-3 bg-white rounded-lg text-sm shadow-sm w-full"
+                                    rows="2" disabled></textarea>
                             </div>
 
                         </div>
@@ -258,19 +285,19 @@
                             <div class="flex space-x-4 mb-4 border-b border-[#0a514a]">
                                 <button type="button"
                                     class="tab-btn py-2 px-4 text-gray-700 font-semibold border-b-2 border-[#0a514a]"
-                                    data-tab="items">
+                                    data-tab="so-items">
                                     Items
                                 </button>
-                                <button type="button"
+                                <button type="button" id="sales-team-tab-btn"
                                     class="tab-btn py-2 px-4 text-gray-700 font-semibold border-b-2 border-transparent"
-                                    data-tab="sales-team">
+                                    data-tab="so-sales-team">
                                     Sales Team
                                 </button>
                             </div>
 
 
                             <!-- Items Tab -->
-                            <div id="items" class="tab-content tab-active">
+                            <div id="so-items" class="tab-content tab-active">
                                 <div class="overflow-x-auto">
                                     <table class="min-w-full border border-[#95a2a0] rounded-lg">
                                         <thead class="bg-gradient-to-r from-[#0a514a] to-[#0c6c73] text-white">
@@ -279,23 +306,24 @@
                                                 <th class="px-4 py-3 text-left text-sm font-semibold">Quantity</th>
                                                 <th class="px-4 py-3 text-left text-sm font-semibold">Units</th>
                                                 <th class="px-4 py-3 text-left text-sm font-semibold">Description</th>
+                                                <th class="px-4 py-3 text-left text-sm font-semibold">Price Level</th>
                                                 <th id="th-rate" class="px-4 py-3 text-left text-sm font-semibold">Rate
                                                 </th>
-                                                <th id="th-amount" class="px-4 py-3 text-left text-sm font-semibold ">
+                                                <th id="th-amount" class="px-4 py-3 text-left text-sm font-semibold">
                                                     Amount</th>
                                                 <th class="px-4 py-3 text-left text-sm font-semibold">Class</th>
                                                 <th class="px-4 py-3 text-left text-sm font-semibold text-right">
                                                     Department</th>
                                             </tr>
                                         </thead>
-                                        <tbody id="itemsTableBody" class="bg-white">
+                                        <tbody id="so-itemsTableBody" class="bg-white">
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
 
                             <!-- Sales team Tab -->
-                            <div id="sales-team" class="tab-content">
+                            <div id="so-sales-team" class="tab-content">
                                 <div class="overflow-x-auto">
                                     <table class="min-w-full border border-[#95a2a0] rounded-lg">
                                         <thead class="bg-gradient-to-r from-[#0a514a] to-[#0c6c73] text-white">
@@ -307,7 +335,7 @@
                                                     Contribution %</th>
                                             </tr>
                                         </thead>
-                                        <tbody id="salesTeamTableBody" class="bg-white">
+                                        <tbody id="so-salesTeamTableBody" class="bg-white">
                                         </tbody>
                                     </table>
                                 </div>
@@ -318,436 +346,6 @@
             </div>
         </div>
     </div>
-
-
-    <script>
-        const tabs = document.querySelectorAll('.tab-btn');
-        const tabContents = document.querySelectorAll('.tab-content');
-
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-
-                tabs.forEach(t => {
-                    t.classList.remove('border-[#0a514a]');
-                    t.classList.add('border-transparent');
-                });
-
-                tabContents.forEach(c => c.classList.remove('tab-active'));
-                tab.classList.remove('border-transparent');
-                tab.classList.add('border-[#0a514a]'); // highlight active tab
-                const selectedTab = document.getElementById(tab.dataset.tab);
-                selectedTab.classList.add('tab-active');
-            });
-        });
-
-        function setEditMode(isEdit) {
-            const fields = document.querySelectorAll("input, select, textarea");
-
-            fields.forEach(f => f.disabled = !isEdit);
-
-            document.getElementById("editButton").classList.toggle("hidden", isEdit);
-            document.getElementById("editActions").classList.toggle("hidden", !isEdit);
-        }
-
-        document.getElementById("editButton").addEventListener("click", () => {
-            setEditMode(true);
-        });
-
-        document.getElementById("cancelButton").addEventListener("click", () => {
-            setEditMode(false);
-        });
-
-        document.getElementById("saveButton").addEventListener("click", () => {
-            console.log("Saving...");
-            setEditMode(false);
-        });
-
-
-        function formatDateForInput(nsDate) {
-            if (!nsDate) return "";
-            const parts = nsDate.split("/");
-            if (parts.length !== 3) return "";
-            const month = parts[0].padStart(2, "0");
-            const day = parts[1].padStart(2, "0");
-            const year = parts[2];
-            return `${year}-${month}-${day}`;
-        }
-
-
-        const BASE_URL = 'https://td3047046.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=95&deploy=1&compid=TD3047046&ns-at=AAEJ7tMQZfEmAHZ5pKgDlB14gl1ebwQScEBzoIyXL1pSYbQfpTM';
-
-        // Read URL params
-        const url = new URL(window.location.href);
-        const pageType = url.searchParams.get("type");
-        // type = estimate | opportunity | salesorder
-
-        let recordId = '';
-        if (pageType === "estimate") recordId = url.searchParams.get("estimateId");
-        else if (pageType === "opportunity") recordId = url.searchParams.get("opportunityId");
-        else if (pageType === "salesorder") recordId = url.searchParams.get("salesOrderId");
-
-        // Decide Suitelet action
-        let action = "";
-        if (pageType === "estimate") action = "getKanbanEstimateDetails";
-        else if (pageType === "opportunity") action = "getKanbanOpportunityDetails";
-        else if (pageType === "salesorder") action = "getKanbanSalesOrderDetails";
-
-        // Build fetch body
-        const userId = localStorage.getItem("userId");   // or however you store the logged-in email
-
-        let fetchBody = {
-            action,
-            userId: userId || ""
-        };
-        if (pageType === "estimate") fetchBody.estimateId = recordId;
-        else if (pageType === "opportunity") fetchBody.opportunityId = recordId;
-        else if (pageType === "salesorder") fetchBody.salesOrderId = recordId;
-
-        fetch(BASE_URL, {
-            method: "POST",
-            body: JSON.stringify(fetchBody)
-        })
-            .then(res => res.json())
-            .then(data => {
-
-                console.log("➡️ Fetched Data:", data);
-
-                if (!data.success) {
-                    console.error("Failed to load details");
-                    return;
-                }
-
-                // Extract required data including sales manager
-                const header = data.data;
-                const isSalesManager = data.data;
-                const items = header.items;
-                const salesTeam = header.salesteam;
-                const salesManager = (isSalesManager === true || isSalesManager === "true" || isSalesManager === "T");
-
-                console.log("Is Sales Manager?", salesManager);
-
-                // Hide Rate & Amount headers if not sales manager
-                if (!salesManager) {
-                    const rateHeader = document.getElementById("th-rate");
-                    const amountHeader = document.getElementById("th-amount");
-
-                    if (rateHeader) rateHeader.style.display = "none";
-                    if (amountHeader) amountHeader.style.display = "none";
-                }
-
-                // --- FIXED STRUCTURE ---
-                console.log("Sales Order Header:", header);
-                console.log("Sales Order Items:", items);
-                console.log("Sales Team:", salesTeam);
-
-
-
-                // Main header fields
-                document.querySelectorAll(".so-number").forEach(el => el.innerText = header.tranid || "");
-                document.getElementById("so-custname").innerText = header.entity || "";
-                document.getElementById("so-statusref").innerText = header.status || "";
-
-                function populateHeaderFields(header) {
-                    // Customer
-                    document.getElementById("so-customer").value = header.entity || "";
-
-                    // Dates
-                    document.getElementById("so-date").value = formatDateForInput(header.trandate) || "";
-                    document.getElementById("so-startdate").value = formatDateForInput(header.startdate) || "";
-                    document.getElementById("so-enddate").value = formatDateForInput(header.enddate) || "";
-
-                    // PO & Job
-                    document.getElementById("so-po").value = header.po || "";
-                    document.getElementById("so-job-id").value = header.job || "";
-
-                    // Total → label
-                    document.getElementById("so-total").innerText = header.total || "";
-
-                    // Memo
-                    document.getElementById("so-memo").value = header.memo || "";
-
-                    // Sales Information
-                    document.getElementById("so-salesrep").innerText = header.salesrep || "";
-                    document.getElementById("so-saleseffectivedate").value = formatDateForInput(header.saleseffectivedate) || "";
-                    document.getElementById("lead-source").value = header.leadsource || "";
-                    document.getElementById("so-oppurtunity").value = header.opportunity || "";
-                    document.getElementById("so-partner").value = header.partner || "";
-
-                    // Classification
-                    document.getElementById("so-subsidiary").innerText = header.subsidiary || "";
-                    document.getElementById("so-class").value = header.class || "";
-                    document.getElementById("so-location").value = header.location || "";
-                    document.getElementById("so-department").value = header.department || "";
-                }
-
-
-
-                function populateJobDropdown(jobs = [], selectedJobId = "") {
-                    const select = document.getElementById("so-job-id");
-                    select.innerHTML = "";
-
-                    const blank = document.createElement("option");
-                    blank.value = "";
-                    select.appendChild(blank);
-
-                    jobs.forEach(job => {
-                        const opt = document.createElement("option");
-                        opt.value = job.id;
-                        opt.textContent = job.name;
-
-                        if (String(job.id) === String(selectedJobId)) opt.selected = true;
-
-                        select.appendChild(opt);
-                    });
-                }
-
-
-                function populateLeadSourceDropdown(selectedLeadSource = "") {
-                    const leadSources = ["Other", "Partner Referral", "Trade Show", "Web"];
-                    const select = document.getElementById("lead-source");
-                    select.innerHTML = "";
-
-                    leadSources.forEach(source => {
-                        const opt = document.createElement("option");
-                        opt.value = source;
-                        opt.textContent = source;
-                        if (selectedLeadSource.trim().toLowerCase() === source.trim().toLowerCase()) opt.selected = true;
-                        select.appendChild(opt);
-                    });
-                }
-
-
-
-                function populatePartnerDropdown(partners = [], selectedPartnerId = "") {
-                    const select = document.getElementById("partner");
-                    select.innerHTML = "";
-
-                    const blank = document.createElement("option");
-                    blank.value = "";
-                    select.appendChild(blank);
-
-                    partners.forEach(partner => {
-                        const opt = document.createElement("option");
-                        opt.value = partner.id;
-                        opt.textContent = partner.name;
-                        if (String(partner.id) === String(selectedPartnerId)) opt.selected = true;
-                        select.appendChild(opt);
-                    });
-                }
-
-                function populateClassDropdown(classData = {}) {
-                    const select = document.getElementById("est-class");
-                    select.innerHTML = "";
-
-                    const blank = document.createElement("option");
-                    blank.value = "";
-                    if (!classData.selectedClassId) blank.selected = true;
-                    select.appendChild(blank);
-
-                    classData.classes?.forEach(c => {
-                        const opt = document.createElement("option");
-                        opt.value = c.id;
-                        opt.textContent = c.name;
-                        if (String(c.id) === String(classData.selectedClassId)) opt.selected = true;
-                        select.appendChild(opt);
-                    });
-                }
-
-                function populateDepartmentDropdown(departmentData = {}) {
-                    const select = document.getElementById("est-department");
-                    select.innerHTML = "";
-
-                    const blank = document.createElement("option");
-                    blank.value = "";
-                    if (!departmentData.selectedDepartmentId) blank.selected = true;
-                    select.appendChild(blank);
-
-                    departmentData.departments?.forEach(dep => {
-                        const opt = document.createElement("option");
-                        opt.value = dep.id;
-                        opt.textContent = dep.name;
-                        if (String(dep.id) === String(departmentData.selectedDepartmentId)) opt.selected = true;
-                        select.appendChild(opt);
-                    });
-                }
-
-                function populateLocationDropdown(locationData = {}) {
-                    const select = document.getElementById("est-location");
-                    select.innerHTML = "";
-
-                    const blank = document.createElement("option");
-                    blank.value = "";
-                    if (!locationData.selectedLocationId) blank.selected = true;
-                    select.appendChild(blank);
-
-                    locationData.locations?.forEach(loc => {
-                        const opt = document.createElement("option");
-                        opt.value = loc.id;
-                        opt.textContent = loc.name;
-                        if (String(loc.id) === String(locationData.selectedLocationId)) opt.selected = true;
-                        select.appendChild(opt);
-                    });
-                }
-
-                // -------------------- LINE ITEM DROPDOWNS --------------------
-                function createItemDropdown(itemList = [], selectedItemId = "") {
-                    const select = document.createElement("select");
-                    select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm";
-                    select.disabled = true;
-
-                    const blank = document.createElement("option");
-                    blank.value = "";
-                    if (!selectedItemId) blank.selected = true;
-                    select.appendChild(blank);
-
-                    itemList.forEach(item => {
-                        const opt = document.createElement("option");
-                        opt.value = item.id;
-                        opt.textContent = item.name;
-                        if (String(item.id) === String(selectedItemId)) opt.selected = true;
-                        select.appendChild(opt);
-                    });
-
-                    return select;
-                }
-
-                function createClassDropdown(classList = [], selectedClassId = "") {
-                    const select = document.createElement("select");
-                    select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm";
-                    select.disabled = true;
-
-                    const blank = document.createElement("option");
-                    blank.value = "";
-                    if (!selectedClassId) blank.selected = true;
-                    select.appendChild(blank);
-
-                    classList.forEach(cls => {
-                        const opt = document.createElement("option");
-                        opt.value = cls.id;
-                        opt.textContent = cls.name;
-                        if (String(cls.id) === String(selectedClassId)) opt.selected = true;
-                        select.appendChild(opt);
-                    });
-
-                    return select;
-                }
-
-                function createDepartmentDropdown(deptList = [], selectedDeptId = "") {
-                    const select = document.createElement("select");
-                    select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm";
-                    select.disabled = true;
-
-                    const blank = document.createElement("option");
-                    blank.value = "";
-                    if (!selectedDeptId) blank.selected = true;
-                    select.appendChild(blank);
-
-                    deptList.forEach(dep => {
-                        const opt = document.createElement("option");
-                        opt.value = dep.id;
-                        opt.textContent = dep.name;
-                        if (String(dep.id) === String(selectedDeptId)) opt.selected = true;
-                        select.appendChild(opt);
-                    });
-
-                    return select;
-                }
-
-                function createSalesRepDropdown(repList = [], selectedEmployeeId = "") {
-                    const select = document.createElement("select");
-                    select.className = "border border-[#95a2a0] p-1 rounded w-full text-xsm";
-                    select.disabled = true;
-
-                    const blank = document.createElement("option");
-                    blank.value = "";
-                    if (!selectedEmployeeId) blank.selected = true;
-                    select.appendChild(blank);
-
-                    repList.forEach(rep => {
-                        const opt = document.createElement("option");
-                        opt.value = rep.id;
-                        opt.textContent = rep.name;
-                        if (String(rep.id) === String(selectedEmployeeId)) opt.selected = true;
-                        select.appendChild(opt);
-                    });
-
-                    return select;
-                }
-
-                populateHeaderFields(header);
-                populateJobDropdown(header.jobDetails?.jobs || [], header.jobDetails?.selectedJobId || "");
-                populateStatusDropdown(header.status || "");
-                populateLeadSourceDropdown(header.leadSource || "");
-                populateForecastTypeDropdown(header.forecastType || "");
-                populatePartnerDropdown(header.partnerDetails?.partners || [], header.partnerDetails?.selectedPartnerId || "");
-                populateClassDropdown(header.classDetails);
-                populateDepartmentDropdown(header.departmentDetails);
-                populateLocationDropdown(header.locationDetails);
-
-                // -------------------- RENDER ITEMS --------------------
-                const tbody = document.getElementById("itemsTableBody");
-                tbody.innerHTML = "";
-
-                if (!items || items.length === 0) {
-                    tbody.innerHTML = `<tr><td class="text-sm px-3 py-2 text-gray-500 text-center" colspan="8">No items found</td></tr>`;
-                }
-                else {
-                    items.forEach(row => {
-                        const tr = document.createElement("tr");
-
-                        tr.innerHTML = `
-                        <td class="itemCell px-3 py-2 text-sm"></td>
-                        <td class="px-3 py-2 text-sm"><input type="text" value="${row.quantity || ''}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
-                        <td class="px-3 py-2 text-sm"><input type="text" value="${row.units || ''}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
-                        <td class="px-3 py-2 text-sm"><input type="text" value="${row.description || ''}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
-                        <td class="rateCell px-3 py-2 text-sm"><input type="text" value="${row.rate != null ? row.rate.toFixed(2) : ''}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
-                        <td class="amountCell px-3 py-2 text-sm"><input type="text" value="${row.amount != null ? row.amount.toFixed(2) : ''}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
-                        <td class="classCell px-3 py-2 text-sm"></td>
-                        <td class="deptCell px-3 py-2 text-sm"></td>
-                    `;
-
-                        // Insert item dropdown
-                        tr.querySelector(".itemCell").appendChild(createItemDropdown(header.itemList?.items || [], row.itemId));
-
-                        // Class & department always visible
-                        tr.querySelector(".classCell").appendChild(createClassDropdown(header.classDetails?.classes || [], row.classId));
-                        tr.querySelector(".deptCell").appendChild(createDepartmentDropdown(header.departmentDetails?.departments || [], row.departmentId));
-
-                        // Rate & Amount toggled only for sales manager
-                        if (!salesManager) {
-                            tr.querySelector(".rateCell").style.display = "none";
-                            tr.querySelector(".amountCell").style.display = "none";
-                        }
-
-                        tbody.appendChild(tr);
-                    });
-                }
-
-                // -------------------- RENDER SALES TEAM --------------------
-                const salesBody = document.getElementById("salesTeamTableBody");
-                salesBody.innerHTML = "";
-
-                if (!salesTeam || salesTeam.length === 0) {
-                    salesBody.innerHTML = `<tr><td colspan="4" class="text-sm px-3 py-2 text-gray-500 text-center">No sales team found</td></tr>`;
-                }
-                else {
-                    salesTeam.forEach(row => {
-                        const tr = document.createElement("tr");
-                        tr.innerHTML = `
-                        <td class="px-3 py-2 text-sm"></td>
-                        <td class="px-3 py-2 text-sm"><input value="${row.salesRole || ''}" disabled class="w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
-                        <td class="px-3 py-2 text-sm">${row.primary ? "Yes" : "No"}</td>
-                        <td class="px-3 py-2 text-sm"><input type="number" value="${row.contribution.toFixed(1)}" disabled class="contributionInput w-full bg-gray-100 border border-[#95a2a0] px-2 py-1 rounded" /></td>
-                    `;
-
-                        tr.children[0].appendChild(createSalesRepDropdown(repList, row.employeeId));
-                        salesBody.appendChild(tr);
-                    });
-                }
-            })
-            .catch(err => console.error(err));
-
-    </script>
 
 </body>
 

@@ -939,8 +939,6 @@ define(['N/search', 'N/query', 'N/record'],
 
                 try {
                     if (!estimateId) return resultData;
-
-                    // Load the estimate to get customer
                     const estRecord = record.load({
                         type: record.Type.ESTIMATE,
                         id: estimateId
@@ -950,7 +948,6 @@ define(['N/search', 'N/query', 'N/record'],
                     const selectedJobId = estRecord.getValue("job") || "";
                     resultData.selectedJobId = selectedJobId;
 
-                    // Search for jobs linked to this customer
                     const jobSearch = search.create({
                         type: "job",
                         filters: [
@@ -958,46 +955,47 @@ define(['N/search', 'N/query', 'N/record'],
                             "AND",
                             ["customer", "anyof", customerId]
                         ],
-                        columns: ["internalid", "altname"] // entityid is the job name
+                        columns: ["internalid", "altname"]
                     });
 
                     jobSearch.run().each(r => {
                         const jobId = r.getValue("internalid");
                         let jobName = r.getValue("altname");
-
-                        // Ensure jobName is a string (sometimes may be returned as number)
                         if (jobName !== null && jobName !== undefined) {
                             jobName = String(jobName);
-                        } else {
+                        } 
+                        else {
                             jobName = '';
                         }
 
                         resultData.jobs.push({
-                            id: jobId,   // value of <option>
-                            name: jobName // text of <option>
+                            id: jobId,
+                            name: jobName
                         });
                         return true;
                     });
 
-                    // Get selected job name
                     if (selectedJobId) {
                         const lookup = search.lookupFields({
                             type: "job",
                             id: selectedJobId,
                             columns: ["altname", "entityid"]
                         });
-
                         const selectedName = lookup?.altname || "";
                         resultData.selectedJobName = String(selectedName);
                     }
-
-                } catch (e) {
+                } 
+                catch (e) {
                     log.error("jobDetails Error", e);
                 }
-
                 return resultData;
             },
 
+            /**
+             * Get lead source (campaign) list + selected lead source for the estimate
+             * @param {string|number} estimateId
+             * @returns {Object} { leadSources:[], selectedLeadSourceId:"", selectedLeadSourceName:"" }
+             */
             leadSourceDetails(estimateId) {
                 const resultData = {
                     leadSources: [],
@@ -1012,10 +1010,8 @@ define(['N/search', 'N/query', 'N/record'],
                         type: record.Type.ESTIMATE,
                         id: estimateId
                     });
-
                     const selectedLeadSourceId = estRecord.getValue("leadsource") || "";
                     resultData.selectedLeadSourceId = selectedLeadSourceId;
-
                     const leadSourceSearch = search.create({
                         type: "campaign",
                         filters: [["isinactive", "is", "F"]],
@@ -1023,14 +1019,12 @@ define(['N/search', 'N/query', 'N/record'],
                     });
 
                     leadSourceSearch.run().each(r => {
-                        const campaignId = r.getValue("campaignid") || r.id; // fallback to internal id
+                        const campaignId = r.getValue("campaignid") || r.id;
                         let title = r.getValue("title") || "";
-
                         resultData.leadSources.push({
                             id: campaignId,
                             title: String(title)
                         });
-
                         return true;
                     });
 
@@ -1042,34 +1036,32 @@ define(['N/search', 'N/query', 'N/record'],
                         });
                         resultData.selectedLeadSourceName = lookup?.title ? String(lookup.title) : "";
                     }
-
-                } catch (e) {
+                } 
+                catch (e) {
                     log.error("leadSourceDetails Error", e);
                 }
-
                 return resultData;
             },
 
+            /**
+             * Get partner list + selected partner for the estimate
+             * @param {string|number} estimateId
+             * @returns {Object} { partners:[], selectedPartnerId:"", selectedPartnerName:"" }
+             */
             partnerDetails(estimateId) {
                 const resultData = {
                     partners: [],
                     selectedPartnerId: "",
                     selectedPartnerName: ""
                 };
-
                 try {
                     if (!estimateId) return resultData;
-
-                    // Load Estimate to read selected partner
                     const estRecord = record.load({
                         type: record.Type.ESTIMATE,
                         id: estimateId
                     });
-
                     const selectedPartnerId = estRecord.getValue("partner") || "";
                     resultData.selectedPartnerId = selectedPartnerId;
-
-                    // Search all active Partners
                     const partnerSearch = search.create({
                         type: "partner",
                         filters: [["isinactive", "is", "F"]],
@@ -1084,25 +1076,26 @@ define(['N/search', 'N/query', 'N/record'],
                         return true;
                     });
 
-                    // Fetch selected partner name
                     if (selectedPartnerId) {
                         const lookup = search.lookupFields({
                             type: "partner",
                             id: selectedPartnerId,
                             columns: ["companyname"]
                         });
-
                         resultData.selectedPartnerName = lookup?.companyname || "";
                     }
-
                 }
                 catch (err) {
                     log.error("partnerDetails Error", err);
                 }
-
                 return resultData;
             },
 
+            /**
+             * Get class list + selected class for the estimate
+             * @param {string|number} estimateId
+             * @returns {Object} { classes:[], selectedClassId:"", selectedClassName:"" }
+             */
             classDetails(estimateId) {
                 const resultData = {
                     classes: [],
@@ -1112,19 +1105,14 @@ define(['N/search', 'N/query', 'N/record'],
 
                 try {
                     if (!estimateId) return resultData;
-
-                    // Load estimate to get subsidiary + class
                     const estRecord = record.load({
                         type: record.Type.ESTIMATE,
                         id: estimateId
                     });
-
                     const subsidiaryId = estRecord.getValue("subsidiary") || "";
                     const selectedClassId = estRecord.getValue("class") || "";
-
                     resultData.selectedClassId = selectedClassId;
 
-                    // Search for all classes under this subsidiary
                     const classSearch = search.create({
                         type: "classification",
                         filters: [
@@ -1143,17 +1131,14 @@ define(['N/search', 'N/query', 'N/record'],
                         return true;
                     });
 
-                    // Lookup selected class name
                     if (selectedClassId) {
                         const lookup = search.lookupFields({
                             type: "classification",
                             id: selectedClassId,
                             columns: ["name"]
                         });
-
                         resultData.selectedClassName = lookup?.name || "";
                     }
-
                 }
                 catch (e) {
                     log.error("classDetails Error", e);
@@ -1162,6 +1147,11 @@ define(['N/search', 'N/query', 'N/record'],
                 return resultData;
             },
 
+            /**
+             * Get department list + selected department for the estimate
+             * @param {string|number} estimateId
+             * @returns {Object} { departments:[], selectedDepartmentId:"", selectedDepartmentName:"" }
+             */
             departmentDetails(estimateId) {
                 const resultData = {
                     departments: [],
@@ -1171,8 +1161,6 @@ define(['N/search', 'N/query', 'N/record'],
 
                 try {
                     if (!estimateId) return resultData;
-
-                    // Load estimate to get subsidiary + department
                     const estRecord = record.load({
                         type: record.Type.ESTIMATE,
                         id: estimateId
@@ -1180,10 +1168,7 @@ define(['N/search', 'N/query', 'N/record'],
 
                     const subsidiaryId = estRecord.getValue("subsidiary") || "";
                     const selectedDepartmentId = estRecord.getValue("department") || "";
-
                     resultData.selectedDepartmentId = selectedDepartmentId;
-
-                    // Search all departments linked to the subsidiary
                     const depSearch = search.create({
                         type: "department",
                         filters: [
@@ -1202,24 +1187,26 @@ define(['N/search', 'N/query', 'N/record'],
                         return true;
                     });
 
-                    // Lookup selected department name
                     if (selectedDepartmentId) {
                         const lookup = search.lookupFields({
                             type: "department",
                             id: selectedDepartmentId,
                             columns: ["name"]
                         });
-
                         resultData.selectedDepartmentName = lookup?.name || "";
                     }
-
-                } catch (e) {
+                }
+                catch (e) {
                     log.error("departmentDetails Error", e);
                 }
-
                 return resultData;
             },
 
+            /**
+             * Get location list + selected location for the estimate
+             * @param {string|number} estimateId
+             * @returns {Object} { locations:[], selectedLocationId:"", selectedLocationName:"" }
+             */
             locationDetails(estimateId) {
                 const resultData = {
                     locations: [],
@@ -1229,8 +1216,6 @@ define(['N/search', 'N/query', 'N/record'],
 
                 try {
                     if (!estimateId) return resultData;
-
-                    // Load record to get subsidiary + location
                     const estRecord = record.load({
                         type: record.Type.ESTIMATE,
                         id: estimateId
@@ -1238,10 +1223,7 @@ define(['N/search', 'N/query', 'N/record'],
 
                     const subsidiaryId = estRecord.getValue("subsidiary") || "";
                     const selectedLocationId = estRecord.getValue("location") || "";
-
                     resultData.selectedLocationId = selectedLocationId;
-
-                    // Search all locations linked to this subsidiary
                     const locSearch = search.create({
                         type: "location",
                         filters: [
@@ -1260,48 +1242,45 @@ define(['N/search', 'N/query', 'N/record'],
                         return true;
                     });
 
-                    // Lookup selected location name
                     if (selectedLocationId) {
                         const lookup = search.lookupFields({
                             type: "location",
                             id: selectedLocationId,
                             columns: ["name"]
                         });
-
                         resultData.selectedLocationName = lookup?.name || "";
                     }
-
-                } catch (error) {
+                } 
+                catch (error) {
                     log.error("locationDetails Error", error);
                 }
-
                 return resultData;
             },
 
+            /**
+             * Get item list for the estimate subsidiary
+             * @param {string|number} estimateId
+             * @returns {Object} { items:[] }
+             */
             itemList(estimateId) {
                 const result = { items: [] };
 
                 try {
-                    // Validate input
                     if (!estimateId) {
                         log.error("itemList", "No estimateId provided");
                         return result;
                     }
 
-                    // Load estimate to get subsidiary
                     const estRecord = record.load({
                         type: record.Type.ESTIMATE,
                         id: estimateId
                     });
-
                     const subsidiaryId = estRecord.getValue("subsidiary");
-
                     if (!subsidiaryId) {
                         log.error("itemList", `No subsidiary found for estimate ${estimateId}`);
                         return result;
                     }
 
-                    // Item Search
                     const itemSearch = search.create({
                         type: search.Type.ITEM,
                         filters: [
@@ -1319,16 +1298,19 @@ define(['N/search', 'N/query', 'N/record'],
                             id: resultRow.getValue("internalid"),
                             name: resultRow.getValue("itemid")
                         });
-                        return true; // continue iteration
+                        return true;
                     });
-
-                } catch (e) {
+                } 
+                catch (e) {
                     log.error("itemList error", JSON.stringify(e));
                 }
-
                 return result;
             },
 
+            /**
+             * Get active sales representative list
+             * @returns {Object} { reps:[] }
+             */
             salesRepList() {
                 const result = { reps: [] };
 
@@ -1352,29 +1334,30 @@ define(['N/search', 'N/query', 'N/record'],
                         });
                         return true;
                     });
-
-                } catch (e) {
+                } 
+                catch (e) {
                     log.error("salesRepList error", JSON.stringify(e));
                 }
-
                 return result;
             },
 
+            /**
+             * Get class list derived from items on the estimate
+             * @param {string|number} estimateId
+             * @returns {Object} { classes:[] }
+             */
             classList(estimateId) {
                 const result = { classes: [] };
 
                 try {
                     if (!estimateId) return result;
-
                     const estRecord = record.load({
                         type: record.Type.ESTIMATE,
                         id: estimateId
                     });
-
                     const itemCount = estRecord.getLineCount({ sublistId: "item" });
                     const itemIds = new Set();
 
-                    // Collect item internal IDs from estimate lines
                     for (let i = 0; i < itemCount; i++) {
                         const itemId = estRecord.getSublistValue({
                             sublistId: "item",
@@ -1385,10 +1368,7 @@ define(['N/search', 'N/query', 'N/record'],
                     }
 
                     if (itemIds.size === 0) return result;
-
                     const classIds = new Set();
-
-                    // Fetch class for each item
                     search.create({
                         type: "item",
                         filters: [
@@ -1403,10 +1383,8 @@ define(['N/search', 'N/query', 'N/record'],
                         if (classId) classIds.add(classId);
                         return true;
                     });
-
                     if (classIds.size === 0) return result;
 
-                    // Fetch class names for the collected classIds
                     search.create({
                         type: "classification",
                         filters: [
@@ -1420,29 +1398,30 @@ define(['N/search', 'N/query', 'N/record'],
                         });
                         return true;
                     });
-
-                } catch (e) {
+                } 
+                catch (e) {
                     log.error("classList error", e);
                 }
-
                 return result;
             },
 
+            /**
+             * Get department list derived from items on the estimate
+             * @param {string|number} estimateId
+             * @returns {Object} { departments:[] }
+             */
             departmentList(estimateId) {
                 const result = { departments: [] };
 
                 try {
                     if (!estimateId) return result;
-
                     const estRecord = record.load({
                         type: record.Type.ESTIMATE,
                         id: estimateId
                     });
-
                     const itemCount = estRecord.getLineCount({ sublistId: "item" });
                     const itemIds = new Set();
 
-                    // Collect item IDs from estimate lines
                     for (let i = 0; i < itemCount; i++) {
                         const itemId = estRecord.getSublistValue({
                             sublistId: "item",
@@ -1453,10 +1432,7 @@ define(['N/search', 'N/query', 'N/record'],
                     }
 
                     if (itemIds.size === 0) return result;
-
                     const deptIds = new Set();
-
-                    // Search department values for items
                     search.create({
                         type: "item",
                         filters: [
@@ -1471,10 +1447,8 @@ define(['N/search', 'N/query', 'N/record'],
                         if (deptId) deptIds.add(deptId);
                         return true;
                     });
-
                     if (deptIds.size === 0) return result;
 
-                    // Fetch department names
                     search.create({
                         type: "department",
                         filters: [
@@ -1488,29 +1462,30 @@ define(['N/search', 'N/query', 'N/record'],
                         });
                         return true;
                     });
-
-                } catch (e) {
+                } 
+                catch (e) {
                     log.error("departmentList error", e);
                 }
-
                 return result;
             },
 
+            /**
+             * Get unit of measure list per item on the estimate
+             * @param {string|number} estimateId
+             * @returns {Object} { units:{} }
+             */
             unitList(estimateId) {
-                const result = { units: {} }; // itemId → [abbreviation]
+                const result = { units: {} };
 
                 try {
                     if (!estimateId) return result;
-
                     const estRecord = record.load({
                         type: record.Type.ESTIMATE,
                         id: estimateId
                     });
-
                     const itemCount = estRecord.getLineCount({ sublistId: "item" });
                     const itemIds = new Set();
 
-                    // Collect item IDs from estimate
                     for (let i = 0; i < itemCount; i++) {
                         const itemId = estRecord.getSublistValue({
                             sublistId: "item",
@@ -1519,12 +1494,8 @@ define(['N/search', 'N/query', 'N/record'],
                         });
                         if (itemId) itemIds.add(itemId);
                     }
-
                     if (itemIds.size === 0) return result;
-
-                    const unitTypeMap = {}; // itemId → unitTypeId
-
-                    // STEP 1: Get each item's unitstype
+                    const unitTypeMap = {};
                     search.create({
                         type: "item",
                         filters: [
@@ -1541,41 +1512,231 @@ define(['N/search', 'N/query', 'N/record'],
                         return true;
                     });
 
-                    // STEP 2: For each unit type, get its subunits (only abbreviation)
                     for (const [itemId, unitTypeId] of Object.entries(unitTypeMap)) {
-                        const abbreviations = [];
-
-                        search.create({
+                        const uoms = [];
+                        const unitTypeRec = record.load({
                             type: "unitstype",
-                            filters: [
-                                ["internalid", "anyof", unitTypeId],
-                                "AND",
-                                ["isinactive", "is", "F"]
-                            ],
-                            columns: [
-                                search.createColumn({ name: "abbreviation" })
-                            ]
-                        }).run().each(row => {
-                            const abbr = row.getValue({ name: "abbreviation" });
-                            if (abbr) abbreviations.push(abbr);
-                            return true;
+                            id: unitTypeId
                         });
+                        const lineCount = unitTypeRec.getLineCount({ sublistId: "uom" });
 
-                        result.units[itemId] = abbreviations;
+                        for (let i = 0; i < lineCount; i++) {
+                            const abbr = unitTypeRec.getSublistValue({
+                                sublistId: "uom",
+                                fieldId: "abbreviation",
+                                line: i
+                            });
+                            const uomId = unitTypeRec.getSublistValue({
+                                sublistId: "uom",
+                                fieldId: "internalid",
+                                line: i
+                            });
+                            const inUse = unitTypeRec.getSublistValue({
+                                sublistId: "uom",
+                                fieldId: "inuse",
+                                line: i
+                            });
+                            if (abbr && uomId) {
+                                uoms.push({
+                                    id: uomId, 
+                                    name: abbr
+                                });
+                            }
+                        }
+                        result.units[itemId] = uoms;
                     }
-
-                } catch (e) {
+                } 
+                catch (e) {
                     log.error("unitList error", e);
                 }
-
                 return result;
             },
 
-            salesRoleList() {
-                const result = { salesRoles: [] };
+            /**
+             * Get price level list (with rates) per item on the estimate
+             * @param {string|number} estimateId
+             * @returns {Object} { priceLevels:{} }
+             */
+            pricelevelList(estimateId) {
+                const result = { priceLevels: {} };
 
                 try {
-                    // Search all active Sales Roles
+                    if (!estimateId) return result;
+                    const estRec = record.load({
+                        type: record.Type.ESTIMATE,
+                        id: estimateId
+                    });
+
+                    const itemCount = estRec.getLineCount({ sublistId: "item" });
+                    const itemIds = new Set();
+
+                    for (let i = 0; i < itemCount; i++) {
+                        const itemId = estRec.getSublistValue({
+                            sublistId: "item",
+                            fieldId: "item",
+                            line: i
+                        });
+                        if (itemId) itemIds.add(itemId);
+                    }
+
+                    if (!itemIds.size) return result;
+                    const allPriceLevelIds = [];
+
+                    search.create({
+                        type: "pricelevel",
+                        filters: [["isinactive", "is", "F"]],
+                        columns: ["internalid"]
+                    }).run().each(res => {
+                        allPriceLevelIds.push(res.getValue("internalid"));
+                        return true;
+                    });
+
+                    if (!allPriceLevelIds.length) return result;
+
+                    search.create({
+                        type: "item",
+                        filters: [
+                            ["isinactive", "is", "F"],
+                            "AND",
+                            ["internalid", "anyof", Array.from(itemIds)],
+                            "AND",
+                            ["pricing.pricelevel", "anyof", allPriceLevelIds]
+                        ],
+                        columns: [
+                            "internalid",
+                            { name: "pricelevel", join: "pricing" },
+                            { name: "unitprice", join: "pricing" }
+                        ]
+                    }).run().each(res => {
+                        const itemId = res.getValue("internalid");
+
+                        if (!result.priceLevels[itemId]) {
+                            result.priceLevels[itemId] = [];
+                        }
+
+                        result.priceLevels[itemId].push({
+                            id: res.getValue({ name: "pricelevel", join: "pricing" }),
+                            name: res.getText({ name: "pricelevel", join: "pricing" }),
+                            rate: res.getValue({ name: "unitprice", join: "pricing" }) || "0"
+                        });
+                        return true;
+                    });
+                } 
+                catch (e) {
+                    log.error("pricelevelList error", e);
+                }
+                return result;
+            },
+
+            /**
+             * Get item details including units, default unit, description, class, department, and price levels
+             * @param {string|number} itemId
+             * @returns {Object} { success:true|false, data:{} }
+             */
+            getItemDetails(itemId) {
+                const result = {
+                    units: [],
+                    defaultUnit: "",
+                    description: "",
+                    classId: "",
+                    departmentId: "",
+                    priceLevels: []
+                };
+
+                try {
+                    if (!itemId) return { success: false };
+                    let unitTypeId = "";
+
+                    search.create({
+                        type: "item",
+                        filters: [["internalid", "anyof", itemId]],
+                        columns: [
+                            "salesdescription",
+                            "unitstype",
+                            "class",
+                            "department"
+                        ]
+                    }).run().each(row => {
+                        unitTypeId = row.getValue("unitstype");
+                        result.description = row.getValue("salesdescription") || "";
+                        result.classId = row.getValue("class") || "";
+                        result.departmentId = row.getValue("department") || "";
+                        return false;
+                    });
+
+                    search.create({
+                        type: "item",
+                        filters: [
+                            ["internalid", "anyof", itemId],
+                            "AND",
+                            ["pricing.pricelevel", "noneof", "@NONE@"]
+                        ],
+                        columns: [
+                            { name: "pricelevel", join: "pricing" },
+                            { name: "unitprice", join: "pricing" }
+                        ]
+                    }).run().each(row => {
+                        const priceLevelId = row.getValue({ name: "pricelevel", join: "pricing" });
+                        const priceLevelName = row.getText({ name: "pricelevel", join: "pricing" }) || `Price Level ${priceLevelId}`;
+                        const unitPrice = row.getValue({ name: "unitprice", join: "pricing" });
+
+                        if (priceLevelId) {
+                            result.priceLevels.push({
+                                id: priceLevelId,
+                                name: priceLevelName,
+                                rate: unitPrice ? parseFloat(unitPrice) : 0
+                            });
+                        }
+                        return true;
+                    });
+
+                    if (unitTypeId) {
+                        const unitTypeRec = record.load({
+                            type: "unitstype",
+                            id: unitTypeId
+                        });
+                        const lineCount = unitTypeRec.getLineCount({ sublistId: "uom" });
+
+                        for (let i = 0; i < lineCount; i++) {
+                            const uomId = unitTypeRec.getSublistValue({
+                                sublistId: "uom",
+                                fieldId: "internalid",
+                                line: i
+                            });
+                            const abbr = unitTypeRec.getSublistValue({
+                                sublistId: "uom",
+                                fieldId: "abbreviation",
+                                line: i
+                            });
+                            const baseUnit = unitTypeRec.getSublistValue({
+                                sublistId: "uom",
+                                fieldId: "baseunit",
+                                line: i
+                            });
+
+                            if (uomId && abbr) {
+                                result.units.push({ id: uomId, name: abbr });
+                                if (baseUnit === "T") {
+                                    result.defaultUnit = uomId;
+                                }
+                            }
+                        }
+                    }
+                    return { success: true, data: result };
+                } 
+                catch (e) {
+                    log.error("getItemDetails error", e);
+                    return { success: false };
+                }
+            },
+
+            /**
+             * Get all active sales roles
+             * @returns {Object} { salesRoles: [] }
+             */
+            salesRoleList() {
+                const result = { salesRoles: [] };
+                try {
                     search.create({
                         type: "salesrole",
                         filters: [
@@ -1586,21 +1747,26 @@ define(['N/search', 'N/query', 'N/record'],
                             search.createColumn({ name: "name" })
                         ]
                     })
-                        .run()
-                        .each(role => {
-                            result.salesRoles.push({
-                                id: role.getValue({ name: "internalid" }),
-                                name: role.getValue({ name: "name" })
-                            });
-                            return true;
+                    .run()
+                    .each(role => {
+                        result.salesRoles.push({
+                            id: role.getValue({ name: "internalid" }),
+                            name: role.getValue({ name: "name" })
                         });
-                } catch (e) {
+                        return true;
+                    });
+                } 
+                catch (e) {
                     log.error("salesRoleList error", e);
                 }
-
                 return result;
             },
 
+            /**
+             * Get class list + current class assigned to the Sales Order
+             * @param {string|number} salesOrderId
+             * @returns {Object} { classes:[], selectedClassId:"", selectedClassName:"" }
+             */
             soClassDetails(salesOrderId) {
                 const resultData = {
                     classes: [],
@@ -1610,19 +1776,13 @@ define(['N/search', 'N/query', 'N/record'],
 
                 try {
                     if (!salesOrderId) return resultData;
-
-                    // Load estimate to get subsidiary + class
                     const soRecord = record.load({
                         type: record.Type.SALES_ORDER,
                         id: salesOrderId
                     });
-
                     const subsidiaryId = soRecord.getValue("subsidiary") || "";
                     const selectedClassId = soRecord.getValue("class") || "";
-
                     resultData.selectedClassId = selectedClassId;
-
-                    // Search for all classes under this subsidiary
                     const classSearch = search.create({
                         type: "classification",
                         filters: [
@@ -1641,25 +1801,26 @@ define(['N/search', 'N/query', 'N/record'],
                         return true;
                     });
 
-                    // Lookup selected class name
                     if (selectedClassId) {
                         const lookup = search.lookupFields({
                             type: "classification",
                             id: selectedClassId,
                             columns: ["name"]
                         });
-
                         resultData.selectedClassName = lookup?.name || "";
                     }
-
                 } 
                 catch (e) {
                     log.error("classDetails Error", e);
                 }
-
                 return resultData;
             },
 
+            /**
+             * Get department list + current department assigned to the Sales Order
+             * @param {string|number} salesOrderId
+             * @returns {Object} { departments:[], selectedDepartmentId:"", selectedDepartmentName:"" }
+             */
             soDepartmentDetails(salesOrderId) {
                 const resultData = {
                     departments: [],
@@ -1670,7 +1831,6 @@ define(['N/search', 'N/query', 'N/record'],
                 try {
                     if (!salesOrderId) return resultData;
 
-                    // Load estimate to get subsidiary + department
                     const soRecord = record.load({
                         type: record.Type.SALES_ORDER,
                         id: salesOrderId
@@ -1678,10 +1838,8 @@ define(['N/search', 'N/query', 'N/record'],
 
                     const subsidiaryId = soRecord.getValue("subsidiary") || "";
                     const selectedDepartmentId = soRecord.getValue("department") || "";
-
                     resultData.selectedDepartmentId = selectedDepartmentId;
 
-                    // Search all departments linked to the subsidiary
                     const depSearch = search.create({
                         type: "department",
                         filters: [
@@ -1700,7 +1858,6 @@ define(['N/search', 'N/query', 'N/record'],
                         return true;
                     });
 
-                    // Lookup selected department name
                     if (selectedDepartmentId) {
                         const lookup = search.lookupFields({
                             type: "department",
@@ -1710,14 +1867,18 @@ define(['N/search', 'N/query', 'N/record'],
 
                         resultData.selectedDepartmentName = lookup?.name || "";
                     }
-
-                } catch (e) {
+                } 
+                catch (e) {
                     log.error("departmentDetails Error", e);
                 }
-
                 return resultData;
             },
 
+            /**
+             * Get location list + current location assigned to the Sales Order
+             * @param {string|number} salesOrderId
+             * @returns {Object} { locations:[], selectedLocationId:"", selectedLocationName:"" }
+             */
             soLocationDetails(salesOrderId) {
                 const resultData = {
                     locations: [],
@@ -1728,7 +1889,6 @@ define(['N/search', 'N/query', 'N/record'],
                 try {
                     if (!salesOrderId) return resultData;
 
-                    // Load record to get subsidiary + location
                     const soRecord = record.load({
                         type: record.Type.SALES_ORDER,
                         id: salesOrderId
@@ -1739,7 +1899,6 @@ define(['N/search', 'N/query', 'N/record'],
 
                     resultData.selectedLocationId = selectedLocationId;
 
-                    // Search all locations linked to this subsidiary
                     const locSearch = search.create({
                         type: "location",
                         filters: [
@@ -1768,11 +1927,10 @@ define(['N/search', 'N/query', 'N/record'],
 
                         resultData.selectedLocationName = lookup?.name || "";
                     }
-
-                } catch (error) {
+                } 
+                catch (error) {
                     log.error("locationDetails Error", error);
                 }
-
                 return resultData;
             },
 
@@ -1791,7 +1949,6 @@ define(['N/search', 'N/query', 'N/record'],
                 try {
                     if (!salesOrderId) return resultData;
 
-                    // Load the estimate to get customer
                     const soRecord = record.load({
                         type: record.Type.SALES_ORDER,
                         id: salesOrderId
@@ -1801,7 +1958,6 @@ define(['N/search', 'N/query', 'N/record'],
                     const selectedJobId = soRecord.getValue("job") || "";
                     resultData.selectedJobId = selectedJobId;
 
-                    // Search for jobs linked to this customer
                     const jobSearch = search.create({
                         type: "job",
                         filters: [
@@ -1809,28 +1965,27 @@ define(['N/search', 'N/query', 'N/record'],
                             "AND",
                             ["customer", "anyof", customerId]
                         ],
-                        columns: ["internalid", "altname"] // entityid is the job name
+                        columns: ["internalid", "altname"]
                     });
 
                     jobSearch.run().each(r => {
                         const jobId = r.getValue("internalid");
                         let jobName = r.getValue("altname");
 
-                        // Ensure jobName is a string (sometimes may be returned as number)
                         if (jobName !== null && jobName !== undefined) {
                             jobName = String(jobName);
-                        } else {
+                        } 
+                        else {
                             jobName = '';
                         }
 
                         resultData.jobs.push({
-                            id: jobId,   // value of <option>
-                            name: jobName // text of <option>
+                            id: jobId,
+                            name: jobName
                         });
                         return true;
                     });
 
-                    // Get selected job name
                     if (selectedJobId) {
                         const lookup = search.lookupFields({
                             type: "job",
@@ -1841,14 +1996,18 @@ define(['N/search', 'N/query', 'N/record'],
                         const selectedName = lookup?.altname || "";
                         resultData.selectedJobName = String(selectedName);
                     }
-
-                } catch (e) {
+                } 
+                catch (e) {
                     log.error("jobDetails Error", e);
                 }
-
                 return resultData;
             },
 
+            /**
+             * Get partner list + current partner assigned to the Sales Order
+             * @param {string|number} salesOrderId
+             * @returns {Object} { partners:[], selectedPartnerId:"", selectedPartnerName:"" }
+             */
             soPartnerDetails(salesOrderId) {
                 const resultData = {
                     partners: [],
@@ -1858,8 +2017,6 @@ define(['N/search', 'N/query', 'N/record'],
 
                 try {
                     if (!salesOrderId) return resultData;
-
-                    // Load Estimate to read selected partner
                     const soRecord = record.load({
                         type: record.Type.SALES_ORDER,
                         id: salesOrderId
@@ -1868,7 +2025,6 @@ define(['N/search', 'N/query', 'N/record'],
                     const selectedPartnerId = soRecord.getValue("partner") || "";
                     resultData.selectedPartnerId = selectedPartnerId;
 
-                    // Search all active Partners
                     const partnerSearch = search.create({
                         type: "partner",
                         filters: [["isinactive", "is", "F"]],
@@ -1883,7 +2039,6 @@ define(['N/search', 'N/query', 'N/record'],
                         return true;
                     });
 
-                    // Fetch selected partner name
                     if (selectedPartnerId) {
                         const lookup = search.lookupFields({
                             type: "partner",
@@ -1893,15 +2048,18 @@ define(['N/search', 'N/query', 'N/record'],
 
                         resultData.selectedPartnerName = lookup?.companyname || "";
                     }
-
                 }
                 catch (err) {
                     log.error("partnerDetails Error", err);
                 }
-
                 return resultData;
             },
 
+            /**
+             * Get lead source list + current lead source assigned to the Sales Order
+             * @param {string|number} salesOrderId
+             * @returns {Object} { leadSources:[], selectedLeadSourceId:"", selectedLeadSourceName:"" }
+             */
             soLeadSourceDetails(salesOrderId) {
                 const resultData = {
                     leadSources: [],
@@ -1927,7 +2085,7 @@ define(['N/search', 'N/query', 'N/record'],
                     });
 
                     leadSourceSearch.run().each(r => {
-                        const campaignId = r.getValue("campaignid") || r.id; // fallback to internal id
+                        const campaignId = r.getValue("campaignid") || r.id;
                         let title = r.getValue("title") || "";
 
                         resultData.leadSources.push({
@@ -1946,38 +2104,38 @@ define(['N/search', 'N/query', 'N/record'],
                         });
                         resultData.selectedLeadSourceName = lookup?.title ? String(lookup.title) : "";
                     }
-
-                } catch (err) {
+                } 
+                catch (err) {
                     log.error("leadSourceDetails Error", err);
                 }
 
                 return resultData;
             },
 
+            /**
+             * Get all active items for the Sales Order's subsidiary
+             * @param {string|number} salesOrderId
+             * @returns {Object} { items: [] }
+             */
             soItemList(salesOrderId) {
                 const result = { items: [] };
 
                 try {
-                    // Validate input
                     if (!salesOrderId) {
                         log.error("itemList", "No estimateId provided");
                         return result;
                     }
 
-                    // Load estimate to get subsidiary
                     const soRecord = record.load({
                         type: record.Type.SALES_ORDER,
                         id: salesOrderId
                     });
-
                     const subsidiaryId = soRecord.getValue("subsidiary");
-
                     if (!subsidiaryId) {
                         log.error("itemList", `No subsidiary found for estimate ${salesOrderId}`);
                         return result;
                     }
 
-                    // Item Search
                     const itemSearch = search.create({
                         type: search.Type.ITEM,
                         filters: [
@@ -1995,16 +2153,22 @@ define(['N/search', 'N/query', 'N/record'],
                             id: resultRow.getValue("internalid"),
                             name: resultRow.getValue("itemid")
                         });
-                        return true; // continue iteration
+                        return true;
                     });
 
-                } catch (e) {
+                } 
+                catch (e) {
                     log.error("itemList error", JSON.stringify(e));
                 }
 
                 return result;
             },
 
+            /**
+             * Get all active opportunities and selected opportunity for a Sales Order
+             * @param {string|number} salesOrderId
+             * @returns {Object} { opportunities:[], selectedOpportunityId:'', selectedOpportunityName:'' }
+             */
             soOpportunityDetails(salesOrderId) {
                 const resultData = {
                     opportunities: [],
@@ -2015,7 +2179,6 @@ define(['N/search', 'N/query', 'N/record'],
                 try {
                     if (!salesOrderId) return resultData;
 
-                    // Load Estimate to read selected partner
                     const soRecord = record.load({
                         type: record.Type.SALES_ORDER,
                         id: salesOrderId
@@ -2024,7 +2187,6 @@ define(['N/search', 'N/query', 'N/record'],
                     const selectedOpportunityId = soRecord.getValue("opportunity") || "";
                     resultData.selectedOpportunityId = selectedOpportunityId;
 
-                    // Search all active Partners
                     const opportunitySearch = search.create({
                         type: "opportunity",
                         filters: [["isinactive", "is", "F"]],
@@ -2039,98 +2201,115 @@ define(['N/search', 'N/query', 'N/record'],
                         return true;
                     });
 
-                    // Fetch selected partner name
                     if (selectedPartnerId) {
                         const lookup = search.lookupFields({
                             type: "opportunity",
                             id: selectedOpportunityId,
                             columns: ["title"]
                         });
-
                         resultData.selectedOpportunityName = lookup?.title || "";
                     }
-
                 }
                 catch (err) {
                     log.error("partnerDetails Error", err);
                 }
-
                 return resultData;
             },
-
-            getItemDetails(itemId) {
-                const result = {
-                    units: [],
-                    defaultUnit: "",
-                    description: "",
-                    rate: 0,
-                    classId: "",
-                    departmentId: ""
-                };
+            
+            /**
+             * Get units (UOMs) per item on a Sales Order
+             * @param {string|number} salesOrderId
+             * @returns {Object} { units: { itemId: [{id, name}] } }
+             */
+            soUnitList(salesOrderId) {
+                const result = { units: {} };
 
                 try {
-                    if (!itemId) return { success: false };
+                    if (!salesOrderId) return result;
 
-                    let unitTypeId = "";
-
-                    // STEP 1: Get item details
-                    search.create({
-                        type: "item",
-                        filters: [["internalid", "anyof", itemId]],
-                        columns: [
-                            "salesdescription",
-                            "baseprice",
-                            "unitstype",
-                            "class",
-                            "department"
-                        ]
-                    }).run().each(row => {
-                        unitTypeId = row.getValue("unitstype");
-                        result.description = row.getValue("salesdescription") || "";
-                        result.rate = parseFloat(row.getValue("baseprice")) || 0;
-                        result.classId = row.getValue("class") || "";
-                        result.departmentId = row.getValue("department") || "";
-                        return false;
+                    const soRecord = record.load({
+                        type: record.Type.SALES_ORDER,
+                        id: salesOrderId
                     });
 
-                    if (!unitTypeId) {
-                        return { success: true, data: result };
+                    const itemCount = soRecord.getLineCount({ sublistId: "item" });
+                    const itemIds = new Set();
+
+                    for (let i = 0; i < itemCount; i++) {
+                        const itemId = soRecord.getSublistValue({
+                            sublistId: "item",
+                            fieldId: "item",
+                            line: i
+                        });
+                        if (itemId) itemIds.add(itemId);
                     }
 
-                    // STEP 2: Fetch units + default
-                    let firstUnit = "";
+                    if (itemIds.size === 0) return result;
+
+                    const unitTypeMap = {};
 
                     search.create({
-                        type: "unitstype",
+                        type: "item",
                         filters: [
-                            ["internalid", "anyof", unitTypeId],
-                            "AND",
-                            ["isinactive", "is", "F"]
+                            ["internalid", "anyof", Array.from(itemIds)]
                         ],
-                        columns: ["abbreviation"]
-                    }).run().each((row, i) => {
-                        const abbr = row.getValue("abbreviation");
-                        if (abbr) {
-                            result.units.push(abbr);
-                            if (!firstUnit) firstUnit = abbr; // first = default
-                        }
+                        columns: [
+                            search.createColumn({ name: "internalid" }),
+                            search.createColumn({ name: "unitstype" })
+                        ]
+                    }).run().each(row => {
+                        const itemId = row.getValue("internalid");
+                        const unitTypeId = row.getValue("unitstype");
+                        if (unitTypeId) unitTypeMap[itemId] = unitTypeId;
                         return true;
                     });
 
-                    // ✅ DEFAULT UNIT = abbreviation
-                    result.defaultUnit = firstUnit;
+                    for (const [itemId, unitTypeId] of Object.entries(unitTypeMap)) {
 
-                    return { success: true, data: result };
+                        const uoms = [];
 
-                } catch (e) {
-                    log.error("getItemDetails error", e);
-                    return { success: false };
+                        const unitTypeRec = record.load({
+                            type: "unitstype",
+                            id: unitTypeId
+                        });
+
+                        const lineCount = unitTypeRec.getLineCount({ sublistId: "uom" });
+
+                        for (let i = 0; i < lineCount; i++) {
+
+                            const abbr = unitTypeRec.getSublistValue({
+                                sublistId: "uom",
+                                fieldId: "abbreviation",
+                                line: i
+                            });
+
+                            const uomId = unitTypeRec.getSublistValue({
+                                sublistId: "uom",
+                                fieldId: "internalid",
+                                line: i
+                            });
+
+                            const inUse = unitTypeRec.getSublistValue({
+                                sublistId: "uom",
+                                fieldId: "inuse",
+                                line: i
+                            });
+
+                            if (abbr && uomId) {
+                                uoms.push({
+                                    id: uomId,
+                                    name: abbr
+                                });
+                            }
+                        }
+                        result.units[itemId] = uoms;
+                    }
+                } 
+                catch (e) {
+                    log.error("unitList error", e);
                 }
-            }
 
-
-
-
+                return result;
+            },
         }
-
     });
